@@ -31,6 +31,8 @@ export function NotificationsPage() {
             ? `${unreadNotifications} unread`
             : 'You are all caught up'
         }
+        showBack
+        backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">

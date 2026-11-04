@@ -10,6 +10,8 @@ export interface ScreenHeaderProps {
   subtitle?: string
   variant?: ScreenHeaderVariant
   showBack?: boolean
+  /** Fallback destination when there is no in-app history to go back to. */
+  backTo?: string
   right?: ReactNode
   className?: string
 }
@@ -19,6 +21,7 @@ export function ScreenHeader({
   subtitle,
   variant = 'brand',
   showBack = false,
+  backTo,
   right,
   className,
 }: ScreenHeaderProps) {
@@ -46,7 +49,7 @@ export function ScreenHeader({
         {showBack ? (
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
             aria-label="Go back"
             className={cn(
               'mt-0.5 grid size-9 shrink-0 place-items-center rounded-full transition-colors',
