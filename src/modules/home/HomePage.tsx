@@ -134,7 +134,7 @@ export function HomePage() {
         </div>
       </header>
 
-      <div className="-mt-6 space-y-4 px-4">
+      <div className="relative z-10 -mt-6 space-y-4 px-4">
         <Card padding="md">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
