@@ -1,0 +1,60 @@
+/**
+ * Fafo Delivery design tokens.
+ *
+ * These values are the single source of truth for colour, type, radius and
+ * elevation. Every Tailwind utility (bg-brand, text-ink, shadow-card, ...)
+ * is generated from the variables below, so screens should use the token
+ * classes instead of hard-coded hex values.
+ */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+
+  /* Brand */
+  --color-brand-deep: #5123a5;
+  --color-brand: #713ce0;
+  --color-brand-hover: #6231cf;
+  --color-brand-soft: #eee7ff;
+  --color-brand-tint: #f6f2ff;
+
+  /* Surfaces */
+  --color-canvas: #f8f7fc;
+  --color-surface: #ffffff;
+  --color-line: #ece8f6;
+
+  /* Text */
+  --color-ink: #1b1430;
+  --color-ink-muted: #6e6789;
+  --color-ink-soft: #9a93ae;
+
+  /* Status */
+  --color-success: #12a150;
+  --color-success-soft: #e6f7ed;
+  --color-warning: #e08a00;
+  --color-warning-soft: #fff4e0;
+  --color-danger: #e0413e;
+  --color-danger-soft: #fdecea;
+  --color-info: #2f6fed;
+  --color-info-soft: #eaf1ff;
+
+  /* Radii */
+  --radius-card: 1.25rem;
+  --radius-tile: 0.9rem;
+
+  /* Elevation */
+  --shadow-card: 0 10px 30px -22px rgba(81, 35, 165, 0.45),
+    0 2px 6px -4px rgba(27, 20, 48, 0.08);
+  --shadow-float: 0 30px 70px -40px rgba(42, 15, 92, 0.55),
+    0 10px 30px -20px rgba(81, 35, 165, 0.35);
+  --shadow-nav: 0 -10px 30px -24px rgba(81, 35, 165, 0.55);
+}
+
+/** Purple header gradient used by brand headers and the home banner. */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(
+    150deg,
+    #3f1685 0%,
+    #5123a5 38%,
+    #713ce0 100%
+  );
+}
