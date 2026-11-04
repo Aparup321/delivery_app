@@ -9,7 +9,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../components/common/Avatar'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
@@ -118,11 +118,18 @@ export function HomePage() {
                 </span>
               ) : null}
             </div>
-            <Avatar
-              name={partner.fullName}
-              src={partner.avatarUrl}
-              className="ring-2 ring-white/25"
-            />
+            <Link
+              to="/profile"
+              aria-label="Open profile"
+              title="Open profile"
+              className="rounded-full transition-transform duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-deep"
+            >
+              <Avatar
+                name={partner.fullName}
+                src={partner.avatarUrl}
+                className="ring-2 ring-white/25"
+              />
+            </Link>
           </div>
         </div>
       </header>
