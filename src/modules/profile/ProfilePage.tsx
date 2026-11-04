@@ -1,0 +1,222 @@
+import { useState } from 'react'
+import {
+  ChevronRight,
+  FileText,
+  LogOut,
+  Mail,
+  MapPin,
+  Phone,
+  Star,
+  Truck,
+} from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Avatar } from '../../components/common/Avatar'
+import { Badge } from '../../components/common/Badge'
+import { Button } from '../../components/common/Button'
+import { Card } from '../../components/common/Card'
+import { Select } from '../../components/common/Select'
+import { Toggle } from '../../components/common/Toggle'
+import { ScreenHeader } from '../../components/layout/ScreenHeader'
+import { useApp } from '../../context/app-store'
+import { useAuth } from '../../context/auth'
+import { currentPartner } from '../../mock/partner'
+
+export function ProfilePage() {
+  const navigate = useNavigate()
+  const { session, signOut } = useAuth()
+  const { onboarding } = useApp()
+  const [language, setLanguage] = useState('en')
+  const [jobAlerts, setJobAlerts] = useState(true)
+
+  const partner = currentPartner
+  const documents = [
+    { label: 'Aadhaar card', fileName: onboarding.documents.aadhaar },
+    { label: 'PAN card', fileName: onboarding.documents.pan },
+    { label: 'Driving licence', fileName: onboarding.documents.licence },
+    { label: 'Vehicle RC', fileName: onboarding.documents.registration },
+  ]
+
+  const statusBadge =
+    onboarding.status === 'approved'
+      ? { label: 'Approved', tone: 'success' as const }
+      : onboarding.status === 'submitted'
+        ? { label: 'Under review', tone: 'warning' as const }
+        : { label: 'Setup pending', tone: 'warning' as const }
+
+  function handleSignOut() {
+    signOut()
+    navigate('/login', { replace: true })
+  }
+
+  return (
+    <div className="pb-6">
+      <ScreenHeader
+        title="Profile"
+        subtitle="Partner account and settings"
+        right={<Avatar name={partner.fullName} src={partner.avatarUrl} />}
+      />
+
+      <div className="space-y-4 px-4 pt-5">
+        <Card padding="lg">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[16px] font-bold text-ink">{partner.fullName}</p>
+              <p className="mt-0.5 text-[11.5px] text-ink-muted">
+                Partner ID · {partner.id}
+              </p>
+            </div>
+            <Badge tone={statusBadge.tone} size="sm">
+              {statusBadge.label}
+            </Badge>
+          </div>
+
+          <div className="mt-3 flex items-center gap-3 border-t border-line pt-3 text-[11.5px] text-ink-muted">
+            <span className="flex items-center gap-1">
+              <Star className="size-3.5 text-warning" aria-hidden="true" />
+              {partner.rating.toFixed(1)} rating
+            </span>
+            <span className="flex items-center gap-1">
+              <Truck className="size-3.5" aria-hidden="true" />
+              {partner.vehicleType}
+            </span>
+          </div>
+        </Card>
+
+        <Card padding="md">
+          <p className="text-[13px] font-bold text-ink">Contact</p>
+
+          <ul className="mt-2 space-y-2.5 text-[12px]">
+            <li className="flex items-center gap-2.5">
+              <Phone className="size-4 shrink-0 text-brand" aria-hidden="true" />
+              <span className="text-ink">
+                {session ? `+91 ${session.phone}` : 'Not available'}
+              </span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <Mail className="size-4 shrink-0 text-brand" aria-hidden="true" />
+              <span className="truncate text-ink">
+                {onboarding.email || 'Not added'}
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <MapPin
+                className="mt-0.5 size-4 shrink-0 text-brand"
+                aria-hidden="true"
+              />
+              <span className="text-ink">
+                {onboarding.addressLine
+                  ? `${onboarding.addressLine}, ${onboarding.city} ${onboarding.pincode}`
+                  : `${onboarding.city} · address not added`}
+              </span>
+            </li>
+          </ul>
+        </Card>
+
+        <Card padding="md">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[13px] font-bold text-ink">Vehicle</p>
+            <Badge tone="brand" size="sm">
+              {onboarding.vehicle.type}
+            </Badge>
+          </div>
+          <p className="mt-2 text-[12px] text-ink">
+            {onboarding.vehicle.model || 'Model not added'}
+            {onboarding.vehicle.colour ? ` · ${onboarding.vehicle.colour}` : ''}
+          </p>
+          <p className="text-[11.5px] text-ink-muted">
+            {onboarding.vehicle.registrationNumber ||
+              'Registration number not added'}
+          </p>
+        </Card>
+
+        <Card padding="md">
+          <p className="text-[13px] font-bold text-ink">Documents</p>
+
+          <ul className="mt-2 divide-y divide-line">
+            {documents.map((document) => (
+              <li
+                key={document.label}
+                className="flex items-center justify-between gap-3 py-2"
+              >
+                <span className="flex items-center gap-2 text-[12px] text-ink">
+                  <FileText
+                    className="size-4 shrink-0 text-ink-soft"
+                    aria-hidden="true"
+                  />
+                  {document.label}
+                </span>
+                <Badge
+                  tone={document.fileName ? 'success' : 'neutral'}
+                  size="sm"
+                >
+                  {document.fileName ? 'Uploaded' : 'Missing'}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <Card padding="md" className="space-y-3">
+          <p className="text-[13px] font-bold text-ink">Preferences</p>
+
+          <Select
+            label="App language"
+            value={language}
+            options={[
+              { value: 'en', label: 'English' },
+              { value: 'hi', label: 'हिन्दी (Hindi)' },
+              { value: 'bn', label: 'বাংলা (Bengali)' },
+            ]}
+            onChange={(event) => setLanguage(event.target.value)}
+          />
+
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-brand-tint px-3.5 py-3">
+            <div>
+              <p className="text-[12.5px] font-semibold text-ink">
+                Request alerts
+              </p>
+              <p className="text-[11px] text-ink-muted">
+                Notify me about new delivery requests
+              </p>
+            </div>
+            <Toggle
+              checked={jobAlerts}
+              onChange={setJobAlerts}
+              label="Request alerts"
+            />
+          </div>
+        </Card>
+
+        <Card padding="md" className="space-y-2">
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={() => navigate('/onboarding')}
+            rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
+          >
+            Update partner details
+          </Button>
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => navigate('/support')}
+          >
+            Help & support
+          </Button>
+          <Button
+            variant="danger"
+            fullWidth
+            onClick={handleSignOut}
+            leftIcon={<LogOut className="size-4" aria-hidden="true" />}
+          >
+            Sign out
+          </Button>
+        </Card>
+
+        <p className="px-1 text-center text-[11px] text-ink-soft">
+          Fafo Delivery Partner App · Prototype build
+        </p>
+      </div>
+    </div>
+  )
+}
