@@ -246,21 +246,25 @@ export function HomePage() {
               icon={Package}
               value={String(earningsSummary.deliveriesToday)}
               label="Deliveries"
+              to="/deliveries"
             />
             <StatCard
               icon={Wallet}
               value={formatCurrency(earningsSummary.today)}
               label="Earnings"
+              to="/earnings"
             />
             <StatCard
               icon={Clock3}
               value={dashboardStats.workingHours}
               label="Working hours"
+              to="/history"
             />
             <StatCard
               icon={Star}
               value={dashboardStats.rating.toFixed(1)}
               label="Your rating"
+              to="/profile"
             />
           </div>
         </section>
