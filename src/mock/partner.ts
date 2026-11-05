@@ -6,9 +6,9 @@ import type { Partner } from '../types/partner'
  */
 export const currentPartner: Partner = {
   id: 'FDP-10248',
-  fullName: 'Aparup Das',
-  phone: '+91 98329 79005',
-  email: 'aparup.das@example.com',
+  fullName: 'Rahul Das',
+  phone: '+91 9999955555',
+  email: 'meow.das@example.com',
   city: 'Kolkata',
   avatarUrl: null,
   vehicleType: 'scooter',

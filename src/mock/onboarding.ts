@@ -4,8 +4,8 @@ import type { OnboardingState } from '../types/onboarding'
 export const initialOnboarding: OnboardingState = {
   step: 0,
   status: 'draft',
-  fullName: 'Aparup Das',
-  email: 'aparup.das@example.com',
+  fullName: 'Rahul Das',
+  email: 'meow.das@example.com',
   city: 'Kolkata',
   addressLine: '',
   pincode: '',

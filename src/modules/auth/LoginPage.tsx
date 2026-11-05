@@ -49,7 +49,7 @@ export function LoginPage() {
             type="tel"
             inputMode="numeric"
             autoComplete="tel-national"
-            placeholder="98329 79005"
+            placeholder="99999 55555"
             hint="We will send a 6-digit verification code."
             error={error}
             value={phone}
