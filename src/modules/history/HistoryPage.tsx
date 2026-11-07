@@ -52,6 +52,8 @@ export function HistoryPage() {
       <ScreenHeader
         title="History"
         subtitle="Every delivery you have completed or cancelled"
+        showBack
+        backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">

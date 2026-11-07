@@ -53,6 +53,8 @@ export function ProfilePage() {
       <ScreenHeader
         title="Profile"
         subtitle="Partner account and settings"
+        showBack
+        backTo="/"
         right={<Avatar name={partner.fullName} src={partner.avatarUrl} />}
       />
 
@@ -116,16 +118,23 @@ export function ProfilePage() {
           <div className="flex items-center justify-between gap-2">
             <p className="text-[13px] font-bold text-ink">Vehicle</p>
             <Badge tone="brand" size="sm">
-              {onboarding.vehicle.type}
+              {onboarding.vehicle.type === 'foot'
+                ? 'On foot'
+                : onboarding.vehicle.type}
             </Badge>
           </div>
           <p className="mt-2 text-[12px] text-ink">
-            {onboarding.vehicle.model || 'Model not added'}
-            {onboarding.vehicle.colour ? ` · ${onboarding.vehicle.colour}` : ''}
+            {onboarding.vehicle.type === 'foot'
+              ? 'Walking delivery'
+              : `${onboarding.vehicle.model || 'Model not added'}${onboarding.vehicle.colour ? ` · ${onboarding.vehicle.colour}` : ''}`}
           </p>
           <p className="text-[11.5px] text-ink-muted">
-            {onboarding.vehicle.registrationNumber ||
-              'Registration number not added'}
+            {onboarding.vehicle.type === 'foot'
+              ? 'No vehicle or registration needed'
+              : onboarding.vehicle.type === 'bicycle'
+                ? 'No registration needed'
+                : onboarding.vehicle.registrationNumber ||
+                  'Registration number not added'}
           </p>
         </Card>
 
@@ -194,7 +203,9 @@ export function ProfilePage() {
             onClick={() => navigate('/onboarding')}
             rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
           >
-            Update partner details
+            {onboarding.status === 'draft'
+              ? 'Continue partner setup'
+              : 'View partner details'}
           </Button>
           <Button
             variant="secondary"

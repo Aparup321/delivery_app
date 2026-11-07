@@ -41,6 +41,8 @@ export function EarningsPage() {
       <ScreenHeader
         title="Earnings"
         subtitle="Payouts, incentives and delivery earnings"
+        showBack
+        backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">

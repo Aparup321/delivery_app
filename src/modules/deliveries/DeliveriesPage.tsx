@@ -18,6 +18,8 @@ type DeliveryTab = 'available' | 'active' | 'completed'
 export function DeliveriesPage() {
   const navigate = useNavigate()
   const {
+    isOnline,
+    setOnline,
     requests,
     activeDelivery,
     history,
@@ -29,8 +31,10 @@ export function DeliveriesPage() {
   return (
     <div className="pb-6">
       <ScreenHeader
-        title="Deliveries"
+        title="Orders"
         subtitle="Requests, active jobs and completed work"
+        showBack
+        backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">
@@ -39,14 +43,25 @@ export function DeliveriesPage() {
           value={tab}
           onChange={(value) => setTab(value as DeliveryTab)}
           items={[
-            { id: 'available', label: 'Available', count: requests.length },
+            {
+              id: 'available',
+              label: 'Available',
+              count: isOnline ? requests.length : 0,
+            },
             { id: 'active', label: 'Active', count: activeDelivery ? 1 : 0 },
             { id: 'completed', label: 'Completed' },
           ]}
         />
 
         {tab === 'available' ? (
-          requests.length > 0 ? (
+          !isOnline ? (
+            <EmptyState
+              icon={Package}
+              title="You are offline"
+              description="Go online to receive nearby grocery and restaurant requests."
+              action={<Button onClick={() => setOnline(true)}>Go online</Button>}
+            />
+          ) : requests.length > 0 ? (
             <div className="space-y-3">
               {requests.map((delivery) => (
                 <DeliveryRequestCard

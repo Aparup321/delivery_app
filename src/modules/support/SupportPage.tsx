@@ -41,6 +41,7 @@ export function SupportPage() {
         title="Help & support"
         subtitle="FAQs and support tickets"
         showBack
+        backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">

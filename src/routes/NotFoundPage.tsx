@@ -11,8 +11,9 @@ export function NotFoundPage() {
     <div className="pb-8">
       <ScreenHeader
         title="Page not found"
-        subtitle="This screen is not part of the app yet"
+        subtitle="The link may be broken or the page may have moved"
         showBack
+        backTo="/"
       />
 
       <div className="px-4 pt-6">

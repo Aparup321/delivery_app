@@ -11,6 +11,7 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { EmptyState } from '../../components/common/EmptyState'
+import { Input } from '../../components/common/Input'
 import { SectionHeading } from '../../components/common/SectionHeading'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
 import { MapPreview } from '../../components/deliveries/MapPreview'
@@ -31,8 +32,11 @@ const issueReasons = [
 
 export function ActiveDeliveryPage() {
   const navigate = useNavigate()
-  const { activeDelivery, advanceDelivery, cancelDelivery } = useApp()
+  const { activeDelivery, advanceDelivery, completeDelivery, cancelDelivery } =
+    useApp()
   const [showIssues, setShowIssues] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [otpError, setOtpError] = useState('')
 
   if (!activeDelivery) {
     return (
@@ -41,6 +45,7 @@ export function ActiveDeliveryPage() {
           title="Active delivery"
           subtitle="No delivery in progress"
           showBack
+          backTo="/deliveries"
         />
         <div className="px-4 pt-6">
           <EmptyState
@@ -59,14 +64,26 @@ export function ActiveDeliveryPage() {
   }
 
   const actionLabel = nextDeliveryAction[activeDelivery.status]
-  const isFinalStep = activeDelivery.status === 'in_transit'
+  const isAwaitingDropCode = activeDelivery.status === 'drop_arrived'
 
   function handleAdvance() {
     advanceDelivery()
+  }
 
-    if (isFinalStep) {
-      navigate('/history')
+  function handleComplete() {
+    if (otp.length !== 4) {
+      setOtpError('Enter the 4-digit delivery code from the customer.')
+      return
     }
+
+    if (!completeDelivery(otp)) {
+      setOtpError('That code does not match. Check with the customer and try again.')
+      return
+    }
+
+    setOtp('')
+    setOtpError('')
+    navigate('/history')
   }
 
   function handleCancel(reason: string) {
@@ -80,6 +97,7 @@ export function ActiveDeliveryPage() {
         title="Active delivery"
         subtitle={activeDelivery.id}
         showBack
+        backTo="/deliveries"
         right={
           <Badge tone="brand" size="sm">
             {deliveryStatusLabels[activeDelivery.status]}
@@ -171,9 +189,42 @@ export function ActiveDeliveryPage() {
         ) : null}
 
         <div className="space-y-2">
-          <Button fullWidth size="lg" onClick={handleAdvance}>
-            {actionLabel ?? 'Delivery completed'}
-          </Button>
+          {isAwaitingDropCode ? (
+            <Card padding="md">
+              <SectionHeading
+                title="Verify delivery OTP"
+                subtitle="Ask the customer for the 4-digit code to close this delivery."
+              />
+              <div className="mt-3">
+                <Input
+                  label="Delivery OTP"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={4}
+                  placeholder="4-digit code"
+                  value={otp}
+                  error={otpError}
+                  hint="Demo build: use 4821 to complete the delivery."
+                  onChange={(event) => {
+                    setOtp(event.target.value.replace(/\D/g, ''))
+                    setOtpError('')
+                  }}
+                />
+              </div>
+              <Button
+                className="mt-3"
+                fullWidth
+                size="lg"
+                onClick={handleComplete}
+              >
+                Complete delivery
+              </Button>
+            </Card>
+          ) : (
+            <Button fullWidth size="lg" onClick={handleAdvance}>
+              {actionLabel ?? 'Delivery completed'}
+            </Button>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <Button
