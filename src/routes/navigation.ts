@@ -12,7 +12,7 @@ export interface NavItem {
 /** Bottom navigation items, in display order. */
 export const primaryNavItems: NavItem[] = [
   { label: 'Home', to: '/', icon: Home, end: true },
-  { label: 'Deliveries', to: '/deliveries', icon: Package },
+  { label: 'Orders', to: '/deliveries', icon: Package },
   { label: 'History', to: '/history', icon: History },
   { label: 'Earnings', to: '/earnings', icon: Wallet },
   { label: 'Profile', to: '/profile', icon: UserRound },
