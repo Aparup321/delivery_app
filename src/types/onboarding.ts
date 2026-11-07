@@ -29,6 +29,8 @@ export interface OnboardingState {
   status: OnboardingStatus
   fullName: string
   email: string
+  /** ISO date (yyyy-mm-dd) entered on the personal step. */
+  dateOfBirth: string
   city: string
   addressLine: string
   pincode: string

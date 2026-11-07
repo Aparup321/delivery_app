@@ -6,6 +6,7 @@ export const initialOnboarding: OnboardingState = {
   status: 'draft',
   fullName: 'Rahul Das',
   email: 'meow.das@example.com',
+  dateOfBirth: '',
   city: 'Kolkata',
   addressLine: '',
   pincode: '',
@@ -26,22 +27,22 @@ export const initialOnboarding: OnboardingState = {
     accountNumber: '',
     ifsc: '',
   },
-  training: [false, false, false],
+  training: [false, false, false, false, false],
   submittedAt: null,
 }
 
 export const trainingTopics = [
-  'Delivery and food safety basics',
-  'Customer communication and etiquette',
-  'Emergency and issue reporting',
+  { title: 'Welcome to PicDrop + HopNgo', duration: '2 min' },
+  { title: 'How to Accept Delivery Orders', duration: '3 min' },
+  { title: 'Pickup & Delivery Process', duration: '4 min' },
+  { title: 'Customer Interaction Guidelines', duration: '2 min' },
+  { title: 'Delivery Safety & Best Practices', duration: '3 min' },
 ]
 
 export const onboardingSteps = [
   { id: 'personal', label: 'Personal' },
-  { id: 'address', label: 'Address' },
   { id: 'kyc', label: 'KYC' },
   { id: 'vehicle', label: 'Vehicle' },
-  { id: 'bank', label: 'Bank' },
   { id: 'training', label: 'Training' },
   { id: 'review', label: 'Review' },
 ]

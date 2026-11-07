@@ -2,7 +2,7 @@
 export type PartnerStatus = 'pending' | 'active' | 'paused'
 
 /** Vehicle a partner uses for deliveries. */
-export type VehicleType = 'bicycle' | 'scooter' | 'bike'
+export type VehicleType = 'foot' | 'bicycle' | 'scooter' | 'bike'
 
 /**
  * Delivery partner profile.

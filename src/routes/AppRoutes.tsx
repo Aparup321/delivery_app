@@ -23,12 +23,12 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="onboarding" element={<OnboardingPage />} />
           <Route path="deliveries" element={<DeliveriesPage />} />
           <Route path="deliveries/active" element={<ActiveDeliveryPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="earnings" element={<EarningsPage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="onboarding" element={<OnboardingPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="*" element={<NotFoundPage />} />

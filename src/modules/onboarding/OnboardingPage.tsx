@@ -1,23 +1,33 @@
 import { useState } from 'react'
-import { BadgeCheck, Check, FileText } from 'lucide-react'
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Bike,
+  Check,
+  Clock3,
+  FileText,
+  Footprints,
+  Play,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
-import { ProgressBar } from '../../components/common/ProgressBar'
-import { Select } from '../../components/common/Select'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { onboardingSteps, trainingTopics } from '../../mock/onboarding'
 import type { DocumentKey, OnboardingState } from '../../types/onboarding'
+import { cn } from '../../utils/cn'
 import { formatDate } from '../../utils/format'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PINCODE_PATTERN = /^\d{6}$/
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/
-const REGISTRATION_PATTERN = /^[A-Z]{2}[- ]?\d{1,2}[- ]?[A-Z]{1,2}[- ]?\d{4}$/i
+const REGISTRATION_PATTERN =
+  /^[A-Z]{2}[- ]?\d{1,2}[- ]?[A-Z]{1,2}[- ]?\d{4}$/i
 
 const documentFields: Array<{
   key: DocumentKey
@@ -28,10 +38,15 @@ const documentFields: Array<{
   {
     key: 'aadhaar',
     title: 'Aadhaar card',
-    hint: 'Front side, JPG or PDF',
+    hint: 'Front and back, JPG or PDF',
     required: true,
   },
-  { key: 'pan', title: 'PAN card', hint: 'Clear photo of the card', required: true },
+  {
+    key: 'pan',
+    title: 'PAN card',
+    hint: 'Clear photo of the card',
+    required: true,
+  },
   {
     key: 'licence',
     title: 'Driving licence',
@@ -46,6 +61,17 @@ const documentFields: Array<{
   },
 ]
 
+const vehicleOptions: Array<{
+  value: OnboardingState['vehicle']['type']
+  label: string
+  icon: LucideIcon
+}> = [
+  { value: 'bike', label: 'Bike', icon: Bike },
+  { value: 'scooter', label: 'Scooter', icon: Bike },
+  { value: 'bicycle', label: 'Bicycle', icon: Bike },
+  { value: 'foot', label: 'On foot', icon: Footprints },
+]
+
 function validateStep(step: number, state: OnboardingState): string {
   switch (step) {
     case 0:
@@ -55,11 +81,35 @@ function validateStep(step: number, state: OnboardingState): string {
       if (!EMAIL_PATTERN.test(state.email)) {
         return 'Enter a valid email address.'
       }
+      if (!state.dateOfBirth) {
+        return 'Enter your date of birth.'
+      }
+
+      const dateOfBirth = new Date(`${state.dateOfBirth}T00:00:00`)
+      if (Number.isNaN(dateOfBirth.getTime())) {
+        return 'Enter a valid date of birth.'
+      }
+
+      const today = new Date()
+      if (dateOfBirth > today) {
+        return 'Date of birth cannot be in the future.'
+      }
+
+      let age = today.getFullYear() - dateOfBirth.getFullYear()
+      const monthDelta = today.getMonth() - dateOfBirth.getMonth()
+      if (
+        monthDelta < 0 ||
+        (monthDelta === 0 && today.getDate() < dateOfBirth.getDate())
+      ) {
+        age -= 1
+      }
+
+      if (age < 18) {
+        return 'You must be at least 18 years old to deliver with Fafo.'
+      }
       if (!state.city.trim()) {
         return 'Enter your city.'
       }
-      return ''
-    case 1:
       if (state.addressLine.trim().length < 8) {
         return 'Enter your current address.'
       }
@@ -67,23 +117,13 @@ function validateStep(step: number, state: OnboardingState): string {
         return 'Enter a 6-digit PIN code.'
       }
       return ''
-    case 2:
+    case 1:
       if (!state.documents.aadhaar) {
         return 'Upload your Aadhaar card to continue.'
       }
       if (!state.documents.pan) {
         return 'Upload your PAN card to continue.'
       }
-      return ''
-    case 3:
-      if (!state.vehicle.model.trim()) {
-        return 'Enter your vehicle model.'
-      }
-      if (!REGISTRATION_PATTERN.test(state.vehicle.registrationNumber)) {
-        return 'Enter a valid registration number, for example WB02AB1234.'
-      }
-      return ''
-    case 4:
       if (state.bank.accountHolder.trim().length < 3) {
         return "Enter the account holder's name."
       }
@@ -94,7 +134,22 @@ function validateStep(step: number, state: OnboardingState): string {
         return 'Enter a valid IFSC code, for example HDFC0001234.'
       }
       return ''
-    case 5:
+    case 2: {
+      const needsRegistration =
+        state.vehicle.type === 'bike' || state.vehicle.type === 'scooter'
+
+      if (state.vehicle.type !== 'foot' && !state.vehicle.model.trim()) {
+        return 'Enter your vehicle model.'
+      }
+      if (
+        needsRegistration &&
+        !REGISTRATION_PATTERN.test(state.vehicle.registrationNumber)
+      ) {
+        return 'Enter a valid registration number, for example WB02AB1234.'
+      }
+      return ''
+    }
+    case 3:
       if (state.training.some((completed) => !completed)) {
         return 'Complete every training topic to continue.'
       }
@@ -146,7 +201,6 @@ export function OnboardingPage() {
     }
 
     submitOnboarding()
-    navigate('/')
   }
 
   if (isSubmitted) {
@@ -156,6 +210,7 @@ export function OnboardingPage() {
           title="Partner setup"
           subtitle="Application submitted"
           showBack
+          backTo="/"
         />
 
         <div className="px-4 pt-6">
@@ -197,130 +252,196 @@ export function OnboardingPage() {
 
   return (
     <div className="pb-8">
-      <ScreenHeader
-        title="Partner setup"
-        subtitle={`Step ${step + 1} of ${onboardingSteps.length} · ${onboardingSteps[step].label}`}
-        showBack
-      />
+      <header className="relative overflow-hidden rounded-b-[1.75rem] bg-brand-gradient px-4 pb-5 pt-6 text-white">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Go back"
+            onClick={handleBack}
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          >
+            <ArrowLeft className="size-5" aria-hidden="true" />
+          </button>
+          <h1 className="text-[17px] font-bold tracking-tight">
+            Partner Onboarding
+          </h1>
+        </div>
+
+        <div className="relative mt-5">
+          <span
+            aria-hidden="true"
+            className="absolute left-5 right-5 top-3.5 h-px bg-white/25"
+          />
+          <ol className="relative flex justify-between">
+            {onboardingSteps.map((item, index) => {
+              const isDone = index < step
+              const isActive = index === step
+
+              return (
+                <li
+                  key={item.id}
+                  className="flex w-full flex-col items-center gap-1.5"
+                >
+                  <span
+                    className={cn(
+                      'grid size-7 place-items-center rounded-full border text-[11px] font-bold',
+                      isDone
+                        ? 'border-white bg-white text-brand-deep'
+                        : isActive
+                          ? 'border-white bg-white text-brand-deep ring-4 ring-white/20'
+                          : 'border-white/35 bg-white/10 text-white/80',
+                    )}
+                  >
+                    {isDone ? (
+                      <Check className="size-3.5" aria-hidden="true" />
+                    ) : (
+                      index + 1
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-[10.5px] font-semibold',
+                      isDone || isActive ? 'text-white' : 'text-white/70',
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+      </header>
 
       <div className="space-y-4 px-4 pt-5">
-        <ProgressBar
-          value={step + 1}
-          max={onboardingSteps.length}
-          hint={`${step + 1} of ${onboardingSteps.length} steps`}
-        />
-
         {step === 0 ? (
-          <Card padding="md" className="space-y-3">
-            <Input
-              label="Full name"
-              required
-              value={onboarding.fullName}
-              placeholder="Name as on documents"
-              onChange={(event) =>
-                updateOnboarding({ fullName: event.target.value })
-              }
-            />
-            <Input
-              label="Email address"
-              type="email"
-              required
-              value={onboarding.email}
-              placeholder="you@example.com"
-              onChange={(event) =>
-                updateOnboarding({ email: event.target.value })
-              }
-            />
-            <Input
-              label="City"
-              required
-              value={onboarding.city}
-              placeholder="Kolkata"
-              onChange={(event) =>
-                updateOnboarding({ city: event.target.value })
-              }
-            />
-            <Input
-              label="Mobile number"
-              value={session ? `+91 ${session.phone}` : ''}
-              hint="Your verified number cannot be changed here."
-              readOnly
-              disabled
-            />
-          </Card>
+          <>
+            <div>
+              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+                Personal Details
+              </h2>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                Tell us about yourself
+              </p>
+            </div>
+
+            <Card padding="md" className="space-y-3">
+              <Input
+                label="Full name"
+                required
+                value={onboarding.fullName}
+                placeholder="Name as on documents"
+                onChange={(event) =>
+                  updateOnboarding({ fullName: event.target.value })
+                }
+              />
+              <Input
+                label="Mobile number"
+                value={session ? `+91 ${session.phone}` : ''}
+                hint="Your verified number cannot be changed here."
+                readOnly
+                disabled
+              />
+              <Input
+                label="Email"
+                type="email"
+                required
+                value={onboarding.email}
+                placeholder="you@example.com"
+                onChange={(event) =>
+                  updateOnboarding({ email: event.target.value })
+                }
+              />
+              <Input
+                label="Date of birth"
+                type="date"
+                required
+                value={onboarding.dateOfBirth}
+                onChange={(event) =>
+                  updateOnboarding({ dateOfBirth: event.target.value })
+                }
+              />
+              <Input
+                label="City"
+                required
+                value={onboarding.city}
+                placeholder="Kolkata"
+                onChange={(event) =>
+                  updateOnboarding({ city: event.target.value })
+                }
+              />
+              <Input
+                label="Address"
+                required
+                value={onboarding.addressLine}
+                placeholder="House, street, area"
+                onChange={(event) =>
+                  updateOnboarding({ addressLine: event.target.value })
+                }
+              />
+              <Input
+                label="PIN code"
+                required
+                inputMode="numeric"
+                maxLength={6}
+                value={onboarding.pincode}
+                placeholder="700091"
+                onChange={(event) =>
+                  updateOnboarding({
+                    pincode: event.target.value.replace(/\D/g, '').slice(0, 6),
+                  })
+                }
+              />
+            </Card>
+          </>
         ) : null}
 
         {step === 1 ? (
-          <Card padding="md" className="space-y-3">
-            <Input
-              label="Current address"
-              required
-              value={onboarding.addressLine}
-              placeholder="House, street, area"
-              onChange={(event) =>
-                updateOnboarding({ addressLine: event.target.value })
-              }
-            />
-            <Input
-              label="PIN code"
-              required
-              inputMode="numeric"
-              maxLength={6}
-              value={onboarding.pincode}
-              placeholder="700091"
-              onChange={(event) =>
-                updateOnboarding({
-                  pincode: event.target.value.replace(/\D/g, '').slice(0, 6),
-                })
-              }
-            />
-            <Input
-              label="City"
-              value={onboarding.city}
-              readOnly
-              disabled
-              hint="Change your city from the Personal step."
-            />
-          </Card>
-        ) : null}
+          <>
+            <div>
+              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+                KYC Verification
+              </h2>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                Upload clear, valid documents for verification
+              </p>
+            </div>
 
-        {step === 2 ? (
-          <div className="space-y-2.5">
-            <p className="text-[12px] leading-relaxed text-ink-muted">
-              Upload clear photos or PDFs. Documents are only used to verify
-              your identity.
-            </p>
+            <div className="space-y-2.5">
+              {documentFields.map((field) => {
+                const fileName = onboarding.documents[field.key]
 
-            {documentFields.map((field) => {
-              const fileName = onboarding.documents[field.key]
+                return (
+                  <label key={field.key} className="block cursor-pointer">
+                    <Card padding="sm">
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-deep">
+                          <FileText className="size-4" aria-hidden="true" />
+                        </span>
 
-              return (
-                <Card key={field.key} padding="sm">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-deep">
-                      <FileText className="size-4" aria-hidden="true" />
-                    </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[12.5px] font-semibold text-ink">
+                            {field.title}
+                            {field.required ? (
+                              <span className="text-danger"> *</span>
+                            ) : null}
+                          </p>
+                          <p className="truncate text-[11px] text-ink-muted">
+                            {fileName || field.hint}
+                          </p>
+                        </div>
 
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12.5px] font-semibold text-ink">
-                        {field.title}
-                        {field.required ? (
-                          <span className="text-danger"> *</span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-[11px] text-ink-muted">
-                        {fileName || field.hint}
-                      </p>
-                    </div>
+                        {fileName ? (
+                          <span className="grid size-6 place-items-center rounded-full bg-success text-white">
+                            <Check className="size-3.5" aria-hidden="true" />
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-brand">
+                            Upload
+                          </span>
+                        )}
+                      </div>
 
-                    {fileName ? (
-                      <Badge tone="success" size="sm">
-                        Uploaded
-                      </Badge>
-                    ) : null}
-
-                    <label className="cursor-pointer rounded-xl bg-brand-soft px-2.5 py-1.5 text-[11px] font-semibold text-brand-deep transition-colors hover:bg-[#e3d8ff]">
-                      {fileName ? 'Replace' : 'Upload'}
                       <input
                         type="file"
                         accept="image/*,.pdf"
@@ -338,244 +459,373 @@ export function OnboardingPage() {
                           })
                         }}
                       />
-                    </label>
-                  </div>
-                </Card>
-              )
-            })}
-          </div>
+                    </Card>
+                  </label>
+                )
+              })}
+            </div>
+
+            <Card padding="sm" className="border-warning/25 bg-warning-soft">
+              <div className="flex items-start gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-warning/15 text-warning">
+                  <Clock3 className="size-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-bold text-ink">
+                    Verification status
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+                    Documents are checked after you submit, usually within one
+                    working day.
+                  </p>
+                </div>
+                <Badge tone="warning" size="sm">
+                  Pending
+                </Badge>
+              </div>
+            </Card>
+
+            <Card padding="md" className="space-y-3">
+              <p className="text-[13px] font-bold text-ink">
+                Bank account details
+              </p>
+              <Input
+                label="Account holder name"
+                required
+                value={onboarding.bank.accountHolder}
+                placeholder="Name as on the bank account"
+                onChange={(event) =>
+                  updateOnboarding({
+                    bank: {
+                      ...onboarding.bank,
+                      accountHolder: event.target.value,
+                    },
+                  })
+                }
+              />
+              <Input
+                label="Account number"
+                required
+                inputMode="numeric"
+                value={onboarding.bank.accountNumber}
+                placeholder="50100 1234 5678"
+                onChange={(event) =>
+                  updateOnboarding({
+                    bank: {
+                      ...onboarding.bank,
+                      accountNumber: event.target.value
+                        .replace(/\D/g, '')
+                        .slice(0, 18),
+                    },
+                  })
+                }
+              />
+              <Input
+                label="IFSC code"
+                required
+                value={onboarding.bank.ifsc}
+                placeholder="HDFC0001234"
+                hint="Find this on your cheque book or bank app."
+                onChange={(event) =>
+                  updateOnboarding({
+                    bank: {
+                      ...onboarding.bank,
+                      ifsc: event.target.value.toUpperCase().slice(0, 11),
+                    },
+                  })
+                }
+              />
+            </Card>
+          </>
+        ) : null}
+
+        {step === 2 ? (
+          <>
+            <div>
+              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+                Vehicle Details
+              </h2>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                Provide your vehicle and licence information
+              </p>
+            </div>
+
+            <Card padding="md" className="space-y-4">
+              <div>
+                <p className="mb-2 text-[13px] font-semibold text-ink">
+                  Vehicle type <span className="text-danger">*</span>
+                </p>
+                <div
+                  role="radiogroup"
+                  aria-label="Vehicle type"
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {vehicleOptions.map(({ value, label, icon: Icon }) => {
+                    const selected = onboarding.vehicle.type === value
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() =>
+                          updateOnboarding({
+                            vehicle: { ...onboarding.vehicle, type: value },
+                          })
+                        }
+                        className={cn(
+                          'flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-[12px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40',
+                          selected
+                            ? 'border-brand bg-brand-tint text-brand-deep'
+                            : 'border-line bg-surface text-ink hover:border-brand/30',
+                        )}
+                      >
+                        <Icon className="size-5" aria-hidden="true" />
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {onboarding.vehicle.type === 'bike' ||
+              onboarding.vehicle.type === 'scooter' ? (
+                <Input
+                  label="Registration number"
+                  required
+                  value={onboarding.vehicle.registrationNumber}
+                  placeholder="WB02AB1234"
+                  hint="Enter the number printed on the number plate."
+                  onChange={(event) =>
+                    updateOnboarding({
+                      vehicle: {
+                        ...onboarding.vehicle,
+                        registrationNumber: event.target.value.toUpperCase(),
+                      },
+                    })
+                  }
+                />
+              ) : (
+                <p className="text-[11.5px] leading-relaxed text-ink-muted">
+                  {onboarding.vehicle.type === 'foot'
+                    ? 'Walking deliveries do not need a vehicle registration.'
+                    : 'Bicycles do not need a registration number.'}
+                </p>
+              )}
+              {onboarding.vehicle.type !== 'foot' ? (
+                <>
+                  <Input
+                    label="Vehicle model"
+                    required
+                    value={onboarding.vehicle.model}
+                    placeholder="Honda Activa 6G"
+                    onChange={(event) =>
+                      updateOnboarding({
+                        vehicle: {
+                          ...onboarding.vehicle,
+                          model: event.target.value,
+                        },
+                      })
+                    }
+                  />
+                  <Input
+                    label="Vehicle colour"
+                    value={onboarding.vehicle.colour}
+                    placeholder="Black"
+                    onChange={(event) =>
+                      updateOnboarding({
+                        vehicle: {
+                          ...onboarding.vehicle,
+                          colour: event.target.value,
+                        },
+                      })
+                    }
+                  />
+                </>
+              ) : null}
+            </Card>
+          </>
         ) : null}
 
         {step === 3 ? (
-          <Card padding="md" className="space-y-3">
-            <Select
-              label="Vehicle type"
-              required
-              value={onboarding.vehicle.type}
-              options={[
-                { value: 'scooter', label: 'Scooter' },
-                { value: 'bike', label: 'Motorcycle' },
-                { value: 'bicycle', label: 'Bicycle' },
-              ]}
-              onChange={(event) =>
-                updateOnboarding({
-                  vehicle: {
-                    ...onboarding.vehicle,
-                    type: event.target.value as OnboardingState['vehicle']['type'],
-                  },
-                })
-              }
-            />
-            <Input
-              label="Vehicle model"
-              required
-              value={onboarding.vehicle.model}
-              placeholder="Honda Activa 6G"
-              onChange={(event) =>
-                updateOnboarding({
-                  vehicle: { ...onboarding.vehicle, model: event.target.value },
-                })
-              }
-            />
-            <Input
-              label="Colour"
-              value={onboarding.vehicle.colour}
-              placeholder="Grey"
-              onChange={(event) =>
-                updateOnboarding({
-                  vehicle: { ...onboarding.vehicle, colour: event.target.value },
-                })
-              }
-            />
-            <Input
-              label="Registration number"
-              required
-              value={onboarding.vehicle.registrationNumber}
-              placeholder="WB02AB1234"
-              hint="Enter the number printed on the number plate."
-              onChange={(event) =>
-                updateOnboarding({
-                  vehicle: {
-                    ...onboarding.vehicle,
-                    registrationNumber: event.target.value.toUpperCase(),
-                  },
-                })
-              }
-            />
-          </Card>
+          <>
+            <div>
+              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+                Training &amp; Onboarding
+              </h2>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                Complete every module before your account is approved
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              {trainingTopics.map((topic, index) => {
+                const isComplete = Boolean(onboarding.training[index])
+
+                return (
+                  <button
+                    key={topic.title}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={isComplete}
+                    onClick={() => {
+                      const next = [...onboarding.training]
+                      next[index] = !next[index]
+                      updateOnboarding({ training: next })
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left shadow-card transition-colors hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                  >
+                    <span
+                      className={cn(
+                        'grid size-9 shrink-0 place-items-center rounded-full',
+                        isComplete
+                          ? 'bg-brand-soft text-brand-deep'
+                          : 'bg-brand-tint text-brand',
+                      )}
+                    >
+                      <Play className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12.5px] font-semibold text-ink">
+                        {topic.title}
+                      </span>
+                      <span className="block text-[11px] text-ink-muted">
+                        {topic.duration}
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        'grid size-6 shrink-0 place-items-center rounded-full',
+                        isComplete
+                          ? 'bg-success text-white'
+                          : 'border-2 border-line text-transparent',
+                      )}
+                    >
+                      <Check className="size-3.5" aria-hidden="true" />
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
         ) : null}
 
         {step === 4 ? (
-          <Card padding="md" className="space-y-3">
-            <Input
-              label="Account holder name"
-              required
-              value={onboarding.bank.accountHolder}
-              placeholder="Name as on the bank account"
-              onChange={(event) =>
-                updateOnboarding({
-                  bank: {
-                    ...onboarding.bank,
-                    accountHolder: event.target.value,
-                  },
-                })
-              }
-            />
-            <Input
-              label="Account number"
-              required
-              inputMode="numeric"
-              value={onboarding.bank.accountNumber}
-              placeholder="50100 1234 5678"
-              onChange={(event) =>
-                updateOnboarding({
-                  bank: {
-                    ...onboarding.bank,
-                    accountNumber: event.target.value
-                      .replace(/\D/g, '')
-                      .slice(0, 18),
-                  },
-                })
-              }
-            />
-            <Input
-              label="IFSC code"
-              required
-              value={onboarding.bank.ifsc}
-              placeholder="HDFC0001234"
-              hint="Find this on your cheque book or bank app."
-              onChange={(event) =>
-                updateOnboarding({
-                  bank: {
-                    ...onboarding.bank,
-                    ifsc: event.target.value.toUpperCase().slice(0, 11),
-                  },
-                })
-              }
-            />
-          </Card>
-        ) : null}
-
-        {step === 5 ? (
-          <div className="space-y-2.5">
-            <p className="text-[12px] leading-relaxed text-ink-muted">
-              Read each topic and mark it complete. Training must be finished
-              before your account can be approved.
-            </p>
-
-            {trainingTopics.map((topic, index) => {
-              const isComplete = onboarding.training[index]
-
-              return (
-                <button
-                  key={topic}
-                  type="button"
-                  role="checkbox"
-                  aria-checked={isComplete}
-                  onClick={() => {
-                    const next = [...onboarding.training]
-                    next[index] = !next[index]
-                    updateOnboarding({ training: next })
-                  }}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                >
-                  <span
-                    className={
-                      isComplete
-                        ? 'grid size-6 shrink-0 place-items-center rounded-full bg-success text-white'
-                        : 'grid size-6 shrink-0 place-items-center rounded-full border-2 border-line text-transparent'
-                    }
-                  >
-                    <Check className="size-3.5" aria-hidden="true" />
-                  </span>
-                  <span className="text-[12.5px] font-medium text-ink">
-                    {topic}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        ) : null}
-
-        {step === 6 ? (
-          <Card padding="md" className="space-y-4">
+          <>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                Personal
+              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+                Review &amp; Submit
+              </h2>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                Check your details before sending them for verification
               </p>
-              <div className="mt-1.5 space-y-1 text-[12px]">
-                <div className="flex justify-between gap-3">
-                  <span className="text-ink-muted">Full name</span>
-                  <span className="font-medium text-ink">
-                    {onboarding.fullName}
-                  </span>
+            </div>
+
+            <Card padding="md" className="space-y-4">
+              <section>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                    Personal
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => updateOnboarding({ step: 0 })}
+                    className="text-[11.5px] font-semibold text-brand"
+                  >
+                    Edit
+                  </button>
                 </div>
-                <div className="flex justify-between gap-3">
-                  <span className="text-ink-muted">Email</span>
-                  <span className="truncate font-medium text-ink">
-                    {onboarding.email}
-                  </span>
+                <p className="mt-1.5 text-[12.5px] font-semibold text-ink">
+                  {onboarding.fullName}
+                </p>
+                <p className="text-[11.5px] text-ink-muted">
+                  {onboarding.email}
+                  {onboarding.dateOfBirth
+                    ? ` · ${formatDate(onboarding.dateOfBirth)}`
+                    : ''}
+                </p>
+                <p className="text-[11.5px] text-ink-muted">
+                  {onboarding.addressLine}, {onboarding.city}{' '}
+                  {onboarding.pincode}
+                </p>
+              </section>
+
+              <section className="border-t border-line pt-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                    KYC &amp; bank
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => updateOnboarding({ step: 1 })}
+                    className="text-[11.5px] font-semibold text-brand"
+                  >
+                    Edit
+                  </button>
                 </div>
-                <div className="flex justify-between gap-3">
-                  <span className="text-ink-muted">City</span>
-                  <span className="font-medium text-ink">
-                    {onboarding.city}
-                  </span>
+                <p className="mt-1.5 text-[11.5px] text-ink-muted">
+                  Aadhaar {onboarding.documents.aadhaar ? 'uploaded' : 'missing'}{' '}
+                  · PAN {onboarding.documents.pan ? 'uploaded' : 'missing'}
+                </p>
+                <p className="text-[11.5px] text-ink-muted">
+                  {onboarding.bank.accountHolder} ····{' '}
+                  {onboarding.bank.accountNumber.slice(-4)}
+                </p>
+              </section>
+
+              <section className="border-t border-line pt-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                    Vehicle
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => updateOnboarding({ step: 2 })}
+                    className="text-[11.5px] font-semibold text-brand"
+                  >
+                    Edit
+                  </button>
                 </div>
-              </div>
-            </div>
+                <p className="mt-1.5 text-[12px] text-ink">
+                  {onboarding.vehicle.type === 'foot'
+                    ? 'Walking delivery partner'
+                    : `${onboarding.vehicle.model} · ${onboarding.vehicle.colour}`}
+                </p>
+                <p className="text-[11.5px] text-ink-muted">
+                  {onboarding.vehicle.type === 'foot'
+                    ? 'On foot · no vehicle or registration needed'
+                    : onboarding.vehicle.type === 'bicycle'
+                      ? `Bicycle · ${onboarding.vehicle.colour}`
+                      : `${onboarding.vehicle.registrationNumber} · ${onboarding.vehicle.type}`}
+                </p>
+              </section>
 
-            <div className="border-t border-line pt-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                Address
-              </p>
-              <p className="mt-1.5 text-[12px] font-medium text-ink">
-                {onboarding.addressLine}
-              </p>
-              <p className="text-[12px] text-ink-muted">{onboarding.pincode}</p>
-            </div>
+              <section className="border-t border-line pt-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                    Training
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => updateOnboarding({ step: 3 })}
+                    className="text-[11.5px] font-semibold text-brand"
+                  >
+                    Edit
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11.5px] text-ink-muted">
+                  {onboarding.training.filter(Boolean).length} of{' '}
+                  {trainingTopics.length} modules complete
+                </p>
+              </section>
 
-            <div className="border-t border-line pt-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                Documents
+              <p className="border-t border-line pt-3 text-[11.5px] leading-relaxed text-ink-muted">
+                By submitting, you confirm these details are correct. The review
+                team may contact you for clearer documents.
               </p>
-              <p className="mt-1.5 text-[12px] text-ink">
-                Aadhaar: {onboarding.documents.aadhaar || 'Not uploaded'}
-              </p>
-              <p className="text-[12px] text-ink">
-                PAN: {onboarding.documents.pan || 'Not uploaded'}
-              </p>
-            </div>
-
-            <div className="border-t border-line pt-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                Vehicle
-              </p>
-              <p className="mt-1.5 text-[12px] text-ink">
-                {onboarding.vehicle.model} · {onboarding.vehicle.colour}
-              </p>
-              <p className="text-[12px] text-ink-muted">
-                {onboarding.vehicle.registrationNumber}
-              </p>
-            </div>
-
-            <div className="border-t border-line pt-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                Bank
-              </p>
-              <p className="mt-1.5 text-[12px] text-ink">
-                {onboarding.bank.accountHolder}
-              </p>
-              <p className="text-[12px] text-ink-muted">
-                {onboarding.bank.accountNumber} · {onboarding.bank.ifsc}
-              </p>
-            </div>
-
-            <p className="border-t border-line pt-3 text-[11.5px] leading-relaxed text-ink-muted">
-              By submitting, you confirm these details are correct. The review
-              team may contact you for clearer documents.
-            </p>
-          </Card>
+            </Card>
+          </>
         ) : null}
 
         {error ? (
