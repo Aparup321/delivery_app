@@ -7,6 +7,7 @@ export const initialOnboarding: OnboardingState = {
   fullName: 'Rahul Das',
   email: 'meow.das@example.com',
   dateOfBirth: '',
+  profilePhoto: '',
   city: 'Kolkata',
   addressLine: '',
   pincode: '',

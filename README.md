@@ -66,7 +66,7 @@ material for the project and are not part of the deployed application.
 | Module | What it does | Status |
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP, persisted session, protected routes, logout | Built (mock) |
-| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review | Built (mock) |
+| Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (mock) |
 | KYC & documents | Aadhaar, PAN, licence and RC uploads with review status | Built (mock) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour and registration where applicable | Built (mock) |
 | Training & approval | Training checklist and submitted-application status | Built (mock) |
@@ -116,6 +116,8 @@ shared mock state layer:
 - Session persists across reloads; signing out returns to the login screen.
 - Onboarding progress is saved in `localStorage`, so a half-finished application
   can be resumed.
+- A profile photo is mandatory on the personal step; it is downscaled locally to
+  a 256px preview, shown on Home and Profile, and blocks progress until added.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
   completed or cancelled jobs are added to history.

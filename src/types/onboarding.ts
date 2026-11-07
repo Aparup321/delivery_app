@@ -31,6 +31,8 @@ export interface OnboardingState {
   email: string
   /** ISO date (yyyy-mm-dd) entered on the personal step. */
   dateOfBirth: string
+  /** Downscaled data URL for the required profile photo, or empty. */
+  profilePhoto: string
   city: string
   addressLine: string
   pincode: string

@@ -395,7 +395,8 @@ Firebase is a **later phase**. Until then:
   (`fafo.partner.session`), protected routes that return to the requested screen.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, per-document upload rows,
-  vehicle tiles (bike, scooter, bicycle, on foot) and a submitted/under-review state. Progress is stored under
+  vehicle tiles (bike, scooter, bicycle, on foot), a required profile photo and a
+  submitted/under-review state. Progress is stored under
   `fafo.partner.onboarding`. The flow renders inside the app shell, so the
   bottom navigation is present on every authenticated screen.
 - **Dashboard** — light header, availability switch, three headline stats, six
@@ -419,8 +420,8 @@ Firebase is a **later phase**. Until then:
   uploaded and no review workflow exists.
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
   as demo where they could be mistaken for live data.
-- Onboarding quiz, profile-photo upload, working shifts and service zones are
-  not built.
+- Onboarding quiz, working shifts and service zones are not built. The profile
+  photo is captured (downscaled locally) but not uploaded to storage.
 
 ### Verification (run before handing work back)
 

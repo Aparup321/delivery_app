@@ -55,7 +55,12 @@ export function ProfilePage() {
         subtitle="Partner account and settings"
         showBack
         backTo="/"
-        right={<Avatar name={partner.fullName} src={partner.avatarUrl} />}
+        right={
+          <Avatar
+            name={partner.fullName}
+            src={onboarding.profilePhoto || partner.avatarUrl}
+          />
+        }
       />
 
       <div className="space-y-4 px-4 pt-5">
@@ -79,7 +84,9 @@ export function ProfilePage() {
             </span>
             <span className="flex items-center gap-1">
               <Truck className="size-3.5" aria-hidden="true" />
-              {partner.vehicleType}
+              {onboarding.vehicle.type === 'foot'
+                ? 'On foot'
+                : onboarding.vehicle.type}
             </span>
           </div>
         </Card>

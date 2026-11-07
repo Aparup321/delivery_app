@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import type { ChangeEvent } from 'react'
 import {
   ArrowLeft,
   BadgeCheck,
   Bike,
+  Camera,
   Check,
   Clock3,
   FileText,
@@ -72,9 +74,48 @@ const vehicleOptions: Array<{
   { value: 'foot', label: 'On foot', icon: Footprints },
 ]
 
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+const PHOTO_EDGE = 256
+
+/** Downscales an image file to a small square-safe data URL. */
+function createPhotoPreview(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const image = new Image()
+
+    image.onload = () => {
+      const scale = Math.min(1, PHOTO_EDGE / Math.max(image.width, image.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.width * scale))
+      canvas.height = Math.max(1, Math.round(image.height * scale))
+      const context = canvas.getContext('2d')
+
+      URL.revokeObjectURL(objectUrl)
+
+      if (!context) {
+        reject(new Error('Canvas is unavailable'))
+        return
+      }
+
+      context.drawImage(image, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Image could not be read'))
+    }
+
+    image.src = objectUrl
+  })
+}
+
 function validateStep(step: number, state: OnboardingState): string {
   switch (step) {
     case 0:
+      if (!state.profilePhoto) {
+        return 'Upload a profile photo to continue.'
+      }
       if (state.fullName.trim().length < 3) {
         return 'Enter your full name as it appears on your documents.'
       }
@@ -164,9 +205,37 @@ export function OnboardingPage() {
   const { session } = useAuth()
   const { onboarding, updateOnboarding, submitOnboarding } = useApp()
   const [error, setError] = useState('')
+  const [photoError, setPhotoError] = useState('')
 
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
   const isSubmitted = onboarding.status !== 'draft'
+
+  async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) {
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Choose a JPG or PNG image.')
+      return
+    }
+
+    if (file.size > MAX_PHOTO_BYTES) {
+      setPhotoError('Choose an image smaller than 5 MB.')
+      return
+    }
+
+    try {
+      const preview = await createPhotoPreview(file)
+      updateOnboarding({ profilePhoto: preview })
+      setPhotoError('')
+    } catch {
+      setPhotoError('Could not read that image. Try another file.')
+    }
+  }
 
   function handleBack() {
     setError('')
@@ -323,6 +392,47 @@ export function OnboardingPage() {
               <p className="mt-0.5 text-[12px] text-ink-muted">
                 Tell us about yourself
               </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-1.5">
+              <label className="relative cursor-pointer">
+                <span className="sr-only">Profile photo</span>
+                {onboarding.profilePhoto ? (
+                  <img
+                    src={onboarding.profilePhoto}
+                    alt="Profile photo preview"
+                    className="size-24 rounded-full object-cover ring-4 ring-brand-soft"
+                  />
+                ) : (
+                  <span className="grid size-24 place-items-center rounded-full bg-brand-soft text-brand-deep">
+                    <Camera className="size-8" aria-hidden="true" />
+                  </span>
+                )}
+                <span className="absolute -bottom-0.5 -right-0.5 grid size-8 place-items-center rounded-full bg-brand text-white shadow-card">
+                  <Camera className="size-4" aria-hidden="true" />
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  aria-label="Upload profile photo"
+                  className="sr-only"
+                  onChange={handlePhotoChange}
+                />
+              </label>
+
+              <p className="text-[12.5px] font-semibold text-ink">
+                Profile photo <span className="text-danger">*</span>
+              </p>
+              <p className="text-center text-[11px] text-ink-muted">
+                {onboarding.profilePhoto
+                  ? 'Tap the photo to change it'
+                  : 'Clear front-facing photo, JPG or PNG'}
+              </p>
+              {photoError ? (
+                <p role="alert" className="text-xs font-medium text-danger">
+                  {photoError}
+                </p>
+              ) : null}
             </div>
 
             <Card padding="md" className="space-y-3">
@@ -736,8 +846,21 @@ export function OnboardingPage() {
                     Edit
                   </button>
                 </div>
-                <p className="mt-1.5 text-[12.5px] font-semibold text-ink">
-                  {onboarding.fullName}
+                <div className="mt-1.5 flex items-center gap-2">
+                  {onboarding.profilePhoto ? (
+                    <img
+                      src={onboarding.profilePhoto}
+                      alt=""
+                      className="size-9 rounded-full object-cover"
+                    />
+                  ) : null}
+                  <p className="text-[12.5px] font-semibold text-ink">
+                    {onboarding.fullName}
+                  </p>
+                </div>
+                <p className="text-[11.5px] text-ink-muted">
+                  Profile photo{' '}
+                  {onboarding.profilePhoto ? 'added' : 'missing'}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.email}

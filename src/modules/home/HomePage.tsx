@@ -67,7 +67,7 @@ export function HomePage() {
           >
             <Avatar
               name={partner.fullName}
-              src={partner.avatarUrl}
+              src={onboarding.profilePhoto || partner.avatarUrl}
               className="ring-2 ring-brand-soft"
             />
             <div className="min-w-0">

@@ -8,6 +8,9 @@ backend.
 
 ### Added
 
+- Required profile photo during onboarding. The personal step now blocks
+  progress until a photo is uploaded, stores a downscaled 256px preview, shows
+  it in review, Home and Profile, and rejects non-images or files over 5 MB.
 - On-foot delivery option in onboarding alongside bike, scooter and bicycle.
   Walking partners are not asked for a vehicle model, colour or registration,
   and the profile and review screens show "On foot".
