@@ -369,8 +369,9 @@ Firebase is a **later phase**. Until then:
   `deliveries`, `delivery_types`, `earnings`, `payments`, `notifications`,
   `support_tickets`, `admin_users`.
 - Store file metadata and storage paths, not file contents, in Firestore.
-- Keep configuration in environment variables (`VITE_FIREBASE_*`) with an
-  `.env.example` file. Never commit secrets, service accounts or API keys.
+- Keep configuration in environment variables (`VITE_FIREBASE_*`) with the
+  tracked `.env.example` template. Never commit secrets, service accounts or API
+  keys; `.env` and every other `.env.*` file stay ignored.
 - Authenticate, then restrict reads/writes with Firebase Security Rules so a
   partner can only access their own records; trusted state changes belong in
   Cloud Functions.

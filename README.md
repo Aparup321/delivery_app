@@ -176,7 +176,9 @@ npm install
 ```
 
 No API keys, database or Firebase project are needed — the app runs on local mock
-data.
+data. `.env.example` documents the configuration for the planned backend and map
+integration; copy it to `.env.local` only when that work starts. `.env` and every
+other `.env.*` file stay untracked.
 
 ## 8. Run the project locally
 
