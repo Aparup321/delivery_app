@@ -380,3 +380,77 @@ Firebase is a **later phase**. Until then:
   gating).
 - Keep the frontend usable with mocks if configuration is missing, so demos and
   reviews never depend on live credentials.
+
+---
+
+## 16. Current implementation state and handoff
+
+> Last updated: 7 November 2026. Read this section before starting work; it
+> records what is built, what is intentionally missing, and what an agent
+> picking up the project should do next.
+
+### What is implemented
+
+- **Auth** — mobile number + demo OTP (`123456`), session in `localStorage`
+  (`fafo.partner.session`), protected routes that return to the requested screen.
+- **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
+  Training, Review) with a purple stepper header, per-document upload rows,
+  vehicle tiles (bike, scooter, bicycle, on foot) and a submitted/under-review state. Progress is stored under
+  `fafo.partner.onboarding`. The flow renders inside the app shell, so the
+  bottom navigation is present on every authenticated screen.
+- **Dashboard** — light header, availability switch, three headline stats, six
+  quick actions and a request preview. Requests only appear when online.
+- **Orders** — Available / Active / Completed tabs. Available requests are gated
+  behind availability and the empty state offers a "Go online" action.
+- **Active delivery** — accepted → pickup arrived → picked up → on the way → drop
+  arrived → delivered, with a live timer, route preview, issue reporting and a
+  demo drop OTP (`4821`). Completed and cancelled jobs move to history.
+- **History, earnings, notifications, support, profile** — searchable history,
+  demo earnings, read/unread notifications, FAQ + ticket creation, and profile
+  with documents, language, alerts and sign-out. Every section header has a back
+  control with an explicit fallback; Home is the root and has none.
+
+### Intentionally missing (do not fake these)
+
+- No backend, Firebase, real map provider, push notifications or payments.
+- No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
+  other PicDrop + HopNgo modules and are out of scope here.
+- Document uploads store only the selected file name in local state; no file is
+  uploaded and no review workflow exists.
+- Earnings, payouts, ratings and dashboard totals are demo constants, labelled
+  as demo where they could be mistaken for live data.
+- Onboarding quiz, profile-photo upload, working shifts and service zones are
+  not built.
+
+### Verification (run before handing work back)
+
+```bash
+npm run typecheck   # must pass
+npm run lint        # 0 warnings, 0 errors
+npm run build       # required when routing/config changes
+```
+
+Browser smoke test at 390px and 320px: login → onboarding steps → dashboard
+online/offline → accept a request → advance to drop OTP → notifications →
+support ticket → profile sign-out. Check for horizontal overflow and console
+errors.
+
+### Next recommended work
+
+1. Verification lifecycle (draft → submitted → under review → approved /
+   restricted) with document-level status and eligibility gating.
+2. Onboarding editing after submission (currently the submitted screen is
+   read-only and the profile button says "View partner details").
+3. Persist availability, requests and tickets in the planned service layer when
+   the backend phase starts.
+4. Design alignment for the remaining screens (login, history, support, profile).
+
+### Working agreements that still apply
+
+- The project owner reviews and commits changes; do not commit or push unless
+  explicitly asked. History already exceeds 30 commits, so keep new commits
+  meaningful rather than padding the count.
+- Keep `README.md`, this file, `CHANGELOG.md` and the two `docs/PicDrop-*.md`
+  files current in the same change as behaviour or scope changes.
+- `docs/` and `CHANGELOG.md` may be untracked in the owner's working tree; do
+  not delete them.

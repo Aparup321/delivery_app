@@ -66,13 +66,13 @@ material for the project and are not part of the deployed application.
 | Module | What it does | Status |
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP, persisted session, protected routes, logout | Built (mock) |
-| Onboarding | Seven steps: personal, address, KYC, vehicle, bank, training, review | Built (mock) |
+| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review | Built (mock) |
 | KYC & documents | Aadhaar, PAN, licence and RC uploads with review status | Built (mock) |
-| Vehicle information | Type, model, colour and registration number | Built (mock) |
+| Vehicle information | Bike, scooter, bicycle or on foot; model, colour and registration where applicable | Built (mock) |
 | Training & approval | Training checklist and submitted-application status | Built (mock) |
-| Home dashboard | Online/offline switch, daily stats, request preview, quick actions | Built (mock) |
+| Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (mock) |
 | Delivery requests | Request cards with countdown, accept or reject | Built (mock) |
-| Active delivery | Timeline, status actions, contact and issue reporting | Built (mock) |
+| Active delivery | Timeline, status actions, drop OTP proof, contact and issue reporting | Built (mock) |
 | Map & tracking | Illustrated route preview and distance/ETA | Demo preview |
 | History | Search, status filter and delivery-level earnings | Built (mock) |
 | Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (mock) |
@@ -107,13 +107,20 @@ shared mock state layer:
 
 - `/login` and `/verify-otp` — mobile number entry, 6-digit OTP with a resend
   timer, expiry handling and clear error messages.
-- Protected app shell with Home, Deliveries, History, Earnings, Profile and a
-  404 screen, plus Notifications, Onboarding, Active Delivery and Support.
+- Protected app shell with Home, Orders, History, Earnings, Profile and a
+  404 screen, plus Notifications, Active Delivery, Support and Onboarding, all
+  inside the same shell with the bottom navigation.
+- Every section header carries a back control (Orders, History, Earnings,
+  Profile, Notifications, Support, Active delivery, Onboarding and 404). Home is
+  the app root, so it has no back button.
 - Session persists across reloads; signing out returns to the login screen.
 - Onboarding progress is saved in `localStorage`, so a half-finished application
   can be resumed.
 - Accepting a request moves it into an active delivery with a live status
-  timeline; completing or cancelling it adds the record to history.
+  timeline; the job closes only after the demo drop OTP is verified, and
+  completed or cancelled jobs are added to history.
+- Available requests are only shown while the partner is online; the Orders
+  screen offers a "Go online" action when availability is off.
 - Notifications can be read individually or all at once; support tickets can be
   raised and tracked.
 
@@ -140,7 +147,7 @@ delivery_app/
 │   │                         # notifications, onboarding, support
 │   ├── modules/
 │   │   ├── auth/             # Login and OTP verification
-│   │   ├── onboarding/       # Seven-step partner setup
+│   │   ├── onboarding/       # Five-step partner setup
 │   │   ├── home/             # Dashboard
 │   │   ├── deliveries/       # Requests, active delivery
 │   │   ├── history/          # Delivery history
