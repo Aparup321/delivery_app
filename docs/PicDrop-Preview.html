@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PicDrop — Requirements clean preview · Nomad</title>
+<style>
+  :root{
+    --brand:#713CE0; --brand-deep:#5123A5; --brand-soft:#EEE7FF; --brand-tint:#F6F2FF;
+    --ink:#1B1430; --muted:#6E6789; --soft:#9A93AE; --line:#ECE8F6; --canvas:#F8F7FC;
+    --success:#12A150; --warning:#E08A00; --danger:#E0413E;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--canvas);color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:14.5px;line-height:1.6}
+  .page{max-width:960px;margin:0 auto;padding:36px 22px 72px}
+
+  /* Hero */
+  .hero{background:linear-gradient(135deg,var(--brand-deep),var(--brand));color:#fff;
+    border-radius:20px;padding:30px 30px 26px;box-shadow:0 10px 30px rgba(81,35,165,.18)}
+  .hero .kicker{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+  .hero h1{margin:6px 0 4px;font-size:27px;font-weight:800;letter-spacing:-.02em}
+  .hero .sub{margin:0;font-size:13.5px;opacity:.92;max-width:640px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+    padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600}
+  .chip.warn{background:rgba(255,255,255,.94);color:var(--brand-deep)}
+
+  /* TOC */
+  .toc{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+  .toc h2{margin:0 0 12px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .toc-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px 28px}
+  @media(max-width:720px){.toc-cols{grid-template-columns:1fr}}
+  .toc h3{margin:2px 0 6px;font-size:13.5px;color:var(--brand-deep)}
+  .toc ol{margin:0;padding-left:18px}
+  .toc li{margin:2px 0}
+  .toc a{color:var(--brand-deep);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+
+  /* Doc headers */
+  .doc-head{display:flex;align-items:center;gap:12px;margin:34px 0 4px;flex-wrap:wrap}
+  .doc-badge{background:var(--brand-deep);color:#fff;font-weight:700;font-size:12px;
+    padding:5px 12px;border-radius:999px;letter-spacing:.04em}
+  .doc-head h2{margin:0;font-size:21px;letter-spacing:-.01em}
+  .doc-note{margin:2px 0 16px;color:var(--muted);font-size:13px;max-width:720px}
+
+  /* Sections */
+  .sec{background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:18px 22px 16px;margin-top:14px;scroll-margin-top:14px}
+  .sec h3{margin:0 0 10px;font-size:16px;font-weight:800;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:10px}
+  .num{flex:none;background:var(--brand-soft);color:var(--brand-deep);min-width:27px;height:27px;
+    padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:800}
+  .sec h4{margin:14px 0 6px;font-size:13.5px;color:var(--brand-deep);letter-spacing:.02em}
+  .sec p{margin:6px 0}
+  .sec ul{margin:6px 0;padding-left:20px}
+  .sec li{margin:5px 0}
+  .sec li::marker{color:var(--brand)}
+  .muted{color:var(--muted)}
+  smalljmp{display:block}
+  .divide{border:none;border-top:1px dashed var(--line);margin:12px 0}
+
+  /* Flow steps */
+  ol.flow{list-style:none;counter-reset:step;margin:8px 0;padding:0}
+  ol.flow li{position:relative;padding-left:36px;margin:9px 0;counter-increment:step}
+  ol.flow li::before{content:counter(step);position:absolute;left:0;top:1px;
+    background:var(--brand-soft);color:var(--brand-deep);width:26px;height:26px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
+
+  /* Priority chain */
+  .chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+  .chain .pill{background:var(--brand-soft);color:var(--brand-deep);font-weight:700}
+  .chain .sep{color:var(--soft);font-weight:700}
+
+  /* Pills */
+  .pills{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .pill{display:inline-flex;align-items:center;gap:6px;background:var(--brand-tint);
+    border:1px solid var(--line);color:var(--ink);padding:3px 11px;border-radius:999px;
+    font-size:12px;font-weight:600}
+  .pill.status-ok{border-color:#CBEdd9;background:#EAF7F0;color:#0B7C3D}
+  .pill.status-warn{border-color:#F3E2C4;background:#FCF4E6;color:#9A6200}
+  .pill.status-danger{border-color:#F6D5D4;background:#FDEFEE;color:#B23331}
+
+  /* Callouts */
+  .note{background:var(--brand-tint);border:1px solid var(--line);border-left:3px solid var(--brand);
+    border-radius:12px;padding:10px 14px;margin:10px 0}
+  .note .tag{display:block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--brand-deep);margin-bottom:3px}
+  .note.warn{border-left-color:var(--warning);background:#FDF6EA}
+  .note.warn .tag{color:#9A6200}
+  .note.money{border-left-color:var(--success);background:#F0FAF4}
+  .note.money .tag{color:#0B7C3D}
+
+  /* Formula */
+  .formula{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+    font-size:12.5px;background:#241B3A;color:#E9E2FF;border-radius:12px;padding:12px 16px;
+    margin:10px 0;line-height:1.75;overflow-x:auto}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{border:1px solid var(--line);padding:7px 11px;text-align:left;vertical-align:top}
+  th{background:var(--brand-soft);color:var(--brand-deep);font-weight:700}
+  td.r,th.r{text-align:right;white-space:nowrap}
+  tr.total td{background:var(--brand-tint);font-weight:800;color:var(--brand-deep)}
+  .fine{font-size:11.5px;color:var(--muted);margin-top:-4px}
+
+  /* Checklist */
+  ul.checks{list-style:none;padding-left:2px}
+  ul.checks li{position:relative;padding-left:25px}
+  ul.checks li::before{content:"✓";position:absolute;left:0;top:0;color:var(--success);
+    font-weight:800;font-size:14px}
+
+  /* Footer */
+  .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;
+    color:var(--muted);font-size:12px}
+  .top-link{position:fixed;right:16px;bottom:16px;background:var(--brand-deep);color:#fff;
+    text-decoration:none;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:999px;
+    box-shadow:0 6px 16px rgba(81,35,165,.3)}
+  .top-link:hover{background:var(--brand)}
+
+  @media(max-width:560px){.hero{padding:24px 20px}.sec{padding:16px 16px 14px}.page{padding:20px 14px 64px}}
+
+  @media print{
+    body{background:#fff;font-size:12px}
+    .page{max-width:none;padding:0}
+    .top-link{display:none}
+    .hero{border-radius:0;box-shadow:none}
+    .sec{box-shadow:none;break-inside:avoid;border-color:#ddd}
+    .toc{break-after:page}
+    a{color:var(--brand-deep)}
+  }
+</style>
+</head>
+<body id="top">
+<div class="page">
+
+  <header class="hero">
+    <div class="kicker">Nomad · PicDrop</div>
+    <h1>PicDrop — Requirements Preview</h1>
+    <p class="sub">Clean, consolidated preview of the two requirement drafts: the section-wise feature
+      checklist and the operating notes. Content is unchanged from the source documents.</p>
+    <div class="chips">
+      <span class="chip">Document 1 · Feature scope</span>
+      <span class="chip">Document 2 · Requirements &amp; operating notes</span>
+      <span class="chip">Requirements draft</span>
+      <span class="chip">6 November 2026</span>
+      <span class="chip warn">Examples not approved commercial terms</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Contents">
+    <h2>Contents</h2>
+    <div class="toc-cols">
+      <div>
+        <h3>Document 1 — Developer feature scope</h3>
+        <ol>
+          <li><a href="#d1-1">Accounts and access</a></li>
+          <li><a href="#d1-2">Onboarding, verification and safety</a></li>
+          <li><a href="#d1-3">Seller-owned delivery teams</a></li>
+          <li><a href="#d1-4">Delivery booking and package details</a></li>
+          <li><a href="#d1-5">Partner discovery and assignment</a></li>
+          <li><a href="#d1-6">HopNgo roles and combined trips</a></li>
+          <li><a href="#d1-7">Scheduling and capacity</a></li>
+          <li><a href="#d1-8">Rate cards and quotation</a></li>
+          <li><a href="#d1-9">Free delivery and subsidies</a></li>
+          <li><a href="#d1-10">Tracking and fulfilment</a></li>
+          <li><a href="#d1-11">Fleets and external integrations</a></li>
+          <li><a href="#d1-12">Payments, reporting and administration</a></li>
+          <li><a href="#d1-13">Proposed release boundary</a></li>
+        </ol>
+      </div>
+      <div>
+        <h3>Document 2 — Requirements &amp; operating notes</h3>
+        <ol>
+          <li><a href="#d2-1">Product model and boundaries</a></li>
+          <li><a href="#d2-2">Users, onboarding and permissions</a></li>
+          <li><a href="#d2-3">Seller-owned delivery team</a></li>
+          <li><a href="#d2-4">Booking and fulfilment flow</a></li>
+          <li><a href="#d2-5">Assignment and fallback</a></li>
+          <li><a href="#d2-6">Scheduled delivery and capacity</a></li>
+          <li><a href="#d2-7">HopNgo operating modes</a></li>
+          <li><a href="#d2-8">Rate-card fields and formula</a></li>
+          <li><a href="#d2-9">Pricing bounds and benchmarks</a></li>
+          <li><a href="#d2-10">Free-delivery conditions</a></li>
+          <li><a href="#d2-11">Financial model and examples</a></li>
+          <li><a href="#d2-12">Fleet and external-provider operations</a></li>
+          <li><a href="#d2-13">Tracking, security and reporting</a></li>
+          <li><a href="#d2-14">Core data and implementation</a></li>
+          <li><a href="#d2-15">Delivery phases and decisions</a></li>
+        </ol>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================ DOCUMENT 1 ============================ -->
+  <article>
+    <div class="doc-head">
+      <span class="doc-badge">Document 1</span>
+      <h2>Developer feature scope</h2>
+    </div>
+    <p class="doc-note"><strong>Scope inventory only.</strong> Includes discussed features and recommended
+      operational controls. Phasing is a proposal; inclusion here does not imply all features are required
+      for the first release.</p>
+
+    <section class="sec" id="d1-1">
+      <h3><span class="num">1</span>Accounts and access</h3>
+      <ul>
+        <li>Buyer and seller access to book and track deliveries.</li>
+        <li>Individual delivery-partner onboarding for foot, cycle, bike, car and commercial vehicles.</li>
+        <li>Shared partner identity across PicDrop and HopNgo; multiple eligible roles per account.</li>
+        <li>Seller-owned private delivery teams and optional shared-pool participation with consent.</li>
+        <li>Third-party fleet accounts with fleet administrators and linked riders.</li>
+        <li>Nomad operations/admin access with role-based permissions.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-2">
+      <h3><span class="num">2</span>Onboarding, verification and safety</h3>
+      <ul>
+        <li>Mobile OTP, profile photo, identity verification, bank details and applicable vehicle documents.</li>
+        <li>Separate platform verification status, seller endorsement and fleet affiliation.</li>
+        <li>Nomad Verified and not-yet-Nomad-verified pool labels; no misleading verification badges.</li>
+        <li>Document review, expiry alerts, suspension, blocked accounts and audit trail.</li>
+        <li>Package eligibility, prohibited items, value limits, vehicle capacity and service-area restrictions.</li>
+        <li>Emergency/support access, incident reporting, delivery disputes and claims workflow.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-3">
+      <h3><span class="num">3</span>Seller-owned delivery teams</h3>
+      <ul>
+        <li>Seller invitations, rider acceptance, team membership, working hours and vehicle allocation.</li>
+        <li>Private mode and consent-based shared mode; seller-priority availability controls.</li>
+        <li>Manual assignment, reassignment, workload monitoring and delivery performance reports.</li>
+        <li>Tracking, OTPs, proof of delivery and COD reconciliation for seller-owned jobs.</li>
+        <li>Direct seller payroll or optional platform settlement; separate software-fee configuration.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-4">
+      <h3><span class="num">4</span>Delivery booking and package details</h3>
+      <ul>
+        <li>Seller-initiated, buyer-initiated and order-linked bookings.</li>
+        <li>Pickup/drop contacts, addresses, map pins and serviceability checks.</li>
+        <li>Package category, quantity, dimensions, weight, declared value and handling instructions.</li>
+        <li>Immediate delivery, scheduled same-day and future-date delivery.</li>
+        <li>Standard/express options, upfront quotes and payer selection.</li>
+        <li>Return, failed-delivery, cancellation and optional multiple-stop workflows.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-5">
+      <h3><span class="num">5</span>Partner discovery and assignment</h3>
+      <ul>
+        <li>Preferred partners saved by sellers/buyers with consent and visible verification status.</li>
+        <li>Configurable priority: seller team / preferred partners, Nomad Verified pool, eligible other pool, fleet and external provider.</li>
+        <li>Filter by availability, location, vehicle, capacity, price, trust eligibility and service area.</li>
+        <li>Automatic offer/acceptance, manual selection, timeouts, fallback and reassignment.</li>
+        <li>No automatic paid fallback without the payer approving the price change.</li>
+        <li>Optional quotation/bidding for oversized or custom jobs in a later phase.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-6">
+      <h3><span class="num">6</span>HopNgo roles and combined trips</h3>
+      <ul>
+        <li>Taxi-only, delivery-only and combined-trip availability preferences.</li>
+        <li>Sequential taxi/delivery jobs without overlap; combined trips only when explicitly enabled.</li>
+        <li>Combined-trip route, passenger consent, package suitability, capacity and detour controls.</li>
+        <li>Separate passenger and package tracking visibility, fares, proofs and ledger entries.</li>
+        <li>Admin enablement subject to transport, insurance and safety review.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-7">
+      <h3><span class="num">7</span>Scheduling and capacity</h3>
+      <ul>
+        <li>Partner working days, shifts, breaks, zones and leave calendar.</li>
+        <li>Customer-facing delivery windows, booking cutoffs, lead times and blackout dates.</li>
+        <li>Capacity based on feasible routes, duration, vehicle and committed partner/fleet capacity.</li>
+        <li>Checkout slot holds, booking confirmation, release on timeout/cancellation and prevention of overbooking.</li>
+        <li>Advance partner reservation or confirmed fleet capacity with later rider allocation.</li>
+        <li>Reminders, readiness checks, rescheduling, no-show handling and backup fulfilment.</li>
+        <li>Recurring deliveries and route batching as later-phase options.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-8">
+      <h3><span class="num">8</span>Rate cards and quotation</h3>
+      <ul>
+        <li>Zone- and vehicle-specific base fare, included distance and additional-distance charges.</li>
+        <li>Minimum fare, weight/dimension bands, capacity caps and handling charges.</li>
+        <li>Waiting allowance/fee, pickup approach distance policy, extra stops, returns and cancellation fees.</li>
+        <li>Day/time availability, express/night/peak rules and applicable toll/parking policy.</li>
+        <li>Partner-selected rates within admin-controlled bounds; validated and versioned changes.</li>
+        <li>Suggested benchmark, comparable local median/average and allowed range.</li>
+        <li>Itemised customer quote, partner earnings preview, quote expiry and price-change approval.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-9">
+      <h3><span class="num">9</span>Free delivery and subsidies</h3>
+      <ul>
+        <li>Seller rules by cart threshold, eligible items, customer segment, location, schedule and payment method.</li>
+        <li>Full delivery subsidy, capped subsidy and optional shared funding.</li>
+        <li>Validity periods, usage limits, budgets, rule priority and stacking controls.</li>
+        <li>Checkout eligibility messages and separation of customer fee from carrier charges.</li>
+        <li>Seller authorisation for subsidies and fallback-cost caps; itemised accounting.</li>
+        <li>Refund, partial cancellation, return and threshold-recalculation policy.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-10">
+      <h3><span class="num">10</span>Tracking and fulfilment</h3>
+      <ul>
+        <li>Accepted, assigned, pickup-arrived, picked-up, in-transit, drop-arrived and delivered milestones.</li>
+        <li>Pickup/drop OTP and optional photo/signature proof.</li>
+        <li>Active-job live location, ETA, delay alerts and customer communications.</li>
+        <li>Failed attempt reasons, reattempt, return-to-origin and lost/damaged parcel reporting.</li>
+        <li>Offline event sync, location-permission handling and proof retention controls.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-11">
+      <h3><span class="num">11</span>Fleets and external integrations</h3>
+      <ul>
+        <li>Fleet onboarding, verification, contract, zones, service hours and capacity.</li>
+        <li>Fleet rider invitations, reassignment, availability and performance tracking.</li>
+        <li>Fleet rate contracts, SLAs, billing, commission and reconciliation.</li>
+        <li>External-provider manual booking initially; API quote/book/track/cancel integrations later.</li>
+        <li>Provider-specific payment, refund, proof, webhook and exception mapping.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-12">
+      <h3><span class="num">12</span>Payments, reporting and administration</h3>
+      <ul>
+        <li>Customer fees, seller subsidies, carrier gross charges, platform fees, partner payouts and taxes recorded separately.</li>
+        <li>Commission or markup contracts by provider type; exclude inappropriate pass-through items from commission.</li>
+        <li>Seller-owned delivery software subscription / per-job pricing, independent of rider salary.</li>
+        <li>Prepaid payments, optional COD, collections, payouts, refunds and reconciliation.</li>
+        <li>Seller, partner, fleet and platform dashboards with operational and financial metrics.</li>
+        <li>Admin controls for pricing, service zones, promotions, disputes and provider suspension.</li>
+        <li>Role-based data access, consent, active-job tracking limits, retention and audit logs.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d1-13">
+      <h3><span class="num">13</span>Proposed release boundary</h3>
+      <table>
+        <thead><tr><th>MVP (proposed)</th><th>Later phases (proposed)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Individual/seller-owned teams · verification · basic preferred/pool assignment · manual fleets · rate cards · immediate/scheduled bookings · free-delivery rules · tracking · proof · settlement</td>
+            <td>Provider APIs · advanced routing · recurring jobs · bidding · combined HopNgo passenger-plus-parcel trips</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note warn"><span class="tag">Before sign-off</span>
+        Confirm compliance, verification thresholds, fees, subsidy caps, service limits and the
+        cancellation/claims policy.</div>
+    </section>
+  </article>
+
+  <!-- ============================ DOCUMENT 2 ============================ -->
+  <article>
+    <div class="doc-head">
+      <span class="doc-badge">Document 2</span>
+      <h2>Requirements &amp; operating notes</h2>
+    </div>
+    <p class="doc-note">Features, flows, pricing and conditions. All fares, commissions, windows and limits
+      below are <strong>proposed configuration examples</strong> — not approved commercial terms or market
+      benchmarks. Legal, tax, insurance and transport compliance require review before launch.</p>
+
+    <section class="sec" id="d2-1">
+      <h3><span class="num">1</span>Product model and boundaries</h3>
+      <ul>
+        <li>PicDrop is a <strong>delivery marketplace and delivery-management layer</strong> for sellers, buyers, independent partners, seller-owned teams and third-party fleets.</li>
+        <li>HopNgo drivers may also register delivery capabilities.</li>
+        <li>A single <strong>Delivery Job</strong> must identify: requester, payer, carrier, assigned person, package, route, timing, price, proof and settlement.</li>
+        <li>Keep <strong>account identity</strong>, <strong>organisation membership</strong>, <strong>verification</strong> and <strong>operating mode</strong> as separate concepts.</li>
+        <li>A seller endorsement does <strong>not</strong> equal Nomad verification.</li>
+        <li>A fleet rider remains linked to the fleet when completing that fleet's work.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-2">
+      <h3><span class="num">2</span>Users, onboarding and permissions</h3>
+      <ul>
+        <li>Buyers and sellers can create delivery requests and maintain preferred partners.</li>
+        <li>Individual partners register service areas, vehicles, package capabilities, documents and payout details.</li>
+        <li>Fleet administrators onboard and manage their own riders.</li>
+        <li>Nomad operations approves verification, manages exceptions and administers rules.</li>
+        <li>Preferred-partner selection requires the partner's agreement; verification and job eligibility are re-checked at assignment, even for preferred partners.</li>
+        <li>Restrict sensitive, high-value or otherwise risky shipments to eligible verified providers; define prohibited goods and value limits before release.</li>
+      </ul>
+      <div class="pills">
+        <span class="pill status-warn">Draft</span><span class="pill status-warn">Submitted</span>
+        <span class="pill status-warn">Under review</span><span class="pill status-ok">Approved</span>
+        <span class="pill status-danger">Restricted</span><span class="pill status-danger">Suspended</span>
+      </div>
+      <div class="note"><span class="tag">Verification rule</span>
+        Distinguish basic identity checks from a completed <strong>Nomad verification badge</strong>. A
+        not-yet-Nomad-verified pool is optional and must <strong>never</strong> bypass mandatory eligibility
+        checks. No misleading verification badges.</div>
+    </section>
+
+    <section class="sec" id="d2-3">
+      <h3><span class="num">3</span>Seller-owned delivery team</h3>
+      <ul>
+        <li>The seller invites a rider by mobile number; the rider accepts, verifies identity and joins the seller organisation. Avoid duplicate identities when an existing PicDrop/HopNgo partner accepts an invitation.</li>
+        <li>The seller configures working hours, vehicle, service area and permitted job types.</li>
+        <li><strong>Private riders</strong> receive only seller-assigned work.</li>
+        <li><strong>Shared participation</strong> requires rider and seller consent, explicit availability and protection of already committed seller jobs. Do not assume a seller can unilaterally offer an employee to the marketplace.</li>
+        <li>Seller tools: assignment, reassignment, live active-job tracking, ETA, delivery proofs, delay alerts, COD reconciliation and performance reports.</li>
+        <li>End tracking when the authorised work period/job ends; do <strong>not</strong> expose private off-duty location.</li>
+        <li>If the seller pays wages directly, record the delivery as <strong>seller-owned fulfilment</strong> — do not invent a marketplace carrier payout or deduct commission from salary.</li>
+        <li>Charge the seller a separately agreed <strong>software subscription or per-completed-job fee</strong>. Optional platform-managed rider payments need their own agreement and ledger.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-4">
+      <h3><span class="num">4</span>Booking and fulfilment flow</h3>
+      <ol class="flow">
+        <li>Requester selects pickup/drop locations, contacts, package details, service speed and delivery time.</li>
+        <li>PicDrop validates service area, restricted goods, vehicle fit, declared value and available capacity.</li>
+        <li>System calculates eligible provider quotes and applies any seller-funded delivery offer.</li>
+        <li>Customer reviews the final fee, delivery window, provider class, cancellation rules and payer details. Temporarily hold slot capacity during checkout.</li>
+        <li>Confirm payment or authorised billing; confirm the booking only when capacity is secured. Assign a rider immediately or against a committed fleet/slot capacity.</li>
+        <li>Partner accepts, arrives at pickup, verifies the package and completes pickup proof. Record exceptions before departure.</li>
+        <li>Track the active job, update ETA and send milestone notifications.</li>
+        <li>Verify drop using OTP and any required photo/signature; close COD collection if enabled.</li>
+        <li>Complete settlement, proof storage, rating and reconciliation.</li>
+      </ol>
+      <div class="note warn"><span class="tag">Exception handling</span>
+        For no response, no-show, failed delivery, wrong address or damaged parcel, record a reason and
+        follow a defined retry, support, return or refund path. Reassignment must not duplicate the booking
+        or payment.</div>
+    </section>
+
+    <section class="sec" id="d2-5">
+      <h3><span class="num">5</span>Assignment and fallback</h3>
+      <div class="chain">
+        <span class="pill">Seller-owned rider <em>(when selected)</em></span><span class="sep">→</span>
+        <span class="pill">Preferred eligible partner</span><span class="sep">→</span>
+        <span class="pill">Nomad Verified pool</span><span class="sep">→</span>
+        <span class="pill">Other eligible pool</span><span class="sep">→</span>
+        <span class="pill">Contracted fleet</span><span class="sep">→</span>
+        <span class="pill">External logistics provider</span>
+      </div>
+      <ul>
+        <li>Order is configurable; seller policy may choose fleet or own team earlier. Buyer/seller preferences must not override safety or package constraints.</li>
+        <li>Filter candidates by zone, scheduled availability, vehicle capacity, route feasibility, current commitments, verification, quoted price and relevant performance.</li>
+        <li>Offer jobs with an acceptance timeout, then move to the next eligible option.</li>
+        <li>Preferred availability is <strong>not</strong> a guarantee. If the initial option fails, recompute availability and price.</li>
+        <li>Allow automatic fallback only within a previously authorised price/subsidy cap; otherwise request approval or offer rescheduling/cancellation.</li>
+        <li>Record the actual fulfilling provider for support and financial liability.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-6">
+      <h3><span class="num">6</span>Scheduled delivery and capacity</h3>
+      <ul>
+        <li>Offer ASAP plus scheduled delivery windows; illustrative MVP windows are <strong>two hours</strong> — not guaranteed transit durations.</li>
+        <li>Distinguish pickup window, delivery window and seller preparation time. Apply minimum booking lead time, cutoff, holidays, geography and package constraints.</li>
+        <li>A slot must reflect <strong>committed fulfilment capacity</strong>, not merely partners who happen to be online now. Estimate required travel, service time and existing workloads.</li>
+        <li>Hold capacity briefly during checkout; reserve it atomically on confirmation; release it on expiry/cancellation.</li>
+        <li>A named rider need not always be assigned at booking if a seller/fleet has committed sufficient capacity. Show <strong>"Scheduled — confirmed capacity"</strong> separately from <strong>"Rider assigned"</strong>.</li>
+        <li>Without secured capacity, label the request <strong>pending</strong> rather than promising delivery.</li>
+        <li>Before pickup, send reminders and check readiness. On capacity loss, trigger a backup provider within authorised cost limits, or obtain approval to reschedule/cancel.</li>
+        <li>Recurring deliveries, multi-drop optimisation and batching can follow later.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-7">
+      <h3><span class="num">7</span>HopNgo operating modes</h3>
+      <div class="pills">
+        <span class="pill">Taxi-only</span>
+        <span class="pill">Delivery-only</span>
+        <span class="pill">Sequential dual-service</span>
+        <span class="pill">Combined trips — gated, explicitly enabled</span>
+      </div>
+      <ul>
+        <li>One partner identity across modes; capability is separate from current status: offline, available, reserved or busy.</li>
+        <li>Sequential dual-service permits both job categories but prevents conflicting active assignments.</li>
+        <li>Combined trips are a separate <strong>gated</strong> feature, not a default. Require applicable legal/permit and insurance clearance, passenger consent, secure parcel placement, capacity checks, detour/time limits and compatible handling conditions. Reject packages that compromise passenger safety or service quality.</li>
+        <li>Keep taxi and delivery contracts, fare components, proofs, cancellations and settlements distinct even if the driver completes them on the same route.</li>
+        <li>Passenger and parcel customers must not see each other's personal information.</li>
+        <li>Recommend deferring combined trips until these controls are validated.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-8">
+      <h3><span class="num">8</span>Rate-card fields and formula</h3>
+      <h4>Service profile</h4>
+      <p>Per zone and mode — foot, cycle, bike, car or commercial vehicle: service radius, working days/times,
+        maximum weight, dimensions, package types and minimum notice.</p>
+      <h4>Commercial fields</h4>
+      <p>Base fare, included kilometres, extra-kilometre rate, minimum fare, waiting allowance and per-minute
+        charge, weight/size surcharge, handling surcharge, extra stop, return fee, cancellation fee and
+        approved toll/parking policy. Decide whether pickup approach distance is included or separately
+        priced; disclose it upfront.</p>
+      <h4>Formula</h4>
+      <div class="formula">quoted service fare =
+  MAX( minimum fare,
+       base fare + chargeable distance fee + approved package / handling / time charges )
++ permitted pass-through costs, added separately
++ taxes, added separately</div>
+      <p>Define multiplier order and prevent unintended stacking of express, night and peak charges.</p>
+      <h4>Illustrative bike quote</h4>
+      <table>
+        <thead><tr><th>Component</th><th class="r">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Base fare (includes first 2 km)</td><td class="r">₹30</td></tr>
+          <tr><td>Next 3 km @ ₹12/km</td><td class="r">₹36</td></tr>
+          <tr><td>Weight surcharge</td><td class="r">₹20</td></tr>
+          <tr class="total"><td>Subtotal</td><td class="r">₹86</td></tr>
+          <tr><td>Express premium (+25%, configured)</td><td class="r">₹107.50</td></tr>
+          <tr><td>Platform commission (agreed 15% of eligible fare)</td><td class="r">₹16.13 <span class="muted">(rounded)</span></td></tr>
+          <tr class="total"><td>Partner payout</td><td class="r">₹91.37</td></tr>
+        </tbody>
+      </table>
+      <p class="fine">Example figures only — not approved commercial terms. Any taxes / pass-throughs are separate.</p>
+      <ul>
+        <li>Display the payable total <strong>before acceptance</strong> and the partner's expected net earning. Quote a validity period.</li>
+        <li>Waiting charges need arrival evidence, a free allowance and customer notification.</li>
+        <li>Material package or address changes require repricing approval.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-9">
+      <h3><span class="num">9</span>Pricing bounds and benchmarks</h3>
+      <ul>
+        <li>Prefer simple partner rate cards <strong>within platform-defined bounds</strong> over unrestricted custom pricing for every job.</li>
+        <li>Admin owns zone/mode floors and ceilings; partners choose rates within them.</li>
+        <li>Floors should consider time, vehicle cost, empty travel and platform deductions; do not derive them solely from the cheapest competitors.</li>
+        <li>A possible pilot band is <strong>0.85–1.35× a validated benchmark</strong>, subject to an absolute cost floor and applicable rules. This is a test hypothesis, not a universal recommendation.</li>
+        <li>Do not apply a generic taxi surge cap to delivery or assume it is legally applicable.</li>
+        <li>Show a comparable <strong>local median</strong> as the main benchmark, with average optionally available.</li>
+        <li>Use completed jobs of similar zone, vehicle, distance, time and package class; exclude tips, cancelled jobs, subsidies and anomalous prices.</li>
+        <li>Set a sample threshold and date window; if data is insufficient, label the value <strong>"Platform suggested"</strong> rather than "Zone average".</li>
+        <li>Rate changes apply prospectively, are versioned and <strong>never</strong> alter accepted jobs. Configurable change frequency and fraud checks discourage manipulation.</li>
+        <li>Do not display an acceptance-probability prediction until there is enough evidence to support it.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-10">
+      <h3><span class="num">10</span>Free-delivery conditions</h3>
+      <ul>
+        <li>Free delivery is a customer discount <strong>funded by a named party</strong>; the carrier still earns the agreed fare.</li>
+        <li>The seller enables rules and authorises a subsidy budget/cap. PicDrop-funded or shared offers require separate platform approval.</li>
+        <li><strong>Rule fields:</strong> eligible seller, products/categories, minimum eligible cart subtotal, customer segment, zone/radius, standard/express eligibility, scheduled/ASAP eligibility, payment method, validity, usage limits, discount amount/cap, funding split and budget.</li>
+        <li>Define whether the qualifying subtotal is before/after merchandise discounts; a practical starting rule is <strong>merchandise subtotal after discounts, excluding delivery and taxes</strong>.</li>
+        <li>Apply rules in a deterministic order: eligibility → authorised offer selection / stacking policy → caps / budget → final fee.</li>
+        <li>Reserve subsidy budget with the order. Show any excluded express, toll or other charges clearly before purchase.</li>
+        <li><strong>Fallback policy:</strong> seller pays only within its approved cap; a higher-cost replacement needs seller approval, a customer-approved balance, or rescheduling. Do not silently remove a confirmed free-delivery promise after acceptance.</li>
+        <li>Define partial cancellation and refund rules upfront. If the seller causes an item cancellation, avoid adding a surprise delivery fee to the customer.</li>
+        <li>Returns and reattempts should follow the disclosed policy and reason-code allocation.</li>
+      </ul>
+      <div class="note money"><span class="tag">Worked example — capped subsidy</span>
+        If the fare is ₹80 and the seller cap is ₹50, the customer pays <strong>₹30</strong>. Label this
+        <strong>"Delivery discount up to ₹50"</strong>, not unconditional free delivery. If the seller funds
+        the full ₹80, the customer delivery fee is ₹0.</div>
+    </section>
+
+    <section class="sec" id="d2-11">
+      <h3><span class="num">11</span>Financial model and examples</h3>
+      <ul>
+        <li>Keep <strong>separate fields</strong> for: carrier gross service fare, commission basis/rate, platform commission, customer delivery charge, seller subsidy, platform subsidy, taxes, pass-through charges, tips, cash collected and carrier net payout. Store currency and rounding rules.</li>
+        <li>Prevent double-counting subsidies as extra carrier revenue.</li>
+        <li>Individual partners: an agreed percentage of eligible <strong>delivery service revenue</strong>, not merchandise value. Pilot commissions may be tested commercially; no universal percentage is approved here.</li>
+        <li>Define whether waiting, handling and cancellation fees enter the commission basis; generally keep tips and at-cost toll reimbursements out.</li>
+        <li>Fleet providers: negotiated per-job rates and commission, or net procurement plus markup.</li>
+        <li>External providers: contracted net quote plus disclosed margin/service fee. A Porter integration is <strong>not</strong> assumed available until commercial/API approval.</li>
+        <li>Seller-owned riders paid directly by the seller use the <strong>software-fee model</strong>.</li>
+        <li>COD merchandise money is <strong>money held for the merchant</strong>, not platform delivery revenue. Reconcile it separately and define collection limits, remittance timing and shortages.</li>
+        <li>Final tax / TDS / GST treatment requires qualified review.</li>
+      </ul>
+      <h4>Example (excluding taxes)</h4>
+      <table>
+        <thead><tr><th>Field</th><th class="r">Value</th></tr></thead>
+        <tbody>
+          <tr><td>Carrier service fare</td><td class="r">₹80</td></tr>
+          <tr><td>Seller-funded subsidy</td><td class="r">₹80</td></tr>
+          <tr><td>Customer delivery charge</td><td class="r">₹0</td></tr>
+          <tr><td>Platform commission (agreed 15% of ₹80)</td><td class="r">₹12</td></tr>
+          <tr class="total"><td>Carrier payout</td><td class="r">₹68</td></tr>
+        </tbody>
+      </table>
+      <div class="note warn"><span class="tag">Different model</span>
+        A full ₹80 carrier payout <strong>plus</strong> a ₹12 seller-paid platform fee is a different
+        <strong>gross-up model</strong> and must be separately quoted/agreed.</div>
+    </section>
+
+    <section class="sec" id="d2-12">
+      <h3><span class="num">12</span>Fleet and external-provider operations</h3>
+      <ul>
+        <li>Fleet onboarding captures: legal entity, applicable verification, bank details, operating zones, modes, hours, committed capacity, rates, SLA and responsibility for parcel loss/damage.</li>
+        <li>Fleet admins invite riders and can reassign within their organisation with full audit history.</li>
+        <li>Nomad retains a central job record and support visibility.</li>
+        <li>Fleet ownership does <strong>not</strong> bypass rider eligibility.</li>
+        <li>Prevent a busy fleet rider from accepting conflicting independent jobs.</li>
+        <li>Start external partnerships with authorised <strong>manual bookings</strong> if needed.</li>
+        <li>Later integrations should support quote validity, booking IDs, status events, tracking, cancellation, proof, reconciliation and <strong>retry-safe booking</strong>.</li>
+        <li>Do not show successful booking until the provider confirms it.</li>
+        <li>Map provider states and refunds into PicDrop's standard workflow.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-13">
+      <h3><span class="num">13</span>Tracking, security and reporting</h3>
+      <ul>
+        <li>Track active jobs with appropriate user consent and <strong>role-based visibility</strong>: buyers see their delivery; sellers see their orders/team work; fleets see their assigned jobs; operations sees what is needed for support.</li>
+        <li>Avoid unrestricted access to rider location or cross-customer data.</li>
+        <li>Support intermittent connectivity through event timestamps, queued updates and clear <strong>"Last updated"</strong> indicators.</li>
+        <li>Store OTP verification outcomes safely; define proof retention, restricted photo access, audit logs and location retention/deletion policies.</li>
+        <li>Dashboards should show: acceptance, on-time pickup/drop, completion, cancellations, failed attempts, distance, earnings, commission, subsidies, COD outstanding and claims.</li>
+        <li>Separate scheduled capacity utilisation from real-time partner availability.</li>
+        <li>Show seller-owned fleet software charges independently from marketplace delivery revenue.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-14">
+      <h3><span class="num">14</span>Core data and implementation</h3>
+      <h4>Recommended entities</h4>
+      <div class="pills">
+        <span class="pill">User</span><span class="pill">Organisation</span><span class="pill">Membership</span>
+        <span class="pill">PartnerProfile</span><span class="pill">Vehicle</span><span class="pill">VerificationRecord</span>
+        <span class="pill">Availability</span><span class="pill">ServiceZone</span><span class="pill">RateCardVersion</span>
+        <span class="pill">PreferredPartner</span><span class="pill">DeliveryJob</span><span class="pill">JobStop</span>
+        <span class="pill">SlotCapacity</span><span class="pill">SlotReservation</span><span class="pill">Quote</span>
+        <span class="pill">PromotionRule</span><span class="pill">SubsidyReservation</span><span class="pill">Assignment</span>
+        <span class="pill">TrackingEvent</span><span class="pill">DeliveryProof</span><span class="pill">Payment</span>
+        <span class="pill">LedgerEntry</span><span class="pill">Settlement</span><span class="pill">CODCollection</span>
+        <span class="pill">Dispute</span>
+      </div>
+      <ul>
+        <li>Each job retains the accepted quote/rate version, promotion snapshot, payer approvals and assignment history.</li>
+        <li>Provider changes must preserve the original job ID and financial trail.</li>
+        <li>Use <strong>atomic reservations</strong> to prevent oversold slots and <strong>retry-safe operations</strong> to prevent duplicate bookings or charges.</li>
+        <li>Notifications, location updates and external-provider events must tolerate duplicates and out-of-order arrival.</li>
+        <li>Define explicit allowed job-state transitions and permission checks.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="d2-15">
+      <h3><span class="num">15</span>Delivery phases and decisions</h3>
+      <table>
+        <thead><tr><th>MVP</th><th>Later</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Individual and seller-owned onboarding · essential verification · preferred/general pool · manual fleet onboarding · simple rate cards · ASAP and basic scheduled windows · capacity reservation · tracking, OTP proof · free-delivery rules · basic payouts/reconciliation and admin controls</td>
+            <td>External-provider APIs · advanced fleet dashboards · recurring delivery · batching/routing · custom-job bidding · carefully gated HopNgo combined trips</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note"><span class="tag">Early HopNgo scope</span>
+        HopNgo shared identity and delivery-only capability can be implemented <strong>earlier</strong>,
+        without combined passenger/parcel trips.</div>
+      <h4>Decisions required before development sign-off</h4>
+      <div class="pills">
+        <span class="pill">Launch zones</span>
+        <span class="pill">Mandatory verification; allowable non-verified jobs</span>
+        <span class="pill">Modes and package limits</span>
+        <span class="pill">Commission / software-fee model</span>
+        <span class="pill">Rate bands</span>
+        <span class="pill">Subsidy caps</span>
+        <span class="pill">COD scope</span>
+        <span class="pill">Insurance / claims</span>
+        <span class="pill">Cancellation and return policies</span>
+        <span class="pill">Scheduling promise</span>
+        <span class="pill">Privacy retention</span>
+        <span class="pill">Approved MVP boundary</span>
+      </div>
+      <h4>Acceptance examples</h4>
+      <ul class="checks">
+        <li>No overbooking of the last slot.</li>
+        <li>No invalid vehicle/package match.</li>
+        <li>No unapproved price increase on fallback.</li>
+        <li>Seller free delivery still pays the carrier.</li>
+        <li>Private riders never receive public jobs.</li>
+        <li>Accepted quotes survive rate changes.</li>
+        <li>Each failed/cancelled job has traceable settlement/refund treatment.</li>
+      </ul>
+    </section>
+  </article>
+
+  <footer class="foot">
+    Clean preview generated 6 November 2026 · Nomad • PicDrop · Content structured from the source drafts;
+    wording preserved. All pricing figures are illustrative examples, not approved commercial terms —
+    confirm compliance, fees, subsidy caps, service limits and cancellation/claims policy before sign-off.
+  </footer>
+</div>
+<a class="top-link" href="#top">↑ Contents</a>
+</body>
+</html>
