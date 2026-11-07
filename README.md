@@ -7,10 +7,16 @@ The app is designed as a phone experience: it runs in the browser, looks like a
 modern mobile app, and is built for a 390 × 844 px screen. On larger screens it
 stays a centered app column instead of stretching into a desktop dashboard.
 
-> **Status:** Phases 1–11 are complete as a fully interactive prototype using
-> mock data. Sign-in, onboarding, deliveries, earnings, notifications, support
-> and profile all work in the browser. Firebase, a real map provider and the
-> existing-platform integration (Phases 12–13) are not connected yet.
+> **Status:** Phases 1–11 of the partner experience are complete as a fully
+> interactive prototype using mock data. Sign-in, onboarding, deliveries,
+> earnings, notifications, support and profile all work in the browser.
+> Firebase, a real map provider and the existing-platform integration
+> (Phases 12–13) are not connected yet.
+>
+> The product direction is now **PicDrop + HopNgo**, and this repository is its
+> **delivery-partner module**. The PicDrop delivery requirements have been
+> analysed; implementation is waiting on the owner's decisions from that
+> analysis. Fafo remains the working name of the current prototype.
 
 ---
 
@@ -28,6 +34,23 @@ partners the screens they need to work:
 - go online and receive delivery requests,
 - manage a delivery from acceptance to completion,
 - review history, earnings, notifications and support.
+
+### Source-of-truth references
+
+Delivery behaviour is specified by the PicDrop requirement documents kept in
+`docs/`:
+
+- `docs/PicDrop-1-Feature-Scope.md` — feature inventory, operating rules and the
+  proposed release boundary.
+- `docs/PicDrop-2-Requirements-Notes.md` — workflows, assignment and capacity
+  rules, pricing, subsidies and financial separation.
+- The latest PicDrop + HopNgo design image supplied by the project owner is the
+  visual reference.
+
+Those documents take precedence over older roadmaps, phase plans and design
+references. This README describes how the current prototype was built and is
+historical where it conflicts with them. The reference files are working
+material for the project and are not part of the deployed application.
 
 ## 2. Project objectives
 
@@ -219,7 +242,10 @@ demo session.
 
 Replacing this layer with Firebase should not change the screens: they read state
 from the context hooks (`useApp`, `useAuth`) and render typed models from
-`src/types/`.
+`src/types/`. Two exceptions still import fixtures directly — the signed-in
+partner (`src/mock/partner.ts`, used by Home and Profile) and the earnings
+summary (`src/mock/earnings.ts`, used by Home) — and will move behind the planned
+service layer with the backend integration.
 
 ## 12. Future Firebase integration plan
 

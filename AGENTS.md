@@ -13,6 +13,13 @@ grocery and restaurant delivery platform. The existing platform already manages
 shops, restaurants and orders; this repository contains **only** the partner
 experience.
 
+The product direction is now **PicDrop + HopNgo**, a wider delivery, marketplace
+and mobility platform. This repository remains its **delivery-partner module**.
+The PicDrop requirement documents in `docs/` are the source of truth for delivery
+behaviour; "Fafo" is the legacy name used by the current prototype. Buyer,
+seller, fleet, admin and HopNgo passenger features stay out of scope until the
+owner approves a scope change.
+
 A delivery partner uses the app to:
 
 1. Sign in / register with a mobile number.
@@ -319,6 +326,12 @@ Not allowed without explicit instruction:
 - Removing or rewriting working screens.
 - Adding dependencies, test runners or CI.
 - Building admin/platform-integration features (Phase 12).
+- Implementing the PicDrop delivery requirements before the owner has answered
+  the open decisions from the analysis.
+
+The PicDrop delivery analysis is complete. Every implementation change must stay
+within the approved scope, and `README.md` and this file must be updated in the
+same change whenever behaviour, structure or scope moves.
 
 ---
 
@@ -335,6 +348,9 @@ Before changing code:
 6. In your final message, list **every file created, modified or deleted**, say
    what changed and why, note any checks that could not be run, and mention any
    remaining setup work or open decisions.
+7. Keep `README.md` and this file current: when a change alters behaviour,
+   structure, commands or scope, update the relevant markdown in the same change
+   instead of leaving it for later.
 
 If a requirement conflicts with this document, ask before proceeding.
 
