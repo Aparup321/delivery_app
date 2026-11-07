@@ -1,5 +1,11 @@
 import type { Delivery } from '../types/delivery'
 
+/**
+ * Demo delivery code used to close a job in the prototype.
+ * Replace with the customer-side code issued by the backend.
+ */
+export const DEMO_PROOF_OTP = '4821'
+
 /** Delivery requests offered to the partner. */
 export const initialRequests: Delivery[] = [
   {

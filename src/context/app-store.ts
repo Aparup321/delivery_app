@@ -14,6 +14,8 @@ export interface AppContextValue {
   acceptRequest: (id: string) => void
   rejectRequest: (id: string) => void
   advanceDelivery: () => void
+  /** Verifies the customer's delivery code and closes the active job. */
+  completeDelivery: (otp: string) => boolean
   cancelDelivery: (reason: string) => void
 
   notifications: AppNotification[]

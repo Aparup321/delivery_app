@@ -1,5 +1,5 @@
-import type { Delivery, DeliveryStatus } from '../types/delivery'
-import { deliveryProgression } from '../utils/delivery'
+import type { Delivery } from '../types/delivery'
+import { nextDeliveryStatus } from '../utils/delivery'
 
 export interface DeliveryState {
   requests: Delivery[]
@@ -11,17 +11,8 @@ export type DeliveryAction =
   | { type: 'accept'; id: string; at: string }
   | { type: 'reject'; id: string }
   | { type: 'advance'; at: string }
+  | { type: 'complete'; at: string }
   | { type: 'cancel'; reason: string; at: string }
-
-function nextStatus(status: DeliveryStatus): DeliveryStatus | null {
-  const index = deliveryProgression.indexOf(status)
-
-  if (index < 0) {
-    return null
-  }
-
-  return deliveryProgression[index + 1] ?? null
-}
 
 export function deliveryReducer(
   state: DeliveryState,
@@ -63,8 +54,8 @@ export function deliveryReducer(
         return state
       }
 
-      const next = nextStatus(delivery.status)
-      if (!next) {
+      const next = nextDeliveryStatus(delivery.status)
+      if (!next || next === 'delivered') {
         return state
       }
 
@@ -74,15 +65,31 @@ export function deliveryReducer(
         events: [...delivery.events, { status: next, at: action.at }],
       }
 
-      if (next === 'delivered') {
-        return {
-          ...state,
-          activeDelivery: null,
-          history: [{ ...updated, completedAt: action.at }, ...state.history],
-        }
+      return { ...state, activeDelivery: updated }
+    }
+
+    case 'complete': {
+      const delivery = state.activeDelivery
+      if (!delivery || delivery.status !== 'drop_arrived') {
+        return state
       }
 
-      return { ...state, activeDelivery: updated }
+      const completed: Delivery = {
+        ...delivery,
+        status: 'delivered',
+        completedAt: action.at,
+        proof: { method: 'otp', verifiedAt: action.at },
+        events: [
+          ...delivery.events,
+          { status: 'delivered', at: action.at },
+        ],
+      }
+
+      return {
+        ...state,
+        activeDelivery: null,
+        history: [completed, ...state.history],
+      }
     }
 
     case 'cancel': {

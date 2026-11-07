@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
-import { initialHistory, initialRequests } from '../mock/deliveries'
+import {
+  DEMO_PROOF_OTP,
+  initialHistory,
+  initialRequests,
+} from '../mock/deliveries'
 import { initialNotifications } from '../mock/notifications'
 import { initialOnboarding } from '../mock/onboarding'
 import { initialTickets } from '../mock/support'
@@ -30,7 +34,10 @@ function readOnboarding(): OnboardingState {
       documents: { ...initialOnboarding.documents, ...parsed.documents },
       vehicle: { ...initialOnboarding.vehicle, ...parsed.vehicle },
       bank: { ...initialOnboarding.bank, ...parsed.bank },
-      training: parsed.training ?? initialOnboarding.training,
+      training: Array.from(
+        { length: initialOnboarding.training.length },
+        (_, index) => parsed.training?.[index] ?? false,
+      ),
     }
   } catch {
     return initialOnboarding
@@ -71,6 +78,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const advanceDelivery = useCallback(() => {
     dispatch({ type: 'advance', at: new Date().toISOString() })
   }, [])
+
+  const completeDelivery = useCallback(
+    (otp: string) => {
+      if (deliveries.activeDelivery?.status !== 'drop_arrived') {
+        return false
+      }
+
+      if (otp.trim() !== DEMO_PROOF_OTP) {
+        return false
+      }
+
+      dispatch({ type: 'complete', at: new Date().toISOString() })
+      return true
+    },
+    [deliveries.activeDelivery],
+  )
 
   const cancelDelivery = useCallback((reason: string) => {
     dispatch({ type: 'cancel', reason, at: new Date().toISOString() })
@@ -129,6 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       acceptRequest,
       rejectRequest,
       advanceDelivery,
+      completeDelivery,
       cancelDelivery,
       notifications,
       unreadNotifications,
@@ -146,6 +170,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       acceptRequest,
       rejectRequest,
       advanceDelivery,
+      completeDelivery,
       cancelDelivery,
       notifications,
       unreadNotifications,

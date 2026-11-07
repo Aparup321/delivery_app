@@ -3,9 +3,10 @@ export type DeliveryCategory = 'Grocery' | 'Restaurant'
 export type DeliveryStatus =
   | 'assigned'
   | 'accepted'
-  | 'reached_pickup'
+  | 'pickup_arrived'
   | 'picked_up'
   | 'in_transit'
+  | 'drop_arrived'
   | 'delivered'
   | 'cancelled'
 
@@ -17,6 +18,12 @@ export interface DeliveryStop {
 export interface DeliveryEvent {
   status: DeliveryStatus
   at: string
+}
+
+/** Proof captured when the customer confirms the delivery. */
+export interface DeliveryProof {
+  method: 'otp'
+  verifiedAt: string
 }
 
 /** A delivery job offered to, or handled by, the partner. */
@@ -40,5 +47,6 @@ export interface Delivery {
   completedAt?: string
   status: DeliveryStatus
   events: DeliveryEvent[]
+  proof?: DeliveryProof
   cancellationReason?: string
 }
