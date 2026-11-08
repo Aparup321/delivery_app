@@ -8,6 +8,11 @@ backend.
 
 ### Added
 
+- Onboarding is now isolated per verified mobile number. A new number starts
+  with a blank application instead of inheriting another demo account's
+  submission, and draft applications are redirected back to the wizard until
+  they are submitted. The wizard header offers Sign out; the demo OTP remains
+  `123456`.
 - Required profile photo during onboarding. The personal step now blocks
   progress until a photo is uploaded, stores a downscaled 256px preview, shows
   it in review, Home and Profile, and rejects non-images or files over 5 MB.

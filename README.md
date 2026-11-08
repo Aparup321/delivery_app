@@ -114,8 +114,12 @@ shared mock state layer:
   Profile, Notifications, Support, Active delivery, Onboarding and 404). Home is
   the app root, so it has no back button.
 - Session persists across reloads; signing out returns to the login screen.
-- Onboarding progress is saved in `localStorage`, so a half-finished application
-  can be resumed.
+- Onboarding progress is saved per verified mobile number
+  (`fafo.partner.onboarding.<phone>`), so each demo number has its own
+  application and a new number starts from a blank draft.
+- Draft applications are held inside the onboarding wizard; Home, Orders,
+  Earnings and Profile only open once the application is submitted. The demo OTP
+  is still `123456` for every number.
 - A profile photo is mandatory on the personal step; it is downscaled locally to
   a 256px preview, shown on Home and Profile, and blocks progress until added.
 - Accepting a request moves it into an active delivery with a live status

@@ -202,7 +202,7 @@ function validateStep(step: number, state: OnboardingState): string {
 
 export function OnboardingPage() {
   const navigate = useNavigate()
-  const { session } = useAuth()
+  const { session, signOut } = useAuth()
   const { onboarding, updateOnboarding, submitOnboarding } = useApp()
   const [error, setError] = useState('')
   const [photoError, setPhotoError] = useState('')
@@ -244,6 +244,11 @@ export function OnboardingPage() {
       return
     }
     navigate('/')
+  }
+
+  function handleSignOut() {
+    signOut()
+    navigate('/login', { replace: true })
   }
 
   function handleContinue() {
@@ -334,6 +339,13 @@ export function OnboardingPage() {
           <h1 className="text-[17px] font-bold tracking-tight">
             Partner Onboarding
           </h1>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="ml-auto rounded-full bg-white/10 px-3 py-1.5 text-[11.5px] font-semibold transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          >
+            Sign out
+          </button>
         </div>
 
         <div className="relative mt-5">

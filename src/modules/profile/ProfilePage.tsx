@@ -29,6 +29,7 @@ export function ProfilePage() {
   const [jobAlerts, setJobAlerts] = useState(true)
 
   const partner = currentPartner
+  const displayName = onboarding.fullName.trim() || partner.fullName
   const documents = [
     { label: 'Aadhaar card', fileName: onboarding.documents.aadhaar },
     { label: 'PAN card', fileName: onboarding.documents.pan },
@@ -57,7 +58,7 @@ export function ProfilePage() {
         backTo="/"
         right={
           <Avatar
-            name={partner.fullName}
+            name={displayName}
             src={onboarding.profilePhoto || partner.avatarUrl}
           />
         }
@@ -67,7 +68,7 @@ export function ProfilePage() {
         <Card padding="lg">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[16px] font-bold text-ink">{partner.fullName}</p>
+              <p className="text-[16px] font-bold text-ink">{displayName}</p>
               <p className="mt-0.5 text-[11.5px] text-ink-muted">
                 Partner ID · {partner.id}
               </p>

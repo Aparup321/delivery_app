@@ -1,14 +1,14 @@
 import type { OnboardingState } from '../types/onboarding'
 
-/** Pre-filled draft so the onboarding wizard can be reviewed immediately. */
+/** Blank draft: every new verified number must complete the wizard. */
 export const initialOnboarding: OnboardingState = {
   step: 0,
   status: 'draft',
-  fullName: 'Rahul Das',
-  email: 'meow.das@example.com',
+  fullName: '',
+  email: '',
   dateOfBirth: '',
   profilePhoto: '',
-  city: 'Kolkata',
+  city: '',
   addressLine: '',
   pincode: '',
   documents: {
@@ -18,9 +18,9 @@ export const initialOnboarding: OnboardingState = {
     registration: '',
   },
   vehicle: {
-    type: 'scooter',
-    model: 'Honda Activa 6G',
-    colour: 'Grey',
+    type: 'bike',
+    model: '',
+    colour: '',
     registrationNumber: '',
   },
   bank: {

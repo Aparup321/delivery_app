@@ -13,12 +13,22 @@ import type { OnboardingState } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
 import { AppContext } from './app-store'
 import { deliveryReducer } from './deliveryReducer'
+import { useAuth } from './auth'
 
-const ONBOARDING_STORAGE_KEY = 'fafo.partner.onboarding'
+const ONBOARDING_STORAGE_PREFIX = 'fafo.partner.onboarding'
 
-function readOnboarding(): OnboardingState {
+/** Each verified mobile number keeps its own onboarding draft. */
+function onboardingKey(phone: string): string {
+  return `${ONBOARDING_STORAGE_PREFIX}.${phone}`
+}
+
+function readOnboarding(phone: string | null): OnboardingState {
+  if (!phone) {
+    return initialOnboarding
+  }
+
   try {
-    const raw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY)
+    const raw = window.localStorage.getItem(onboardingKey(phone))
     if (!raw) {
       return initialOnboarding
     }
@@ -45,6 +55,25 @@ function readOnboarding(): OnboardingState {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth()
+
+  return (
+    <AppDataProvider
+      key={session?.phone ?? 'signed-out'}
+      phone={session?.phone ?? null}
+    >
+      {children}
+    </AppDataProvider>
+  )
+}
+
+function AppDataProvider({
+  children,
+  phone,
+}: {
+  children: ReactNode
+  phone: string | null
+}) {
   const [deliveries, dispatch] = useReducer(deliveryReducer, {
     requests: initialRequests,
     activeDelivery: null,
@@ -54,18 +83,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] =
     useState<AppNotification[]>(initialNotifications)
   const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets)
-  const [onboarding, setOnboarding] = useState<OnboardingState>(readOnboarding)
+  const [onboarding, setOnboarding] = useState<OnboardingState>(() =>
+    readOnboarding(phone),
+  )
 
   useEffect(() => {
+    if (!phone) {
+      return
+    }
+
     try {
       window.localStorage.setItem(
-        ONBOARDING_STORAGE_KEY,
+        onboardingKey(phone),
         JSON.stringify(onboarding),
       )
     } catch {
       // Progress stays in memory when storage is blocked.
     }
-  }, [onboarding])
+  }, [onboarding, phone])
 
   const acceptRequest = useCallback((id: string) => {
     dispatch({ type: 'accept', id, at: new Date().toISOString() })

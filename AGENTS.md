@@ -397,8 +397,11 @@ Firebase is a **later phase**. Until then:
   Training, Review) with a purple stepper header, per-document upload rows,
   vehicle tiles (bike, scooter, bicycle, on foot), a required profile photo and a
   submitted/under-review state. Progress is stored under
-  `fafo.partner.onboarding`. The flow renders inside the app shell, so the
-  bottom navigation is present on every authenticated screen.
+  `fafo.partner.onboarding.<phone>`, one draft per verified number, and the demo
+  OTP is the same for every number. Draft partners are redirected back to the
+  wizard until they submit; the wizard header offers Sign out. The flow renders
+  inside the app shell, so the bottom navigation is present on every
+  authenticated screen.
 - **Dashboard** — light header, availability switch, three headline stats, six
   quick actions and a request preview. Requests only appear when online.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated

@@ -54,7 +54,8 @@ export function HomePage() {
   } = useApp()
   const partner = currentPartner
   const nextRequest = requests[0]
-  const firstName = partner.fullName.split(' ')[0] ?? partner.fullName
+  const displayName = onboarding.fullName.trim() || 'Partner'
+  const firstName = displayName.split(' ')[0] ?? displayName
 
   return (
     <div className="pb-6">
@@ -66,7 +67,7 @@ export function HomePage() {
             className="flex min-w-0 items-center gap-3 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
             <Avatar
-              name={partner.fullName}
+              name={displayName}
               src={onboarding.profilePhoto || partner.avatarUrl}
               className="ring-2 ring-brand-soft"
             />
