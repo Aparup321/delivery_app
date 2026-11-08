@@ -40,25 +40,25 @@ const documentFields: Array<{
   {
     key: 'aadhaar',
     title: 'Aadhaar card',
-    hint: 'Front and back, JPG or PDF',
+    hint: 'Front and back, JPG or PDF · max 2 MB',
     required: true,
   },
   {
     key: 'pan',
     title: 'PAN card',
-    hint: 'Clear photo of the card',
+    hint: 'Clear photo of the card · max 2 MB',
     required: true,
   },
   {
     key: 'licence',
     title: 'Driving licence',
-    hint: 'Needed for motorised vehicles',
+    hint: 'Needed for motorised vehicles · max 2 MB',
     required: false,
   },
   {
     key: 'registration',
     title: 'Vehicle RC',
-    hint: 'Registration certificate',
+    hint: 'Registration certificate · max 2 MB',
     required: false,
   },
 ]
@@ -529,7 +529,7 @@ export function OnboardingPage() {
                 KYC Verification
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Upload clear JPG or PDF documents, up to 2 MB each
+                Each file must be JPG or PDF and within 2 MB
               </p>
             </div>
 
