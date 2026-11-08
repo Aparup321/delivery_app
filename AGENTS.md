@@ -385,7 +385,7 @@ Firebase is a **later phase**. Until then:
 
 ## 16. Current implementation state and handoff
 
-> Last updated: 7 November 2026. Read this section before starting work; it
+> Last updated: 8 November 2026. Read this section before starting work; it
 > records what is built, what is intentionally missing, and what an agent
 > picking up the project should do next.
 
@@ -402,6 +402,10 @@ Firebase is a **later phase**. Until then:
   wizard until they submit; the wizard header offers Sign out. The flow renders
   inside the app shell, so the bottom navigation is present on every
   authenticated screen.
+- **Application status** — Profile → Application status shows pending,
+  submitted, under review, approved or rejected, with submitted and updated
+  dates and a four-step tracker. Submitted, under-review, approved and rejected
+  are available from a labelled demo control; no verification service exists.
 - **Dashboard** — light header, availability switch, three headline stats, six
   quick actions and a request preview. Requests only appear when online.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
@@ -420,8 +424,9 @@ Firebase is a **later phase**. Until then:
 - No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
   other PicDrop + HopNgo modules and are out of scope here.
 - Document uploads store only the selected file name in local state; no file is
-  uploaded and no review workflow exists. Files over 2 MB are rejected before
-  the name is recorded.
+  uploaded and no document-level review workflow exists. Application status is
+  demo state changed from a labelled control. Files over 2 MB are rejected
+  before the name is recorded.
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
   as demo where they could be mistaken for live data.
 - Onboarding quiz, working shifts and service zones are not built. The profile
@@ -443,8 +448,8 @@ errors.
 
 ### Next recommended work
 
-1. Verification lifecycle (draft → submitted → under review → approved /
-   restricted) with document-level status and eligibility gating.
+1. Connect the application-status UI to a real verification service, then add
+   document-level review states and eligibility gating before going online.
 2. Onboarding editing after submission (currently the submitted screen is
    read-only and the profile button says "View partner details").
 3. Persist availability, requests and tickets in the planned service layer when

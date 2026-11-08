@@ -30,6 +30,7 @@ export const initialOnboarding: OnboardingState = {
   },
   training: [false, false, false, false, false],
   submittedAt: null,
+  statusUpdatedAt: null,
 }
 
 export const trainingTopics = [

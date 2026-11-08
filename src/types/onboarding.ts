@@ -1,6 +1,11 @@
 import type { VehicleType } from './partner'
 
-export type OnboardingStatus = 'draft' | 'submitted' | 'approved'
+export type OnboardingStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
 
 export type DocumentKey = 'aadhaar' | 'pan' | 'licence' | 'registration'
 
@@ -41,4 +46,6 @@ export interface OnboardingState {
   bank: OnboardingBank
   training: boolean[]
   submittedAt: string | null
+  /** When the current status last changed. */
+  statusUpdatedAt: string | null
 }

@@ -1,7 +1,10 @@
 import { createContext, useContext } from 'react'
 import type { Delivery } from '../types/delivery'
 import type { AppNotification } from '../types/notification'
-import type { OnboardingState } from '../types/onboarding'
+import type {
+  OnboardingState,
+  OnboardingStatus,
+} from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
 
 export interface AppContextValue {
@@ -29,6 +32,8 @@ export interface AppContextValue {
   onboarding: OnboardingState
   updateOnboarding: (patch: Partial<OnboardingState>) => void
   submitOnboarding: () => void
+  /** Demo helper for moving the application through verification. */
+  setApplicationStatus: (status: OnboardingStatus) => void
 }
 
 export const AppContext = createContext<AppContextValue | null>(null)

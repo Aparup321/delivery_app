@@ -19,6 +19,7 @@ import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
 import { dashboardStats, earningsSummary } from '../../mock/earnings'
 import { currentPartner } from '../../mock/partner'
+import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { deliveryStatusLabels } from '../../utils/delivery'
 import { formatCurrency, formatDate } from '../../utils/format'
 
@@ -53,6 +54,7 @@ export function HomePage() {
   const nextRequest = requests[0]
   const displayName = onboarding.fullName.trim() || 'Partner'
   const firstName = displayName.split(' ')[0] ?? displayName
+  const applicationStatus = applicationStatusMeta[onboarding.status]
 
   return (
     <div className="pb-6">
@@ -126,53 +128,41 @@ export function HomePage() {
           </div>
         </Card>
 
-        {onboarding.status === 'draft' ? (
-          <Card padding="md" className="border-brand/20 bg-brand-tint">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[13px] font-semibold text-ink">
-                  Finish your partner setup
+        <Card padding="md">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-ink">
+                {applicationStatus.headline}
+              </p>
+              <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
+                {applicationStatus.description}
+              </p>
+              {onboarding.submittedAt ? (
+                <p className="mt-1 text-[11px] text-ink-soft">
+                  Submitted {formatDate(onboarding.submittedAt)}
                 </p>
-                <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
-                  Add address, KYC, vehicle and bank details to get approved for
-                  deliveries.
-                </p>
-              </div>
-              <Badge tone="warning" size="sm">
-                Pending
-              </Badge>
+              ) : null}
             </div>
-            <Button
-              className="mt-3"
-              size="sm"
-              fullWidth
-              onClick={() => navigate('/onboarding')}
-              rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
-            >
-              Continue setup
-            </Button>
-          </Card>
-        ) : (
-          <Card padding="md">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-[13px] font-semibold text-ink">
-                  Application under review
-                </p>
-                <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
-                  Submitted on{' '}
-                  {onboarding.submittedAt
-                    ? formatDate(onboarding.submittedAt)
-                    : 'recently'}
-                  . Verification usually takes one working day.
-                </p>
-              </div>
-              <Badge tone="success" size="sm">
-                Submitted
-              </Badge>
-            </div>
-          </Card>
-        )}
+            <Badge tone={applicationStatus.tone} size="sm">
+              {applicationStatus.label}
+            </Badge>
+          </div>
+          <Button
+            className="-ml-2 mt-2"
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              navigate(
+                onboarding.status === 'draft'
+                  ? '/onboarding'
+                  : '/application-status',
+              )
+            }
+            rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
+          >
+            {onboarding.status === 'draft' ? 'Continue setup' : 'Track status'}
+          </Button>
+        </Card>
 
         {activeDelivery ? (
           <Card padding="md">

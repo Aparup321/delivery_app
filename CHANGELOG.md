@@ -8,6 +8,11 @@ backend.
 
 ### Added
 
+- Application status tracking under Profile → Application status: pending,
+  submitted, under review, approved and rejected, with submitted/last-update
+  dates and a four-step progress timeline. Home and the submitted screen show
+  the current stage, and a labelled demo control previews each verification
+  state. The final tracker step stays "Decision" until an outcome exists.
 - KYC document uploads are capped at 2 MB per file. Larger images or PDFs are
   rejected with an inline error before the file name is recorded, and the KYC
   step states the limit up front. The profile photo uses the same 2 MB cap and

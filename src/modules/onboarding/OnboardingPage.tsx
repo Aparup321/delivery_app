@@ -22,6 +22,7 @@ import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { onboardingSteps, trainingTopics } from '../../mock/onboarding'
 import type { DocumentKey, OnboardingState } from '../../types/onboarding'
+import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { cn } from '../../utils/cn'
 import { formatDate } from '../../utils/format'
 
@@ -213,6 +214,7 @@ export function OnboardingPage() {
 
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
   const isSubmitted = onboarding.status !== 'draft'
+  const applicationStatus = applicationStatusMeta[onboarding.status]
 
   async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -286,7 +288,7 @@ export function OnboardingPage() {
       <div className="pb-8">
         <ScreenHeader
           title="Partner setup"
-          subtitle="Application submitted"
+          subtitle="Application status"
           showBack
           backTo="/"
         />
@@ -296,31 +298,35 @@ export function OnboardingPage() {
             <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-success-soft text-success">
               <BadgeCheck className="size-7" aria-hidden="true" />
             </span>
-            <h2 className="mt-4 text-base font-bold text-ink">
-              Application submitted
+            <h2 className="mt-4 text-base font-semibold text-ink">
+              {applicationStatus.headline}
             </h2>
             <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
-              We received your details
+              {applicationStatus.description}
               {onboarding.submittedAt
-                ? ` on ${formatDate(onboarding.submittedAt)}`
+                ? ` Submitted on ${formatDate(onboarding.submittedAt)}.`
                 : ''}
-              . The verification team usually completes the review within one
-              working day.
             </p>
             <div className="mt-4 flex justify-center">
-              <Badge tone="warning">Under review</Badge>
+              <Badge tone={applicationStatus.tone}>
+                {applicationStatus.label}
+              </Badge>
             </div>
 
-            <Button className="mt-5" fullWidth onClick={() => navigate('/')}>
-              Back to home
+            <Button
+              className="mt-5"
+              fullWidth
+              onClick={() => navigate('/application-status')}
+            >
+              Track application status
             </Button>
             <Button
               className="mt-2"
               variant="outline"
               fullWidth
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/')}
             >
-              View profile
+              Back to home
             </Button>
           </Card>
         </div>

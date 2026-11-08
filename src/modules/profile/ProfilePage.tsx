@@ -20,6 +20,7 @@ import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { currentPartner } from '../../mock/partner'
+import { applicationStatusMeta } from '../../utils/applicationStatus'
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -37,12 +38,7 @@ export function ProfilePage() {
     { label: 'Vehicle RC', fileName: onboarding.documents.registration },
   ]
 
-  const statusBadge =
-    onboarding.status === 'approved'
-      ? { label: 'Approved', tone: 'success' as const }
-      : onboarding.status === 'submitted'
-        ? { label: 'Under review', tone: 'warning' as const }
-        : { label: 'Setup pending', tone: 'warning' as const }
+  const applicationStatus = applicationStatusMeta[onboarding.status]
 
   function handleSignOut() {
     signOut()
@@ -73,8 +69,8 @@ export function ProfilePage() {
                 Partner ID · {partner.id}
               </p>
             </div>
-            <Badge tone={statusBadge.tone} size="sm">
-              {statusBadge.label}
+            <Badge tone={applicationStatus.tone} size="sm">
+              {applicationStatus.label}
             </Badge>
           </div>
 
@@ -171,6 +167,33 @@ export function ProfilePage() {
               </li>
             ))}
           </ul>
+        </Card>
+
+        <Card padding="md">
+          <p className="text-[13px] font-semibold text-ink">Application</p>
+          <button
+            type="button"
+            onClick={() => navigate('/application-status')}
+            className="mt-2 flex w-full items-center justify-between gap-3 rounded-xl border border-line px-3 py-3 text-left transition-colors hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            <span className="min-w-0">
+              <span className="block text-[12.5px] font-medium text-ink">
+                Application status
+              </span>
+              <span className="mt-0.5 block text-[11.5px] text-ink-muted">
+                Track verification progress
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2">
+              <Badge tone={applicationStatus.tone} size="sm">
+                {applicationStatus.label}
+              </Badge>
+              <ChevronRight
+                className="size-4 text-ink-soft"
+                aria-hidden="true"
+              />
+            </span>
+          </button>
         </Card>
 
         <Card padding="md" className="space-y-3">

@@ -9,7 +9,10 @@ import { initialNotifications } from '../mock/notifications'
 import { initialOnboarding } from '../mock/onboarding'
 import { initialTickets } from '../mock/support'
 import type { AppNotification } from '../types/notification'
-import type { OnboardingState } from '../types/onboarding'
+import type {
+  OnboardingState,
+  OnboardingStatus,
+} from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
 import { AppContext } from './app-store'
 import { deliveryReducer } from './deliveryReducer'
@@ -164,12 +167,27 @@ function AppDataProvider({
   }, [])
 
   const submitOnboarding = useCallback(() => {
+    const at = new Date().toISOString()
     setOnboarding((current) => ({
       ...current,
       status: 'submitted',
-      submittedAt: new Date().toISOString(),
+      submittedAt: at,
+      statusUpdatedAt: at,
       step: 0,
     }))
+  }, [])
+
+  const setApplicationStatus = useCallback((status: OnboardingStatus) => {
+    setOnboarding((current) => {
+      const at = new Date().toISOString()
+      return {
+        ...current,
+        status,
+        submittedAt:
+          current.submittedAt ?? (status === 'draft' ? null : at),
+        statusUpdatedAt: at,
+      }
+    })
   }, [])
 
   const unreadNotifications = useMemo(
@@ -198,6 +216,7 @@ function AppDataProvider({
       onboarding,
       updateOnboarding,
       submitOnboarding,
+      setApplicationStatus,
     }),
     [
       isOnline,
@@ -216,6 +235,7 @@ function AppDataProvider({
       onboarding,
       updateOnboarding,
       submitOnboarding,
+      setApplicationStatus,
     ],
   )
 

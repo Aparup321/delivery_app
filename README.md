@@ -70,6 +70,7 @@ material for the project and are not part of the deployed application.
 | KYC & documents | Aadhaar, PAN, licence and RC uploads with review status | Built (mock) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour and registration where applicable | Built (mock) |
 | Training & approval | Training checklist and submitted-application status | Built (mock) |
+| Application status | Pending, submitted, under review, approved or rejected with a progress timeline | Built (mock) |
 | Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (mock) |
 | Delivery requests | Request cards with countdown, accept or reject | Built (mock) |
 | Active delivery | Timeline, status actions, drop OTP proof, contact and issue reporting | Built (mock) |
@@ -78,7 +79,7 @@ material for the project and are not part of the deployed application.
 | Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (mock) |
 | Notifications | Request, account, delivery and payment alerts with read state | Built (mock) |
 | Help & support | FAQs, ticket submission and ticket status | Built (mock) |
-| Profile & settings | Partner details, documents, language, alerts and sign-out | Built (mock) |
+| Profile & settings | Partner details, documents, language, alerts, application status and sign-out | Built (mock) |
 
 ### Demo access
 
@@ -125,6 +126,10 @@ shared mock state layer:
   Profile, and blocks progress until added.
 - KYC documents accept JPG images or PDFs up to 2 MB each. Larger files are
   rejected inline and are not recorded as uploaded.
+- Application status is available from Profile → Application status. It shows
+  pending, submitted, under review, approved or rejected with submitted and
+  updated dates plus a four-step tracker. A labelled demo control lets testers
+  preview each stage; no verification service is connected.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
   completed or cancelled jobs are added to history.

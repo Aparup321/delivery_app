@@ -208,4 +208,8 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   shadows, header blobs, emoji greetings, hover lifts and uppercase tracked
   labels. The dashboard now uses a flat stat strip and a compact tool list; cards,
   buttons and navigation use quiet hairlines, one accent and 11px minimum labels.
+- **2026-11-08 — M12: application status tracking.** Profile → Application status
+  shows pending, submitted, under review, approved or rejected with dates and a
+  four-step tracker. Home and the submitted screen reflect the current stage; a
+  labelled demo control previews each state. Verification remains mock data.
 

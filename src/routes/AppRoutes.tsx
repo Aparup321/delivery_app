@@ -9,6 +9,7 @@ import { HistoryPage } from '../modules/history/HistoryPage'
 import { HomePage } from '../modules/home/HomePage'
 import { NotificationsPage } from '../modules/notifications/NotificationsPage'
 import { OnboardingPage } from '../modules/onboarding/OnboardingPage'
+import { ApplicationStatusPage } from '../modules/profile/ApplicationStatusPage'
 import { ProfilePage } from '../modules/profile/ProfilePage'
 import { SupportPage } from '../modules/support/SupportPage'
 import { NotFoundPage } from './NotFoundPage'
@@ -31,6 +32,10 @@ export function AppRoutes() {
             <Route path="history" element={<HistoryPage />} />
             <Route path="earnings" element={<EarningsPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route
+              path="application-status"
+              element={<ApplicationStatusPage />}
+            />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="*" element={<NotFoundPage />} />
