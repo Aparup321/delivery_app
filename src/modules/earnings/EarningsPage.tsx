@@ -6,6 +6,7 @@ import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { StatCard } from '../../components/common/StatCard'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import {
   earningsChart,
   earningsSummary,
@@ -16,6 +17,7 @@ import { formatCurrency, formatShortDate } from '../../utils/format'
 
 export function EarningsPage() {
   const { history } = useApp()
+  const { t, locale } = useLanguage()
   const [period, setPeriod] = useState<EarningsPeriod>('today')
 
   const amount =
@@ -36,39 +38,51 @@ export function EarningsPage() {
   const maxPoint = Math.max(...earningsChart.map((point) => point.amount))
   const recentDeliveries = history.slice(0, 4)
 
+  function payoutPeriodLabel(value: string): string {
+    return value.startsWith('Week of ')
+      ? t('Week of {date}', { date: value.slice('Week of '.length) })
+      : value
+  }
+
+  function payoutDateLabel(value: string): string {
+    return value.startsWith('Expected ')
+      ? t('Expected {date}', { date: value.slice('Expected '.length) })
+      : value
+  }
+
   return (
     <div className="pb-6">
       <ScreenHeader
-        title="Earnings"
-        subtitle="Payouts, incentives and delivery earnings"
+        title={t('Earnings')}
+        subtitle={t('Payouts, incentives and delivery earnings')}
         showBack
         backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">
         <SegmentedTabs
-          label="Earnings period"
+          label={t('Earnings period')}
           value={period}
           onChange={(value) => setPeriod(value as EarningsPeriod)}
           items={[
-            { id: 'today', label: 'Today' },
-            { id: 'week', label: 'Week' },
-            { id: 'month', label: 'Month' },
+            { id: 'today', label: t('Today') },
+            { id: 'week', label: t('Week') },
+            { id: 'month', label: t('Month') },
           ]}
         />
 
         <Card padding="lg">
           <p className="text-[12px] font-medium text-ink-muted">
             {period === 'today'
-              ? "Today's earnings"
+              ? t("Today's earnings")
               : period === 'week'
-                ? 'This week'
-                : 'This month'}
+                ? t('This week')
+                : t('This month')}
           </p>
 
           <div className="mt-1 flex items-end justify-between gap-3">
             <p className="text-[28px] font-bold leading-none tracking-tight text-ink">
-              {formatCurrency(amount)}
+              {formatCurrency(amount, locale)}
             </p>
             <Badge tone="success" size="sm">
               <TrendingUp className="size-3" aria-hidden="true" />
@@ -77,27 +91,29 @@ export function EarningsPage() {
           </div>
 
           <p className="mt-2 text-[11.5px] text-ink-muted">
-            Includes {formatCurrency(earningsSummary.incentive)} of incentives
+            {t('Includes {amount} of incentives', {
+              amount: formatCurrency(earningsSummary.incentive, locale),
+            })}
           </p>
         </Card>
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             value={String(deliveries)}
-            label="Deliveries"
-            hint={period === 'today' ? 'Today' : 'This period'}
+            label={t('Deliveries')}
+            hint={period === 'today' ? t('Today') : t('This period')}
           />
           <StatCard
-            value={formatCurrency(average)}
-            label="Avg. per delivery"
-            hint="After incentives"
+            value={formatCurrency(average, locale)}
+            label={t('Avg. per delivery')}
+            hint={t('After incentives')}
           />
         </div>
 
         <Card padding="md">
-          <p className="text-[13px] font-bold text-ink">Earnings trend</p>
+          <p className="text-[13px] font-bold text-ink">{t('Earnings trend')}</p>
           <p className="text-[11.5px] text-ink-muted">
-            Today, by time of day
+            {t('Today, by time of day')}
           </p>
 
           <div className="mt-4 flex h-32 items-end gap-2">
@@ -121,11 +137,11 @@ export function EarningsPage() {
                           : 'w-full rounded-t-md bg-brand/35'
                       }
                       style={{ height: `${height}%` }}
-                      title={`${point.label}: ${formatCurrency(point.amount)}`}
+                      title={`${t(point.label)}: ${formatCurrency(point.amount, locale)}`}
                     />
                   </div>
                   <span className="text-[11px] font-medium text-ink-soft">
-                    {point.label}
+                    {t(point.label)}
                   </span>
                 </div>
               )
@@ -134,7 +150,9 @@ export function EarningsPage() {
         </Card>
 
         <Card padding="md">
-          <p className="text-[13px] font-bold text-ink">Recent deliveries</p>
+          <p className="text-[13px] font-bold text-ink">
+            {t('Recent deliveries')}
+          </p>
 
           <ul className="mt-2 divide-y divide-line">
             {recentDeliveries.map((delivery) => (
@@ -148,14 +166,14 @@ export function EarningsPage() {
                   </p>
                   <p className="text-[11px] text-ink-muted">
                     {delivery.completedAt
-                      ? formatShortDate(delivery.completedAt)
+                      ? formatShortDate(delivery.completedAt, locale)
                       : '—'}{' '}
                     · {delivery.destination.name}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-[12px] font-bold text-ink">
-                    {formatCurrency(delivery.earnings)}
+                    {formatCurrency(delivery.earnings, locale)}
                   </span>
                   <Badge
                     tone={
@@ -163,7 +181,7 @@ export function EarningsPage() {
                     }
                     size="sm"
                   >
-                    {delivery.status === 'cancelled' ? 'Cancelled' : 'Paid'}
+                    {t(delivery.status === 'cancelled' ? 'Cancelled' : 'Paid')}
                   </Badge>
                 </div>
               </li>
@@ -172,7 +190,7 @@ export function EarningsPage() {
         </Card>
 
         <Card padding="md">
-          <p className="text-[13px] font-bold text-ink">Payouts</p>
+          <p className="text-[13px] font-bold text-ink">{t('Payouts')}</p>
 
           <ul className="mt-2 divide-y divide-line">
             {payouts.map((payout) => (
@@ -182,21 +200,21 @@ export function EarningsPage() {
               >
                 <div>
                   <p className="text-[12.5px] font-semibold text-ink">
-                    {payout.period}
+                    {payoutPeriodLabel(payout.period)}
                   </p>
                   <p className="text-[11px] text-ink-muted">
-                    {payout.id} · {payout.paidOn}
+                    {payout.id} · {payoutDateLabel(payout.paidOn)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-[12px] font-bold text-ink">
-                    {formatCurrency(payout.amount)}
+                    {formatCurrency(payout.amount, locale)}
                   </span>
                   <Badge
                     tone={payout.status === 'Paid' ? 'success' : 'warning'}
                     size="sm"
                   >
-                    {payout.status}
+                    {t(payout.status)}
                   </Badge>
                 </div>
               </li>
@@ -205,8 +223,9 @@ export function EarningsPage() {
         </Card>
 
         <p className="px-1 text-center text-[11px] leading-relaxed text-ink-soft">
-          Demo data for this phase. Earnings will come from live delivery and
-          payment records after the backend integration.
+          {t(
+            'Demo data for this phase. Earnings will come from live delivery and payment records after the backend integration.',
+          )}
         </p>
       </div>
     </div>

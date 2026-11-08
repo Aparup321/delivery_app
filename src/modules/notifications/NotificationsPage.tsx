@@ -4,6 +4,7 @@ import { Button } from '../../components/common/Button'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import type { NotificationType } from '../../types/notification'
 import { formatTime } from '../../utils/format'
 
@@ -15,6 +16,7 @@ const typeIcons: Record<NotificationType, LucideIcon> = {
 }
 
 export function NotificationsPage() {
+  const { t, locale } = useLanguage()
   const {
     notifications,
     unreadNotifications,
@@ -25,11 +27,11 @@ export function NotificationsPage() {
   return (
     <div className="pb-6">
       <ScreenHeader
-        title="Notifications"
+        title={t('Notifications')}
         subtitle={
           unreadNotifications > 0
-            ? `${unreadNotifications} unread`
-            : 'You are all caught up'
+            ? t('{count} unread', { count: unreadNotifications })
+            : t('You are all caught up')
         }
         showBack
         backTo="/"
@@ -44,7 +46,7 @@ export function NotificationsPage() {
               onClick={markAllNotificationsRead}
               leftIcon={<CheckCheck className="size-4" aria-hidden="true" />}
             >
-              Mark all as read
+              {t('Mark all as read')}
             </Button>
           </div>
         ) : null}
@@ -59,7 +61,7 @@ export function NotificationsPage() {
                   <button
                     type="button"
                     onClick={() => markNotificationRead(notification.id)}
-                    aria-label={`${notification.title}${notification.isRead ? '' : ', unread'}`}
+                    aria-label={`${t(notification.title)}${notification.isRead ? '' : `, ${t('Unread')}`}`}
                     className={
                       notification.isRead
                         ? 'w-full rounded-card border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
@@ -74,7 +76,7 @@ export function NotificationsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-[12.5px] font-bold text-ink">
-                            {notification.title}
+                            {t(notification.title)}
                           </p>
                           {!notification.isRead ? (
                             <span
@@ -84,10 +86,10 @@ export function NotificationsPage() {
                           ) : null}
                         </div>
                         <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
-                          {notification.body}
+                          {t(notification.body)}
                         </p>
                         <p className="mt-1 text-[10.5px] text-ink-soft">
-                          {formatTime(notification.at)}
+                          {formatTime(notification.at, locale)}
                         </p>
                       </div>
                     </div>
@@ -99,8 +101,10 @@ export function NotificationsPage() {
         ) : (
           <EmptyState
             icon={CheckCheck}
-            title="No notifications"
-            description="Delivery requests, payment updates and account messages will appear here."
+            title={t('No notifications')}
+            description={t(
+              'Delivery requests, payment updates and account messages will appear here.',
+            )}
           />
         )}
       </div>
