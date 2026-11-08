@@ -22,7 +22,7 @@ export interface OnboardingDocuments {
   passbook: string
 }
 
-/** Numbers printed on the KYC documents. The RC number lives on the vehicle. */
+/** Aadhaar and PAN numbers. The licence number is captured in vehicle details. */
 export interface OnboardingDocumentNumbers {
   aadhaar: string
   pan: string
@@ -54,7 +54,7 @@ export interface OnboardingState {
   city: string
   addressLine: string
   pincode: string
-  /** Numbers printed on the Aadhaar, PAN and driving licence. */
+  /** Numbers printed on the Aadhaar and PAN, plus the licence entered with the vehicle. */
   documentNumbers: OnboardingDocumentNumbers
   documents: OnboardingDocuments
   vehicle: OnboardingVehicle

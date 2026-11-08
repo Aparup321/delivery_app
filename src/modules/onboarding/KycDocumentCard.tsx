@@ -4,22 +4,22 @@ import { DocumentUploadTile } from './DocumentUploadTile'
 
 export interface KycDocumentCardProps {
   title: string
-  numberLabel: string
-  numberValue: string
-  numberPlaceholder: string
-  numberHint: string
+  numberLabel?: string
+  numberValue?: string
+  numberPlaceholder?: string
+  numberHint?: string
   inputMode?: 'numeric' | 'text'
-  maxLength: number
+  maxLength?: number
   autoCapitalize?: 'characters' | 'none'
   required?: boolean
   fileName: string
   fileHint: string
   fileError?: string
-  onNumberChange: (value: string) => void
+  onNumberChange?: (value: string) => void
   onFileChange: (file: File) => void
 }
 
-/** KYC row with the document number on the left and upload control on the right. */
+/** KYC row with an optional document number and its upload control. */
 export function KycDocumentCard({
   title,
   numberLabel,
@@ -36,25 +36,33 @@ export function KycDocumentCard({
   onNumberChange,
   onFileChange,
 }: KycDocumentCardProps) {
+  const hasNumberField = Boolean(numberLabel && onNumberChange)
+
   return (
     <Card padding="md">
       <div className="flex items-start gap-3">
-        <Input
-          containerClassName="min-w-0 flex-1"
-          label={numberLabel}
-          required={required}
-          inputMode={inputMode}
-          autoComplete="off"
-          autoCapitalize={autoCapitalize}
-          maxLength={maxLength}
-          value={numberValue}
-          placeholder={numberPlaceholder}
-          hint={numberHint}
-          onChange={(event) => onNumberChange(event.target.value)}
-        />
+        {hasNumberField ? (
+          <Input
+            containerClassName="min-w-0 flex-1"
+            label={numberLabel}
+            required={required}
+            inputMode={inputMode}
+            autoComplete="off"
+            autoCapitalize={autoCapitalize}
+            maxLength={maxLength}
+            value={numberValue ?? ''}
+            placeholder={numberPlaceholder}
+            hint={numberHint}
+            onChange={(event) => onNumberChange?.(event.target.value)}
+          />
+        ) : (
+          <p className="min-w-0 flex-1 self-center text-[13px] font-semibold text-ink">
+            {title}
+          </p>
+        )}
 
         <DocumentUploadTile
-          className="mt-[26px]"
+          className={hasNumberField ? 'mt-[26px]' : 'self-center'}
           documentName={title}
           fileName={fileName}
           onFileChange={onFileChange}

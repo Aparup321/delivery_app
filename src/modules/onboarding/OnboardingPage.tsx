@@ -146,26 +146,6 @@ function validateStep(step: number, state: OnboardingState): string {
         return 'Upload your PAN card to continue.'
       }
 
-      const hasLicence = Boolean(
-        state.documents.licence || state.documentNumbers.licence,
-      )
-      if (hasLicence && !LICENCE_PATTERN.test(state.documentNumbers.licence)) {
-        return 'Enter a valid driving licence number.'
-      }
-      if (hasLicence && !state.documents.licence) {
-        return 'Upload your driving licence to continue.'
-      }
-
-      const hasRc = Boolean(
-        state.documents.registration || state.vehicle.registrationNumber,
-      )
-      if (hasRc && !REGISTRATION_PATTERN.test(state.vehicle.registrationNumber)) {
-        return 'Enter a valid registration number, for example WB02AB1234.'
-      }
-      if (hasRc && !state.documents.registration) {
-        return 'Upload your vehicle RC to continue.'
-      }
-
       if (state.bank.accountHolder.trim().length < 3) {
         return "Enter the account holder's name."
       }
@@ -183,6 +163,12 @@ function validateStep(step: number, state: OnboardingState): string {
 
       if (state.vehicle.type !== 'foot' && !state.vehicle.model.trim()) {
         return 'Enter your vehicle model.'
+      }
+      if (
+        needsRegistration &&
+        !LICENCE_PATTERN.test(state.documentNumbers.licence)
+      ) {
+        return 'Enter a valid driving licence number.'
       }
       if (
         needsRegistration &&
@@ -219,6 +205,9 @@ export function OnboardingPage() {
   const vehicleLabel =
     vehicleOptions.find((option) => option.value === onboarding.vehicle.type)
       ?.label ?? ''
+  const isMotorised =
+    onboarding.vehicle.type === 'bike' ||
+    onboarding.vehicle.type === 'scooter'
 
   async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -621,12 +610,6 @@ export function OnboardingPage() {
 
               <KycDocumentCard
                 title={t('Driving licence')}
-                numberLabel={t('Licence number')}
-                numberValue={onboarding.documentNumbers.licence}
-                numberPlaceholder="WB-0120210012345"
-                numberHint={t('Licence number as printed on the card')}
-                maxLength={18}
-                autoCapitalize="characters"
                 fileName={onboarding.documents.licence}
                 fileHint={t('Needed for motorised vehicles · max 2 MB')}
                 fileError={
@@ -634,42 +617,17 @@ export function OnboardingPage() {
                     ? t(documentErrors.licence)
                     : undefined
                 }
-                onNumberChange={(value) =>
-                  updateOnboarding({
-                    documentNumbers: {
-                      ...onboarding.documentNumbers,
-                      licence: value
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9- ]/g, '')
-                        .slice(0, 18),
-                    },
-                  })
-                }
                 onFileChange={(file) => handleDocumentChange('licence', file)}
               />
 
               <KycDocumentCard
                 title={t('Vehicle RC')}
-                numberLabel={t('Registration number')}
-                numberValue={onboarding.vehicle.registrationNumber}
-                numberPlaceholder="WB02AB1234"
-                numberHint={t('Registration number printed on the RC')}
-                maxLength={13}
-                autoCapitalize="characters"
                 fileName={onboarding.documents.registration}
                 fileHint={t('Registration certificate · max 2 MB')}
                 fileError={
                   documentErrors.registration
                     ? t(documentErrors.registration)
                     : undefined
-                }
-                onNumberChange={(value) =>
-                  updateOnboarding({
-                    vehicle: {
-                      ...onboarding.vehicle,
-                      registrationNumber: value.toUpperCase().slice(0, 13),
-                    },
-                  })
                 }
                 onFileChange={(file) =>
                   handleDocumentChange('registration', file)
@@ -830,29 +788,54 @@ export function OnboardingPage() {
                 </div>
               </div>
 
-              {onboarding.vehicle.type === 'bike' ||
-              onboarding.vehicle.type === 'scooter' ? (
-                <Input
-                  label={t('Registration number')}
-                  required
-                  value={onboarding.vehicle.registrationNumber}
-                  placeholder="WB02AB1234"
-                  hint={t('Enter the number printed on the number plate.')}
-                  onChange={(event) =>
-                    updateOnboarding({
-                      vehicle: {
-                        ...onboarding.vehicle,
-                        registrationNumber: event.target.value.toUpperCase(),
-                      },
-                    })
-                  }
-                />
+              {isMotorised ? (
+                <>
+                  <Input
+                    label={t('Licence number')}
+                    required
+                    value={onboarding.documentNumbers.licence}
+                    placeholder="WB-0120210012345"
+                    hint={t('Licence number as printed on the card')}
+                    maxLength={18}
+                    autoCapitalize="characters"
+                    onChange={(event) =>
+                      updateOnboarding({
+                        documentNumbers: {
+                          ...onboarding.documentNumbers,
+                          licence: event.target.value
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9- ]/g, '')
+                            .slice(0, 18),
+                        },
+                      })
+                    }
+                  />
+                  <Input
+                    label={t('Registration number')}
+                    required
+                    value={onboarding.vehicle.registrationNumber}
+                    placeholder="WB02AB1234"
+                    maxLength={13}
+                    autoCapitalize="characters"
+                    hint={t('Enter the number printed on the number plate.')}
+                    onChange={(event) =>
+                      updateOnboarding({
+                        vehicle: {
+                          ...onboarding.vehicle,
+                          registrationNumber: event.target.value
+                            .toUpperCase()
+                            .slice(0, 13),
+                        },
+                      })
+                    }
+                  />
+                </>
               ) : (
                 <p className="text-[11.5px] leading-relaxed text-ink-muted">
                   {t(
                     onboarding.vehicle.type === 'foot'
-                      ? 'Walking deliveries do not need a vehicle registration.'
-                      : 'Bicycles do not need a registration number.',
+                      ? 'Walking deliveries do not need a licence or registration.'
+                      : 'Bicycles do not need a licence or registration number.',
                   )}
                 </p>
               )}
@@ -1063,11 +1046,18 @@ export function OnboardingPage() {
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.vehicle.type === 'foot'
-                    ? t('On foot · no vehicle or registration needed')
+                    ? t(
+                        'On foot · no vehicle, licence or registration needed',
+                      )
                     : onboarding.vehicle.type === 'bicycle'
                       ? `${t('Bicycle')} · ${onboarding.vehicle.colour}`
                       : `${onboarding.vehicle.registrationNumber} · ${t(vehicleLabel)}`}
                 </p>
+                {isMotorised ? (
+                  <p className="text-[11.5px] text-ink-muted">
+                    {t('Licence number')}: {onboarding.documentNumbers.licence}
+                  </p>
+                ) : null}
               </section>
 
               <section className="border-t border-line pt-3">

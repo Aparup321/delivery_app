@@ -144,12 +144,19 @@ export function ProfilePage() {
           </p>
           <p className="text-[11.5px] text-ink-muted">
             {onboarding.vehicle.type === 'foot'
-              ? t('No vehicle or registration needed')
+              ? t('No vehicle, licence or registration needed')
               : onboarding.vehicle.type === 'bicycle'
-                ? t('No registration needed')
+                ? t('No licence or registration needed')
                 : onboarding.vehicle.registrationNumber ||
                   t('Registration number not added')}
           </p>
+          {onboarding.vehicle.type === 'bike' ||
+          onboarding.vehicle.type === 'scooter' ? (
+            <p className="text-[11.5px] text-ink-muted">
+              {t('Licence number')}:{' '}
+              {onboarding.documentNumbers.licence || t('Not added')}
+            </p>
+          ) : null}
         </Card>
 
         <Card padding="md">
