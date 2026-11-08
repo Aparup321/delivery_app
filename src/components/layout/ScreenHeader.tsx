@@ -33,18 +33,11 @@ export function ScreenHeader({
       className={cn(
         'relative overflow-hidden px-5 pb-5',
         isBrand
-          ? 'rounded-b-3xl bg-brand-gradient pt-6 text-white'
+          ? 'rounded-b-2xl bg-brand-deep pt-6 text-white'
           : 'border-b border-line bg-surface pt-5 text-ink',
         className,
       )}
     >
-      {isBrand ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-10 -top-16 size-40 rounded-full bg-white/10"
-        />
-      ) : null}
-
       <div className="relative flex items-start gap-3">
         {showBack ? (
           <button
@@ -52,9 +45,9 @@ export function ScreenHeader({
             onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
             aria-label="Go back"
             className={cn(
-              'mt-0.5 grid size-9 shrink-0 place-items-center rounded-full transition-colors',
+              'mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg transition-colors',
               isBrand
-                ? 'bg-white/15 text-white hover:bg-white/25'
+                ? 'bg-white/10 text-white hover:bg-white/20'
                 : 'bg-brand-soft text-brand-deep hover:bg-[#e3d8ff]',
             )}
           >
@@ -63,7 +56,7 @@ export function ScreenHeader({
         ) : null}
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[19px] font-bold tracking-tight">{title}</h1>
+          <h1 className="truncate text-[19px] font-semibold tracking-tight">{title}</h1>
           {subtitle ? (
             <p
               className={cn(

@@ -23,7 +23,7 @@ export function SegmentedTabs({
     <div
       role="tablist"
       aria-label={label}
-      className="flex gap-1 rounded-2xl bg-brand-soft/70 p-1"
+      className="flex gap-1 rounded-xl border border-line bg-canvas p-1"
     >
       {items.map((item) => {
         const isActive = item.id === value
@@ -36,9 +36,9 @@ export function SegmentedTabs({
             aria-selected={isActive}
             onClick={() => onChange(item.id)}
             className={cn(
-              'flex-1 whitespace-nowrap rounded-xl px-2 py-2 text-[12px] font-semibold transition-colors duration-200',
+              'flex-1 whitespace-nowrap rounded-lg px-2 py-2 text-[12px] font-medium transition-colors',
               isActive
-                ? 'bg-surface text-brand-deep shadow-card'
+                ? 'bg-surface text-ink'
                 : 'text-ink-muted hover:text-brand-deep',
             )}
           >

@@ -4,7 +4,6 @@ import {
   ClipboardList,
   LifeBuoy,
   Package,
-  Star,
   UserRound,
   Wallet,
 } from 'lucide-react'
@@ -16,13 +15,11 @@ import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { IconButton } from '../../components/common/IconButton'
 import { SectionHeading } from '../../components/common/SectionHeading'
-import { StatCard } from '../../components/common/StatCard'
 import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
 import { dashboardStats, earningsSummary } from '../../mock/earnings'
 import { currentPartner } from '../../mock/partner'
 import { deliveryStatusLabels } from '../../utils/delivery'
-import { getGreeting } from '../../utils/date'
 import { formatCurrency, formatDate } from '../../utils/format'
 
 interface QuickAction {
@@ -32,8 +29,8 @@ interface QuickAction {
 }
 
 const quickActions: QuickAction[] = [
-  { label: 'Find Requests', to: '/deliveries', icon: Package },
-  { label: 'My Orders', to: '/history', icon: ClipboardList },
+  { label: 'Find requests', to: '/deliveries', icon: Package },
+  { label: 'My orders', to: '/history', icon: ClipboardList },
   { label: 'Earnings', to: '/earnings', icon: Wallet },
   { label: 'Support', to: '/support', icon: LifeBuoy },
   { label: 'Notifications', to: '/notifications', icon: Bell },
@@ -72,10 +69,10 @@ export function HomePage() {
               className="ring-2 ring-brand-soft"
             />
             <div className="min-w-0">
-              <p className="text-[12px] font-medium text-ink-muted">
-                {getGreeting()} 👋
+              <p className="text-[11.5px] font-medium text-ink-muted">
+                Delivery partner
               </p>
-              <h1 className="truncate text-[19px] font-bold tracking-tight text-ink">
+              <h1 className="truncate text-[19px] font-semibold tracking-tight text-ink">
                 {firstName}
               </h1>
             </div>
@@ -94,7 +91,7 @@ export function HomePage() {
               <Bell className="size-5" aria-hidden="true" />
             </IconButton>
             {unreadNotifications > 0 ? (
-              <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[9.5px] font-bold text-white">
+              <span className="absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-white">
                 {unreadNotifications}
               </span>
             ) : null}
@@ -115,7 +112,7 @@ export function HomePage() {
                 }
               />
               <div>
-                <p className="text-[13.5px] font-bold text-ink">
+                <p className="text-[13.5px] font-semibold text-ink">
                   {isOnline ? 'You are Online' : 'You are Offline'}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
@@ -133,7 +130,7 @@ export function HomePage() {
           <Card padding="md" className="border-brand/20 bg-brand-tint">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[13px] font-bold text-ink">
+                <p className="text-[13px] font-semibold text-ink">
                   Finish your partner setup
                 </p>
                 <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
@@ -156,10 +153,10 @@ export function HomePage() {
             </Button>
           </Card>
         ) : (
-          <Card padding="md" className="border-success/20 bg-success-soft">
+          <Card padding="md">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-[13px] font-bold text-ink">
+                <p className="text-[13px] font-semibold text-ink">
                   Application under review
                 </p>
                 <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
@@ -181,10 +178,10 @@ export function HomePage() {
           <Card padding="md">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                <p className="text-[11.5px] font-medium text-ink-muted">
                   Active delivery
                 </p>
-                <p className="mt-0.5 text-[13.5px] font-bold text-ink">
+                <p className="mt-0.5 text-[13.5px] font-semibold text-ink">
                   {activeDelivery.id}
                 </p>
               </div>
@@ -207,40 +204,51 @@ export function HomePage() {
           </Card>
         ) : null}
 
-        <div className="grid grid-cols-3 gap-2.5">
-          <StatCard
-            icon={Package}
-            value={String(earningsSummary.deliveriesToday)}
-            label="Today's Deliveries"
+        <div className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border border-line bg-surface">
+          <Link
             to="/deliveries"
-          />
-          <StatCard
-            icon={Wallet}
-            value={formatCurrency(earningsSummary.today)}
-            label="Today's Earnings"
+            className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            <p className="text-[11px] font-medium text-ink-muted">Deliveries</p>
+            <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
+              {earningsSummary.deliveriesToday}
+            </p>
+          </Link>
+          <Link
             to="/earnings"
-          />
-          <StatCard
-            icon={Star}
-            value={dashboardStats.rating.toFixed(1)}
-            label="Your Rating"
+            className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            <p className="text-[11px] font-medium text-ink-muted">Earnings</p>
+            <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
+              {formatCurrency(earningsSummary.today)}
+            </p>
+          </Link>
+          <Link
             to="/profile"
-          />
+            className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            <p className="text-[11px] font-medium text-ink-muted">Rating</p>
+            <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
+              {dashboardStats.rating.toFixed(1)}
+            </p>
+          </Link>
         </div>
 
         <section>
-          <SectionHeading title="Quick Actions" />
-          <div className="mt-3 grid grid-cols-3 gap-2.5">
+          <SectionHeading title="Quick actions" />
+          <div className="mt-2 grid grid-cols-2 gap-x-2">
             {quickActions.map(({ label, to, icon: Icon }) => (
               <Link
                 key={label}
                 to={to}
-                className="flex flex-col items-center gap-2 rounded-card border border-line/80 bg-surface px-2 py-3 text-center shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
               >
-                <span className="grid size-9 place-items-center rounded-xl bg-brand-soft text-brand-deep">
-                  <Icon className="size-[18px]" aria-hidden="true" />
-                </span>
-                <span className="text-[11.5px] font-semibold leading-tight text-ink">
+                <Icon
+                  className="size-[18px] shrink-0 text-ink-muted"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <span className="text-[12.5px] font-medium leading-tight text-ink">
                   {label}
                 </span>
               </Link>
@@ -267,7 +275,7 @@ export function HomePage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-bold text-ink">
+                    <span className="text-[13px] font-semibold text-ink">
                       {nextRequest.id}
                     </span>
                     <Badge
@@ -283,7 +291,7 @@ export function HomePage() {
                     {nextRequest.pickup.name} → {nextRequest.destination.name}
                   </p>
                 </div>
-                <p className="shrink-0 text-[13px] font-bold text-brand-deep">
+                <p className="shrink-0 text-[13px] font-semibold tabular-nums text-brand-deep">
                   {formatCurrency(nextRequest.earnings)}
                 </p>
               </div>
@@ -312,7 +320,7 @@ export function HomePage() {
               </div>
             </Card>
           ) : (
-            <p className="mt-2 rounded-2xl bg-brand-tint px-3 py-3 text-[12px] leading-relaxed text-ink-muted">
+            <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
               {isOnline
                 ? 'No requests right now. Stay online to get the next job.'
                 : 'Turn on availability to start receiving nearby grocery and restaurant requests.'}

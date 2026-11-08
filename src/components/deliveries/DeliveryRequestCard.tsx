@@ -53,7 +53,7 @@ export function DeliveryRequestCard({
             <MapPin className="size-3" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+            <p className="text-[11.5px] font-medium text-ink-muted">
               Pickup
             </p>
             <p className="text-[12.5px] font-semibold text-ink">
@@ -70,7 +70,7 @@ export function DeliveryRequestCard({
             <ArrowDownRight className="size-3" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+            <p className="text-[11.5px] font-medium text-ink-muted">
               Deliver to
             </p>
             <p className="text-[12.5px] font-semibold text-ink">

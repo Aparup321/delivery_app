@@ -19,7 +19,7 @@ backend.
   `123456`.
 - Required profile photo during onboarding. The personal step now blocks
   progress until a photo is uploaded, stores a downscaled 256px preview, shows
-  it in review, Home and Profile, and rejects non-images or files over 5 MB.
+  it in review, Home and Profile, and rejects non-images or files over 2 MB.
 - On-foot delivery option in onboarding alongside bike, scooter and bicycle.
   Walking partners are not asked for a vehicle model, colour or registration,
   and the profile and review screens show "On foot".
@@ -33,6 +33,12 @@ backend.
 
 ### Changed
 
+- UI pass against AI-template tells: removed the purple hue gradients, decorative
+  header blobs and coloured shadows, flattened cards and buttons, replaced the
+  dashboard's repeated icon cards with a quiet stat strip and a two-column tool
+  list, removed emoji greetings and uppercase tracked labels, and raised the
+  smallest labels to 11px. Empty states and the desktop backdrop were flattened
+  too. Palette, flows and features are unchanged.
 - Every section now has a back control in its header: Orders, History, Earnings
   and Profile gained one, and Support, Active delivery and the 404 screen now
   have deterministic fallbacks (Home, Orders and Home respectively) instead of a

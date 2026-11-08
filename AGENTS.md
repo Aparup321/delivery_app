@@ -182,12 +182,11 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 
 ### Shape and elevation
 
-- Cards: `rounded-card` (1.25rem), `border border-line/80`, `shadow-card`.
-- Icon tiles: `rounded-xl`; buttons: `rounded-2xl`; badges: `rounded-full`.
-- Headers use `bg-brand-gradient` (the `@utility` defined in `theme.css`).
+- Cards: `rounded-card` (1rem), `border border-line`, no coloured shadow.
+- Icon tiles: `rounded-lg`; buttons: `rounded-lg`/`rounded-xl`; badges: `rounded-full`.
+- Headers use solid `bg-brand-deep`. No hue gradients, glows or decorative blobs.
 - Touch targets: at least 40px; primary controls use `h-11` / `size-11`.
-- Transitions: `transition-colors` or `transition-all duration-200`. No long or
-  bouncy animations.
+- Transitions: `transition-colors`. No hover lift, glow or decorative motion.
 
 ### Shared components (`src/components/common/`)
 
@@ -265,8 +264,9 @@ extend the shared component with a typed prop instead of copying its classes.
 
 - Mobile-first. The primary design viewport is **390 × 844 px**; verify new
   screens at 390px width first.
-- The app shell is a centered column: `max-w-[430px]`, full height, with a purple
-  backdrop on large screens. Do not stretch screens into a desktop dashboard.
+- The app shell is a centered column: `max-w-[430px]`, full height, on the
+  neutral canvas with hairline side borders on large screens. Do not stretch
+  screens into a desktop dashboard.
 - Breakpoints may adjust spacing or allow two-column grids, but the app must keep
   its phone-like proportions.
 - Respect safe areas: the bottom navigation already accounts for

@@ -68,7 +68,7 @@ export function ProfilePage() {
         <Card padding="lg">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[16px] font-bold text-ink">{displayName}</p>
+              <p className="text-[16px] font-semibold text-ink">{displayName}</p>
               <p className="mt-0.5 text-[11.5px] text-ink-muted">
                 Partner ID · {partner.id}
               </p>
@@ -93,7 +93,7 @@ export function ProfilePage() {
         </Card>
 
         <Card padding="md">
-          <p className="text-[13px] font-bold text-ink">Contact</p>
+          <p className="text-[13px] font-semibold text-ink">Contact</p>
 
           <ul className="mt-2 space-y-2.5 text-[12px]">
             <li className="flex items-center gap-2.5">
@@ -124,7 +124,7 @@ export function ProfilePage() {
 
         <Card padding="md">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[13px] font-bold text-ink">Vehicle</p>
+            <p className="text-[13px] font-semibold text-ink">Vehicle</p>
             <Badge tone="brand" size="sm">
               {onboarding.vehicle.type === 'foot'
                 ? 'On foot'
@@ -147,7 +147,7 @@ export function ProfilePage() {
         </Card>
 
         <Card padding="md">
-          <p className="text-[13px] font-bold text-ink">Documents</p>
+          <p className="text-[13px] font-semibold text-ink">Documents</p>
 
           <ul className="mt-2 divide-y divide-line">
             {documents.map((document) => (
@@ -174,7 +174,7 @@ export function ProfilePage() {
         </Card>
 
         <Card padding="md" className="space-y-3">
-          <p className="text-[13px] font-bold text-ink">Preferences</p>
+          <p className="text-[13px] font-semibold text-ink">Preferences</p>
 
           <Select
             label="App language"

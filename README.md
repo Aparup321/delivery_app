@@ -239,8 +239,12 @@ Supporting tokens: `#1B1430` (text), `#6E6789` (secondary text), `#12A150`
 (success), `#E08A00` (pending), `#E0413E` (danger). All colours live in
 `src/styles/theme.css` as Tailwind v4 tokens, so the palette changes in one place.
 
-Style rules: rounded cards (`rounded-card`, 20px), soft shadows, 40–44px touch
-targets, 200ms transitions, and a centered `max-w-[430px]` app column on every
+Visual direction: a dispatch-desk tool — flat ink-and-paper surfaces, one solid
+deep-purple accent and route-line details. No hue gradients, glows or decorative
+blobs.
+
+Style rules: flat cards (`rounded-card`, 16px) with hairline borders, 40–44px touch
+targets, short colour transitions, and a centered `max-w-[430px]` app column on every
 size.
 
 ## 11. Mock data and app state

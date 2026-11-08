@@ -6,7 +6,7 @@ export function BottomNavigation() {
   return (
     <nav
       aria-label="Primary"
-      className="sticky bottom-0 z-20 border-t border-line/80 bg-surface/95 pb-[max(0.4rem,env(safe-area-inset-bottom))] shadow-nav backdrop-blur"
+      className="sticky bottom-0 z-20 border-t border-line bg-surface pb-[max(0.4rem,env(safe-area-inset-bottom))]"
     >
       <ul className="flex items-stretch justify-between px-2 pt-2">
         {primaryNavItems.map(({ label, to, icon: Icon, end }) => (
@@ -16,7 +16,7 @@ export function BottomNavigation() {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  'group flex flex-col items-center gap-0.5 rounded-2xl py-1 text-[10.5px] font-semibold transition-colors',
+                  'group flex flex-col items-center gap-0.5 rounded-xl py-1 text-[11px] font-medium transition-colors',
                   isActive
                     ? 'text-brand-deep'
                     : 'text-ink-soft hover:text-brand',
@@ -27,15 +27,15 @@ export function BottomNavigation() {
                 <>
                   <span
                     className={cn(
-                      'grid size-9 place-items-center rounded-xl transition-all duration-200',
+                      'grid size-9 place-items-center rounded-lg transition-colors',
                       isActive
                         ? 'bg-brand-soft text-brand-deep'
                         : 'bg-transparent group-hover:bg-brand-tint',
                     )}
                   >
                     <Icon
-                      className="size-[19px]"
-                      strokeWidth={isActive ? 2.4 : 1.9}
+                      className="size-[18px]"
+                      strokeWidth={2}
                       aria-hidden="true"
                     />
                   </span>

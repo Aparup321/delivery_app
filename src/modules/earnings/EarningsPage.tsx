@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TrendingUp, Wallet } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { Card } from '../../components/common/Card'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
@@ -58,7 +58,7 @@ export function EarningsPage() {
         />
 
         <Card padding="lg">
-          <p className="text-[11.5px] font-semibold uppercase tracking-wide text-ink-soft">
+          <p className="text-[12px] font-medium text-ink-muted">
             {period === 'today'
               ? "Today's earnings"
               : period === 'week'
@@ -83,13 +83,11 @@ export function EarningsPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
-            icon={Wallet}
             value={String(deliveries)}
             label="Deliveries"
             hint={period === 'today' ? 'Today' : 'This period'}
           />
           <StatCard
-            icon={TrendingUp}
             value={formatCurrency(average)}
             label="Avg. per delivery"
             hint="After incentives"
@@ -119,14 +117,14 @@ export function EarningsPage() {
                     <div
                       className={
                         isLast
-                          ? 'w-full rounded-t-lg bg-brand-deep transition-all duration-300'
-                          : 'w-full rounded-t-lg bg-brand/35 transition-all duration-300'
+                          ? 'w-full rounded-t-md bg-brand-deep'
+                          : 'w-full rounded-t-md bg-brand/35'
                       }
                       style={{ height: `${height}%` }}
                       title={`${point.label}: ${formatCurrency(point.amount)}`}
                     />
                   </div>
-                  <span className="text-[9.5px] font-medium text-ink-soft">
+                  <span className="text-[11px] font-medium text-ink-soft">
                     {point.label}
                   </span>
                 </div>

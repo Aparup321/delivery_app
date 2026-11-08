@@ -125,7 +125,7 @@ export function ActiveDeliveryPage() {
                 <MapPin className="size-3.5" aria-hidden="true" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                <p className="text-[11.5px] font-medium text-ink-muted">
                   Pickup
                 </p>
                 <p className="text-[12.5px] font-semibold text-ink">
@@ -142,7 +142,7 @@ export function ActiveDeliveryPage() {
                 <Navigation className="size-3.5" aria-hidden="true" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                <p className="text-[11.5px] font-medium text-ink-muted">
                   Deliver to
                 </p>
                 <p className="text-[12.5px] font-semibold text-ink">

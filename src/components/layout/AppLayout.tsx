@@ -17,8 +17,8 @@ export function AppLayout() {
   }, [pathname])
 
   return (
-    <div className="flex min-h-svh justify-center bg-canvas lg:bg-[linear-gradient(150deg,#2a0f5c_0%,#43188f_45%,#5b28c9_100%)]">
-      <div className="flex min-h-svh w-full max-w-[430px] flex-col bg-canvas lg:shadow-float">
+    <div className="flex min-h-svh justify-center bg-canvas">
+      <div className="flex min-h-svh w-full max-w-[430px] flex-col bg-canvas lg:border-x lg:border-line">
         <main className="flex-1">
           <Outlet />
         </main>

@@ -330,7 +330,7 @@ export function OnboardingPage() {
 
   return (
     <div className="pb-8">
-      <header className="relative overflow-hidden rounded-b-[1.75rem] bg-brand-gradient px-4 pb-5 pt-6 text-white">
+      <header className="relative overflow-hidden rounded-b-2xl bg-brand-deep px-4 pb-5 pt-6 text-white">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -402,7 +402,7 @@ export function OnboardingPage() {
         {step === 0 ? (
           <>
             <div>
-              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
                 Personal Details
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
@@ -424,7 +424,7 @@ export function OnboardingPage() {
                     <Camera className="size-8" aria-hidden="true" />
                   </span>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 grid size-8 place-items-center rounded-full bg-brand text-white shadow-card">
+                <span className="absolute -bottom-0.5 -right-0.5 grid size-8 place-items-center rounded-full bg-brand text-white">
                   <Camera className="size-4" aria-hidden="true" />
                 </span>
                 <input
@@ -526,7 +526,7 @@ export function OnboardingPage() {
         {step === 1 ? (
           <>
             <div>
-              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
                 KYC Verification
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
@@ -638,7 +638,7 @@ export function OnboardingPage() {
             </Card>
 
             <Card padding="md" className="space-y-3">
-              <p className="text-[13px] font-bold text-ink">
+              <p className="text-[13px] font-semibold text-ink">
                 Bank account details
               </p>
               <Input
@@ -694,7 +694,7 @@ export function OnboardingPage() {
         {step === 2 ? (
           <>
             <div>
-              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
                 Vehicle Details
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
@@ -803,7 +803,7 @@ export function OnboardingPage() {
         {step === 3 ? (
           <>
             <div>
-              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
                 Training &amp; Onboarding
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
@@ -826,7 +826,7 @@ export function OnboardingPage() {
                       next[index] = !next[index]
                       updateOnboarding({ training: next })
                     }}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left shadow-card transition-colors hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                    className="flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                   >
                     <span
                       className={cn(
@@ -866,7 +866,7 @@ export function OnboardingPage() {
         {step === 4 ? (
           <>
             <div>
-              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
                 Review &amp; Submit
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
@@ -877,7 +877,7 @@ export function OnboardingPage() {
             <Card padding="md" className="space-y-4">
               <section>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                  <p className="text-[11.5px] font-medium text-ink-muted">
                     Personal
                   </p>
                   <button
@@ -918,7 +918,7 @@ export function OnboardingPage() {
 
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                  <p className="text-[11.5px] font-medium text-ink-muted">
                     KYC &amp; bank
                   </p>
                   <button
@@ -941,7 +941,7 @@ export function OnboardingPage() {
 
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                  <p className="text-[11.5px] font-medium text-ink-muted">
                     Vehicle
                   </p>
                   <button
@@ -968,7 +968,7 @@ export function OnboardingPage() {
 
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                  <p className="text-[11.5px] font-medium text-ink-muted">
                     Training
                   </p>
                   <button

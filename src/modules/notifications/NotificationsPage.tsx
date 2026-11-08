@@ -62,8 +62,8 @@ export function NotificationsPage() {
                     aria-label={`${notification.title}${notification.isRead ? '' : ', unread'}`}
                     className={
                       notification.isRead
-                        ? 'w-full rounded-card border border-line/80 bg-surface p-3.5 text-left shadow-card transition-colors hover:border-brand/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-                        : 'w-full rounded-card border border-brand/20 bg-brand-tint p-3.5 text-left shadow-card transition-colors hover:border-brand/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+                        ? 'w-full rounded-card border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+                        : 'w-full rounded-card border border-brand/20 bg-brand-tint p-3.5 text-left transition-colors hover:border-brand/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
                     }
                   >
                     <div className="flex items-start gap-3">

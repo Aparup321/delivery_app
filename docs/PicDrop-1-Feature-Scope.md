@@ -204,4 +204,8 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 - **2026-11-08 — M10: 2 MB upload limit.** KYC documents and the profile photo
   reject files larger than 2 MB with an inline message, and both upload surfaces
   state the limit before selection.
+- **2026-11-08 — M11: anti-slop UI pass.** Removed hue gradients, coloured
+  shadows, header blobs, emoji greetings, hover lifts and uppercase tracked
+  labels. The dashboard now uses a flat stat strip and a compact tool list; cards,
+  buttons and navigation use quiet hairlines, one accent and 11px minimum labels.
 

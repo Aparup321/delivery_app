@@ -34,12 +34,11 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <Card padding="lg">
-        <h1 className="text-[21px] font-bold tracking-tight text-ink">
-          Welcome back 👋
+        <h1 className="text-[21px] font-semibold tracking-tight text-ink">
+          Sign in
         </h1>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
-          Sign in with the mobile number linked to your delivery partner
-          account.
+          Use the mobile number linked to your partner account.
         </p>
 
         <form className="mt-5 space-y-4" onSubmit={handleSubmit} noValidate>
