@@ -463,6 +463,7 @@ export function OnboardingPage() {
               />
               <Input
                 label="Mobile number"
+                required
                 value={session ? `+91 ${session.phone}` : ''}
                 hint="Your verified number cannot be changed here."
                 readOnly
