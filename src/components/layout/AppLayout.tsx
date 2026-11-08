@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/app-store'
 import { BottomNavigation } from './BottomNavigation'
@@ -15,15 +15,19 @@ export function AppLayout() {
   const { onboarding } = useApp()
   const isOnboardingForm =
     pathname === '/onboarding' && onboarding.status === 'draft'
+  const scrollRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    window.scrollTo(0, 0)
+    scrollRef.current?.scrollTo(0, 0)
   }, [pathname])
 
   return (
-    <div className="flex min-h-svh justify-center bg-canvas">
-      <div className="flex min-h-svh w-full max-w-[430px] flex-col bg-canvas lg:border-x lg:border-line">
-        <main className="flex-1">
+    <div className="flex h-svh justify-center overflow-hidden bg-canvas">
+      <div className="flex h-svh w-full max-w-[430px] flex-col overflow-hidden bg-canvas lg:border-x lg:border-line">
+        <main
+          ref={scrollRef}
+          className="app-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+        >
           <Outlet />
         </main>
         {isOnboardingForm ? null : <BottomNavigation />}
