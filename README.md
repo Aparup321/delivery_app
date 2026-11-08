@@ -251,7 +251,8 @@ blobs.
 
 Style rules: flat cards (`rounded-card`, 16px) with hairline borders, 40–44px touch
 targets, short colour transitions, and a centered `max-w-[430px]` app column on every
-size.
+size. The app column owns its vertical scrolling, with a 6px brand-tinted
+scrollbar on its right edge; auth screens use the same treatment.
 
 ## 11. Mock data and app state
 

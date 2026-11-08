@@ -8,6 +8,10 @@ backend.
 
 ### Added
 
+- A slim, brand-tinted scrollbar on the right edge of the app column. The app
+  shell now owns vertical scrolling, so the scrollbar sits beside the phone-like
+  layout instead of at the browser edge, and each route change resets the
+  scroller to the top. Auth screens use the same scroll treatment.
 - Application status tracking under Profile → Application status: pending,
   submitted, under review, approved and rejected, with submitted/last-update
   dates and a four-step progress timeline. Home and the submitted screen show

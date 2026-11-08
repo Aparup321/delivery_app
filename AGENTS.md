@@ -204,7 +204,10 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 | `EmptyState` | Icon, title, description and optional action |
 
 Layout components: `AppLayout`, `BottomNavigation`, `ScreenHeader`,
-`ModulePlaceholder`.
+`ModulePlaceholder`. `AppLayout` owns the vertical scroll area
+(`main.app-scrollbar`) so the slim scrollbar sits on the app column, not the
+browser edge; route changes reset it to the top. Auth screens use the same
+scrollbar treatment.
 
 **Do not duplicate these primitives inside a screen.** If a variant is missing,
 extend the shared component with a typed prop instead of copying its classes.
