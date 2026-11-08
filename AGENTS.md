@@ -420,7 +420,8 @@ Firebase is a **later phase**. Until then:
 - No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
   other PicDrop + HopNgo modules and are out of scope here.
 - Document uploads store only the selected file name in local state; no file is
-  uploaded and no review workflow exists.
+  uploaded and no review workflow exists. Files over 2 MB are rejected before
+  the name is recorded.
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
   as demo where they could be mistaken for live data.
 - Onboarding quiz, working shifts and service zones are not built. The profile

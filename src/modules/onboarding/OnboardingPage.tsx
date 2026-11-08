@@ -75,6 +75,7 @@ const vehicleOptions: Array<{
 ]
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+const MAX_DOCUMENT_BYTES = 2 * 1024 * 1024
 const PHOTO_EDGE = 256
 
 /** Downscales an image file to a small square-safe data URL. */
@@ -206,6 +207,9 @@ export function OnboardingPage() {
   const { onboarding, updateOnboarding, submitOnboarding } = useApp()
   const [error, setError] = useState('')
   const [photoError, setPhotoError] = useState('')
+  const [documentErrors, setDocumentErrors] = useState<
+    Partial<Record<DocumentKey, string>>
+  >({})
 
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
   const isSubmitted = onboarding.status !== 'draft'
@@ -525,7 +529,7 @@ export function OnboardingPage() {
                 KYC Verification
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Upload clear, valid documents for verification
+                Upload clear JPG or PDF documents, up to 2 MB each
               </p>
             </div>
 
@@ -564,15 +568,40 @@ export function OnboardingPage() {
                         )}
                       </div>
 
+                      {documentErrors[field.key] ? (
+                        <p
+                          role="alert"
+                          className="mt-2 text-[11px] font-medium text-danger"
+                        >
+                          {documentErrors[field.key]}
+                        </p>
+                      ) : null}
+
                       <input
                         type="file"
                         accept="image/*,.pdf"
+                        aria-label={`Upload ${field.title}`}
                         className="sr-only"
                         onChange={(event) => {
                           const file = event.target.files?.[0]
+                          event.target.value = ''
+
                           if (!file) {
                             return
                           }
+
+                          if (file.size > MAX_DOCUMENT_BYTES) {
+                            setDocumentErrors((current) => ({
+                              ...current,
+                              [field.key]: 'File is larger than 2 MB. Choose a smaller file.',
+                            }))
+                            return
+                          }
+
+                          setDocumentErrors((current) => ({
+                            ...current,
+                            [field.key]: '',
+                          }))
                           updateOnboarding({
                             documents: {
                               ...onboarding.documents,

@@ -122,6 +122,8 @@ shared mock state layer:
   is still `123456` for every number.
 - A profile photo is mandatory on the personal step; it is downscaled locally to
   a 256px preview, shown on Home and Profile, and blocks progress until added.
+- KYC documents accept JPG images or PDFs up to 2 MB each. Larger files are
+  rejected inline and are not recorded as uploaded.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
   completed or cancelled jobs are added to history.
