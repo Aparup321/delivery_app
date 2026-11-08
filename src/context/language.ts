@@ -3,6 +3,8 @@ import type { Language, TranslationVars } from '../i18n/translations'
 
 export interface LanguageContextValue {
   language: Language
+  /** BCP 47 locale used for dates, times and numbers. */
+  locale: string
   setLanguage: (language: Language) => void
   t: (key: string, vars?: TranslationVars) => string
 }

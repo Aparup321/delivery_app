@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Language, TranslationVars } from '../i18n/translations'
-import { translate } from '../i18n/translations'
+import { languageLocale, translate } from '../i18n/translations'
 import { LanguageContext } from './language'
 
 const STORAGE_KEY = 'fafo.partner.language'
@@ -47,7 +47,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   )
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider
+      value={{ language, locale: languageLocale[language], setLanguage, t }}
+    >
       {children}
     </LanguageContext.Provider>
   )

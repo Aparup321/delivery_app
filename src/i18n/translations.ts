@@ -447,6 +447,33 @@ const hindi: Record<string, string> = {
   'Nothing here': 'यहां कुछ नहीं',
   'The page you are looking for does not exist or may have moved.':
     'आप जो पेज खोज रहे हैं वह मौजूद नहीं है या हट गया है।',
+  'Cash on delivery': 'कैश ऑन डिलीवरी',
+  Unread: 'अपठित',
+  Resolved: 'हल हो गया',
+  '2 min': '2 मिनट',
+  '3 min': '3 मिनट',
+  '4 min': '4 मिनट',
+  '{count}s': '{count} सेकंड',
+  'Profile photo preview': 'प्रोफ़ाइल फोटो पूर्वावलोकन',
+  'Upload profile photo': 'प्रोफ़ाइल फोटो अपलोड करें',
+  'Upload {document}': '{document} अपलोड करें',
+  'Demo route preview from {pickup} to {destination}':
+    '{pickup} से {destination} तक डेमो रूट पूर्वावलोकन',
+  'Name as on the bank account': 'बैंक खाते के अनुसार नाम',
+  'Week of {date}': '{date} का सप्ताह',
+  'Expected {date}': '{date} अपेक्षित',
+  '9 AM': 'सुबह 9',
+  '11 AM': 'सुबह 11',
+  '1 PM': 'दोपहर 1',
+  '3 PM': 'दोपहर 3',
+  '5 PM': 'शाम 5',
+  '7 PM': 'शाम 7',
+  Primary: 'मुख्य',
+  'Fafo Delivery Partner': 'फाफो डिलीवरी पार्टनर',
+  'Planned in this module': 'इस मॉड्यूल में प्रस्तावित',
+  '{label} digit {number}': '{label} अंक {number}',
+  'Customer unreachable at the delivery address.':
+    'डिलीवरी पते पर ग्राहक से संपर्क नहीं हो सका।',
 }
 
 const bengali: Record<string, string> = {
@@ -881,6 +908,33 @@ const bengali: Record<string, string> = {
   'Nothing here': 'এখানে কিছু নেই',
   'The page you are looking for does not exist or may have moved.':
     'আপনি যে পেজ খুঁজছেন তা নেই বা সরে গেছে।',
+  'Cash on delivery': 'ক্যাশ অন ডেলিভারি',
+  Unread: 'অপঠিত',
+  Resolved: 'সমাধান হয়েছে',
+  '2 min': '২ মিনিট',
+  '3 min': '৩ মিনিট',
+  '4 min': '৪ মিনিট',
+  '{count}s': '{count} সেকেন্ড',
+  'Profile photo preview': 'প্রোফাইল ছবির প্রিভিউ',
+  'Upload profile photo': 'প্রোফাইল ছবি আপলোড করুন',
+  'Upload {document}': '{document} আপলোড করুন',
+  'Demo route preview from {pickup} to {destination}':
+    '{pickup} থেকে {destination} পর্যন্ত ডেমো রুট প্রিভিউ',
+  'Name as on the bank account': 'ব্যাঙ্ক অ্যাকাউন্ট অনুযায়ী নাম',
+  'Week of {date}': '{date}-এর সপ্তাহ',
+  'Expected {date}': '{date} প্রত্যাশিত',
+  '9 AM': 'সকাল ৯',
+  '11 AM': 'সকাল ১১',
+  '1 PM': 'দুপুর ১',
+  '3 PM': 'দুপুর ৩',
+  '5 PM': 'সন্ধ্যা ৫',
+  '7 PM': 'সন্ধ্যা ৭',
+  Primary: 'প্রধান',
+  'Fafo Delivery Partner': 'ফাফো ডেলিভারি পার্টনার',
+  'Planned in this module': 'এই মডিউলে পরিকল্পিত',
+  '{label} digit {number}': '{label} সংখ্যা {number}',
+  'Customer unreachable at the delivery address.':
+    'ডেলিভারির ঠিকানায় গ্রাহকের সঙ্গে যোগাযোগ করা যায়নি।',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =
