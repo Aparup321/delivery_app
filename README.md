@@ -67,7 +67,7 @@ material for the project and are not part of the deployed application.
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP, persisted session, protected routes, logout | Built (mock) |
 | Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (mock) |
-| KYC & documents | Aadhaar, PAN, licence and RC uploads with review status | Built (mock) |
+| KYC & documents | Aadhaar, PAN, licence and RC numbers with upload controls, plus a bank passbook upload and review status | Built (mock) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour and registration where applicable | Built (mock) |
 | Training & approval | Training checklist and submitted-application status | Built (mock) |
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline | Built (mock) |
@@ -125,8 +125,12 @@ shared mock state layer:
 - A profile photo is mandatory on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
   Profile, and blocks progress until added.
-- KYC documents accept JPG images or PDFs up to 2 MB each. Larger files are
-  rejected inline and are not recorded as uploaded.
+- KYC asks for the number printed on each document and shows its upload control
+  beside it, with JPG/PDF and 2 MB guidance. Aadhaar and PAN numbers are
+  required; licence and RC numbers stay optional but must be paired with their
+  upload when either is supplied. The bank account row also offers an optional
+  bank passbook or cancelled-cheque upload. All files accept JPG or PDF up to
+  2 MB; larger files are rejected inline and are not recorded as uploaded.
 - Application status is available from Profile → Application status. It shows
   pending, submitted, under review, approved or rejected with submitted and
   updated dates plus a four-step tracker. A labelled demo control lets testers

@@ -402,9 +402,11 @@ Firebase is a **later phase**. Until then:
 - **Auth** — mobile number + demo OTP (`123456`), session in `localStorage`
   (`fafo.partner.session`), protected routes that return to the requested screen.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
-  Training, Review) with a purple stepper header, per-document upload rows,
-  vehicle tiles (bike, scooter, bicycle, on foot), a required profile photo and a
-  submitted/under-review state. Progress is stored under
+  Training, Review) with a purple stepper header, number-plus-upload cards for
+  Aadhaar, PAN, driving licence and the vehicle RC, an optional bank passbook
+  upload beside the account number, vehicle tiles (bike, scooter, bicycle, on
+  foot), a required profile photo and a submitted/under-review state. Progress
+  is stored under
   `fafo.partner.onboarding.<phone>`, one draft per verified number, and the demo
   OTP is the same for every number. Draft partners are redirected back to the
   wizard until they submit; the wizard header offers Sign out. The wizard hides

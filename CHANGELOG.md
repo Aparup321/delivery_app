@@ -8,6 +8,13 @@ backend.
 
 ### Added
 
+- The KYC step now collects the number printed on each document beside a
+  dedicated upload tile for Aadhaar, PAN, driving licence and the vehicle RC.
+  Aadhaar and PAN are required; licence and RC stay optional but must be paired
+  when either the number or file is supplied. The bank account row gains an
+  optional passbook or cancelled-cheque upload. All numbers, file names and
+  upload states persist with the draft, validation follows the selected
+  language, and earlier drafts migrate their Aadhaar number automatically.
 - Full app localization: Profile → App language switches every screen, shared
   component, validation message, notification and FAQ immediately between
   English, Hindi and Bengali. The choice persists under `fafo.partner.language`,
