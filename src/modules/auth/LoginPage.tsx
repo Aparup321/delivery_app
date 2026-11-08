@@ -6,11 +6,13 @@ import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
 import { AuthLayout } from '../../components/layout/AuthLayout'
+import { useLanguage } from '../../context/language'
 
 const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
 
@@ -35,22 +37,22 @@ export function LoginPage() {
     <AuthLayout>
       <Card padding="lg">
         <h1 className="text-[21px] font-semibold tracking-tight text-ink">
-          Sign in
+          {t('Sign in')}
         </h1>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
-          Use the mobile number linked to your partner account.
+          {t('Use the mobile number linked to your partner account.')}
         </p>
 
         <form className="mt-5 space-y-4" onSubmit={handleSubmit} noValidate>
           <Input
-            label="Mobile number"
+            label={t('Mobile number')}
             required
             type="tel"
             inputMode="numeric"
             autoComplete="tel-national"
             placeholder="99999 55555"
-            hint="We will send a 6-digit verification code."
-            error={error}
+            hint={t('We will send a 6-digit verification code.')}
+            error={error ? t(error) : undefined}
             value={phone}
             maxLength={10}
             leftIcon={<Phone className="size-4" aria-hidden="true" />}
@@ -68,14 +70,15 @@ export function LoginPage() {
             size="lg"
             rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
           >
-            Send OTP
+            {t('Send OTP')}
           </Button>
         </form>
       </Card>
 
       <p className="mt-4 px-1 text-center text-[11.5px] leading-relaxed text-ink-soft">
-        Prototype build: verification codes are simulated, no SMS is sent, and no
-        account is created.
+        {t(
+          'Prototype build: verification codes are simulated, no SMS is sent, and no account is created.',
+        )}
       </p>
     </AuthLayout>
   )

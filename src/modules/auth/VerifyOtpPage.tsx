@@ -8,6 +8,7 @@ import { Card } from '../../components/common/Card'
 import { OtpInput } from '../../components/common/OtpInput'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { useAuth } from '../../context/auth'
+import { useLanguage } from '../../context/language'
 import { useCountdown } from '../../hooks/useCountdown'
 import {
   DEMO_OTP,
@@ -25,6 +26,7 @@ export function VerifyOtpPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { signIn } = useAuth()
+  const { t } = useLanguage()
   const state = (location.state ?? null) as VerifyLocationState | null
   const phone = state?.phone
 
@@ -38,6 +40,9 @@ export function VerifyOtpPage() {
   }
 
   const maskedPhone = `+91 ${phone.slice(0, 2)}••••${phone.slice(-4)}`
+  const errorMessage = error
+    ? t(error, { length: OTP_LENGTH })
+    : undefined
 
   function handleVerify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -47,7 +52,7 @@ export function VerifyOtpPage() {
     }
 
     if (otp.length !== OTP_LENGTH) {
-      setError(`Enter the ${OTP_LENGTH}-digit code to continue.`)
+      setError('Enter the {length}-digit code to continue.')
       return
     }
 
@@ -81,11 +86,13 @@ export function VerifyOtpPage() {
         </span>
 
         <h1 className="mt-4 text-[21px] font-semibold tracking-tight text-ink">
-          Verify your number
+          {t('Verify your number')}
         </h1>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
-          We sent a {OTP_LENGTH}-digit code to{' '}
-          <span className="font-semibold text-ink">{maskedPhone}</span>.
+          {t('We sent a {length}-digit code to {phone}.', {
+            length: OTP_LENGTH,
+            phone: maskedPhone,
+          })}
         </p>
 
         <form className="mt-5 space-y-4" onSubmit={handleVerify} noValidate>
@@ -102,12 +109,12 @@ export function VerifyOtpPage() {
               hasError={Boolean(error)}
               autoFocus
             />
-            {error ? (
+            {errorMessage ? (
               <p
                 role="alert"
                 className="mt-2 text-xs font-medium text-danger"
               >
-                {error}
+                {errorMessage}
               </p>
             ) : null}
           </div>
@@ -118,7 +125,7 @@ export function VerifyOtpPage() {
             size="lg"
             rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
           >
-            Verify and continue
+            {t('Verify and continue')}
           </Button>
         </form>
 
@@ -127,29 +134,32 @@ export function VerifyOtpPage() {
             to="/login"
             className="font-semibold text-brand-deep hover:underline"
           >
-            Change number
+            {t('Change number')}
           </Link>
 
           {secondsLeft > 0 ? (
-            <span className="text-ink-muted">Resend in {secondsLeft}s</span>
+            <span className="text-ink-muted">
+              {t('Resend in {seconds}s', { seconds: secondsLeft })}
+            </span>
           ) : (
             <button
               type="button"
               onClick={handleResend}
               className="font-semibold text-brand-deep hover:underline"
             >
-              Resend code
+              {t('Resend code')}
             </button>
           )}
         </div>
 
         <div className="mt-4 flex items-start gap-2 rounded-2xl bg-brand-tint p-3 text-[11.5px] leading-relaxed text-ink-muted">
           <Badge tone="brand" size="sm">
-            Demo
+            {t('Demo')}
           </Badge>
           <span>
-            No SMS is sent in this prototype. Use the code{' '}
-            <span className="font-semibold text-ink">{DEMO_OTP}</span>.
+            {t('No SMS is sent in this prototype. Use the code {code}.', {
+              code: DEMO_OTP,
+            })}
           </span>
         </div>
       </Card>
