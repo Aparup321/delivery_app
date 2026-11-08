@@ -39,6 +39,7 @@ export function ProfilePage() {
     { label: 'PAN card', fileName: onboarding.documents.pan },
     { label: 'Driving licence', fileName: onboarding.documents.licence },
     { label: 'Vehicle RC', fileName: onboarding.documents.registration },
+    { label: 'Bank passbook', fileName: onboarding.documents.passbook },
   ]
 
   const applicationStatus = applicationStatusMeta[onboarding.status]
