@@ -153,8 +153,8 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 | --- | --- | --- |
 | Partner registration and onboarding (§1, §2) | In Progress | Five-step wizard matching the design (personal, KYC and bank, vehicle, training, review) with validation and saved progress; verification lifecycle, service areas and package capability are not modelled yet. |
 | Personal information and profile management (§2) | In Progress | Profile, contact, vehicle and document summary screens exist, and a profile photo is required during onboarding. Editing partner details after submission is not implemented. |
-| KYC and document verification (§2) | In Progress | Aadhaar, PAN, licence and RC are mock file selections; review, expiry and restriction workflows are pending. |
-| Vehicle details and verification (§2) | In Progress | Bike, scooter, bicycle and on-foot partners are supported; model, colour and registration are captured where they apply (not for walking partners). Vehicle verification is pending. |
+| KYC and document verification (§2) | In Progress | Aadhaar and PAN numbers plus driving licence and RC uploads are mock data; review, expiry and restriction workflows are pending. |
+| Vehicle details and verification (§2) | In Progress | Bike, scooter, bicycle and on-foot partners are supported; model, colour, licence and registration are captured where they apply (not for bicycle or walking partners). Vehicle verification is pending. |
 | Training and onboarding (§2) | In Progress | Five timed modules with completion state; the onboarding quiz is not implemented. |
 | Partner availability and service areas (§7) | Pending | Availability is a single online/offline switch; shifts, zones, leave and capacity are not modelled. |
 | Delivery booking and requests (§4) | Pending | Requests are pre-seeded offers; requester, payer, package details and quotes are not modelled. |
@@ -215,4 +215,13 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 - **2026-11-08 — M13: full-screen onboarding form.** The bottom navigation is
   hidden while a draft application is being completed, giving the KYC form the
   full screen. The submitted confirmation still renders inside the app shell.
+- **2026-11-08 — M14: vehicle document numbers moved.** The driving licence and
+  registration numbers now sit on the vehicle step for bike and scooter
+  partners, while KYC keeps the licence and RC uploads; bicycle and on-foot
+  partners skip both numbers. Validation, review and profile summaries follow
+  the new layout.
+- **2026-11-08 — M15: Firebase SDK foundation.** Installed the Firebase Web SDK
+  and added configuration plus single-instance Auth, Firestore and Storage
+  exports under `src/firebase/`. No partner screen or mock module reads live
+  Firebase data yet.
 

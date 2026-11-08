@@ -58,9 +58,10 @@ What exists today:
   support, all routed through `src/context/` and `src/mock/`.
 
 **Remaining: Phase 12 (backend/platform integration, admin functions) and Phase
-13 (release QA).** Both need the open decisions in README to be answered. There
-is no Firebase, no real map provider and no backend in this build; earnings and
-request timers are demo data.
+13 (release QA).** Both need the open decisions in README to be answered. The
+Firebase SDK foundation is installed, but no screen reads or writes live data;
+there is no real map provider or backend data yet, and earnings and request
+timers are demo data.
 
 ---
 
@@ -73,12 +74,13 @@ request timers are demo data.
 | Vite 8 | Dev server and production build |
 | Tailwind CSS v4 | Styling through design tokens (`@theme`) |
 | React Router v7 | Client-side routing and navigation state |
+| Firebase JS SDK | Auth, Firestore and Storage foundation |
 | Lucide React | Icon set |
 | Oxlint | Linting |
 
-**No other libraries are installed.** Do not add a dependency unless the task
-cannot reasonably be done with what is here. Firebase is **not** installed and
-must not be added in the current phase (see section 15).
+**Only the libraries listed above are installed.** Do not add a dependency unless
+the task needs it. The Firebase SDK is present for Phase 12, but screens must keep
+using mock data until the service layer is connected (see section 15).
 
 ---
 
@@ -110,6 +112,7 @@ delivery_app/
 │   │   ├── deliveries/    # Request card, timeline, route preview
 │   │   └── layout/        # AppLayout, AuthLayout, BottomNavigation, headers
 │   ├── context/           # Language, auth and app state (provider + hook files)
+│   ├── firebase/          # Config and singleton auth, Firestore and Storage
 │   ├── hooks/             # Shared hooks (useCountdown)
 │   ├── i18n/              # English keys, Hindi/Bengali maps, locale map
 │   ├── mock/              # Mock data and demo OTP, separated from UI
@@ -325,10 +328,12 @@ Allowed now:
 - Improving any existing screen, the design system, layout and navigation.
 - Fixing bugs in the mock flows (auth, onboarding, deliveries, earnings,
   notifications, support, profile).
+- Firebase SDK configuration, environment setup and service-layer groundwork.
 
 Not allowed without explicit instruction:
 
-- Firebase, real APIs, backend logic or new network services.
+- Connecting existing screens to live Firebase data or replacing the mock flows.
+- Real APIs, backend logic or new network services.
 - Replacing the demo map with a paid provider.
 - Changing the colour palette or design language.
 - Removing or rewriting working screens.
@@ -364,14 +369,17 @@ If a requirement conflicts with this document, ask before proceeding.
 
 ---
 
-## 15. Future Firebase integration rules
+## 15. Firebase integration rules
 
-Firebase is a **later phase**. Until then:
+The Firebase SDK foundation is installed, but screens remain mock-driven until
+the service layer is connected:
 
 - Keep data access out of components: screens receive props from mock modules.
 - When integration starts, introduce `src/services/` as the only layer that talks
   to Firebase, and `src/context/` for shared auth/app state.
-- Never import the Firebase SDK directly inside a page or component.
+- Initialize Firebase once in `src/firebase/index.ts` and import `auth`, `db` and
+  `storage` from `src/firebase`. Never import the Firebase SDK directly inside a
+  page or component.
 - Firestore models must follow the roadmap collections: `partners`,
   `partner_documents`, `vehicles`, `training`, `training_progress`,
   `deliveries`, `delivery_types`, `earnings`, `payments`, `notifications`,
@@ -379,7 +387,10 @@ Firebase is a **later phase**. Until then:
 - Store file metadata and storage paths, not file contents, in Firestore.
 - Keep configuration in environment variables (`VITE_FIREBASE_*`) with the
   tracked `.env.example` template. Never commit secrets, service accounts or API
-  keys; `.env` and every other `.env.*` file stay ignored.
+  keys; `.env` and every other `.env.*` file stay ignored. `VITE_*` values are
+  embedded in the browser bundle, so only public Firebase Web App configuration
+  belongs there; service-account credentials and private keys must stay
+  server-side.
 - Authenticate, then restrict reads/writes with Firebase Security Rules so a
   partner can only access their own records; trusted state changes belong in
   Cloud Functions.
@@ -401,12 +412,16 @@ Firebase is a **later phase**. Until then:
 
 - **Auth** — mobile number + demo OTP (`123456`), session in `localStorage`
   (`fafo.partner.session`), protected routes that return to the requested screen.
+- **Firebase foundation** — the `firebase` SDK is installed, `src/firebase/`
+  reads `VITE_FIREBASE_*` and exports `auth`, `db` and `storage`. No screen uses
+  it yet; all auth, onboarding and delivery behaviour remains mock-driven.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, number-plus-upload cards for
-  Aadhaar, PAN, driving licence and the vehicle RC, an optional bank passbook
-  upload beside the account number, vehicle tiles (bike, scooter, bicycle, on
-  foot), a required profile photo and a submitted/under-review state. Progress
-  is stored under
+  Aadhaar and PAN, upload-only cards for the driving licence and vehicle RC, an
+  optional bank passbook upload beside the account number, vehicle tiles (bike,
+  scooter, bicycle, on foot), licence and registration fields for motorised
+  vehicles, a required profile photo and a submitted/under-review state.
+  Progress is stored under
   `fafo.partner.onboarding.<phone>`, one draft per verified number, and the demo
   OTP is the same for every number. Draft partners are redirected back to the
   wizard until they submit; the wizard header offers Sign out. The wizard hides
@@ -436,7 +451,8 @@ Firebase is a **later phase**. Until then:
 
 ### Intentionally missing (do not fake these)
 
-- No backend, Firebase, real map provider, push notifications or payments.
+- No live backend data: Firebase is initialized, but no screen or mock module
+  reads or writes it. No real map provider, push notifications or payments.
 - No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
   other PicDrop + HopNgo modules and are out of scope here.
 - Document uploads store only the selected file name in local state; no file is

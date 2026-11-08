@@ -8,13 +8,19 @@ backend.
 
 ### Added
 
-- The KYC step now collects the number printed on each document beside a
-  dedicated upload tile for Aadhaar, PAN, driving licence and the vehicle RC.
-  Aadhaar and PAN are required; licence and RC stay optional but must be paired
-  when either the number or file is supplied. The bank account row gains an
-  optional passbook or cancelled-cheque upload. All numbers, file names and
-  upload states persist with the draft, validation follows the selected
-  language, and earlier drafts migrate their Aadhaar number automatically.
+- Firebase SDK foundation: installed `firebase@13`, added `src/firebase/config.ts`
+  and `src/firebase/index.ts` with single-instance `auth`, `db` and `storage`
+  exports, and documented the `VITE_FIREBASE_*` template. `.env.local` contains
+  placeholders and remains ignored. Existing screens still use mock data because
+  no service layer is connected yet.
+- The KYC step collects the Aadhaar and PAN numbers beside their upload tiles
+  and provides upload-only cards for the driving licence and vehicle RC. For
+  bike and scooter partners, the licence and registration numbers are now
+  entered on the vehicle step instead of in KYC, and both are required there.
+  The bank account row gains an optional passbook or cancelled-cheque upload.
+  All numbers, file names and upload states persist with the draft, validation
+  follows the selected language, and earlier drafts migrate their Aadhaar
+  number automatically.
 - Full app localization: Profile → App language switches every screen, shared
   component, validation message, notification and FAQ immediately between
   English, Hindi and Bengali. The choice persists under `fafo.partner.language`,

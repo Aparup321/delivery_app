@@ -10,8 +10,9 @@ stays a centered app column instead of stretching into a desktop dashboard.
 > **Status:** Phases 1–11 of the partner experience are complete as a fully
 > interactive prototype using mock data. Sign-in, onboarding, deliveries,
 > earnings, notifications, support and profile all work in the browser.
-> Firebase, a real map provider and the existing-platform integration
-> (Phases 12–13) are not connected yet.
+> The Firebase SDK foundation (Auth, Firestore and Storage exports) is installed,
+> but the screens still run on mock data. A real map provider and the
+> existing-platform integration (Phases 12–13) are not connected yet.
 >
 > The product direction is now **PicDrop + HopNgo**, and this repository is its
 > **delivery-partner module**. The PicDrop delivery requirements have been
@@ -67,8 +68,8 @@ material for the project and are not part of the deployed application.
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP, persisted session, protected routes, logout | Built (mock) |
 | Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (mock) |
-| KYC & documents | Aadhaar, PAN, licence and RC numbers with upload controls, plus a bank passbook upload and review status | Built (mock) |
-| Vehicle information | Bike, scooter, bicycle or on foot; model, colour and registration where applicable | Built (mock) |
+| KYC & documents | Aadhaar and PAN numbers with upload controls, plus licence, RC and bank passbook uploads and review status | Built (mock) |
+| Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (mock) |
 | Training & approval | Training checklist and submitted-application status | Built (mock) |
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline | Built (mock) |
 | Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (mock) |
@@ -96,10 +97,12 @@ No SMS is sent and no account is created. On the login screen enter any valid
 | [Vite](https://vite.dev/) | 8 | Development server and production build |
 | [Tailwind CSS](https://tailwindcss.com/) | 4 | Styling with design tokens |
 | [React Router](https://reactrouter.com/) | 7 | Routing, guards and navigation |
+| [Firebase](https://firebase.google.com/docs/web/setup) | 13 | Auth, Firestore and Storage SDK foundation |
 | [Lucide React](https://lucide.dev/) | latest | Icons |
 | [Oxlint](https://oxc.rs/) | latest | Code linting |
 
-Firebase is **not installed yet**.
+Firebase is installed as the backend foundation, but no screen reads or writes
+live data yet.
 
 ## 5. Current development status
 
@@ -125,10 +128,11 @@ shared mock state layer:
 - A profile photo is mandatory on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
   Profile, and blocks progress until added.
-- KYC asks for the number printed on each document and shows its upload control
-  beside it, with JPG/PDF and 2 MB guidance. Aadhaar and PAN numbers are
-  required; licence and RC numbers stay optional but must be paired with their
-  upload when either is supplied. The bank account row also offers an optional
+- KYC collects the Aadhaar and PAN numbers beside their upload controls and
+  provides upload-only cards for the driving licence and vehicle RC, with
+  JPG/PDF and 2 MB guidance. For bike and scooter partners, the licence and
+  registration numbers are entered on the vehicle step; bicycle and on-foot
+  partners are not asked for either. The bank account row also offers an optional
   bank passbook or cancelled-cheque upload. All files accept JPG or PDF up to
   2 MB; larger files are rejected inline and are not recorded as uploaded.
 - Application status is available from Profile → Application status. It shows
@@ -166,6 +170,7 @@ delivery_app/
 │   │   └── layout/           # AppLayout, AuthLayout, BottomNavigation,
 │   │                         # ScreenHeader, ModulePlaceholder
 │   ├── context/              # LanguageProvider, AuthProvider, AppProvider, hooks
+│   ├── firebase/             # SDK config plus auth, db and storage exports
 │   ├── hooks/                # useCountdown
 │   ├── i18n/                 # English keys and Hindi/Bengali translations
 │   ├── mock/                 # partner, auth (demo OTP), deliveries, earnings,
@@ -207,10 +212,11 @@ cd delivery_app
 npm install
 ```
 
-No API keys, database or Firebase project are needed — the app runs on local mock
-data. `.env.example` documents the configuration for the planned backend and map
-integration; copy it to `.env.local` only when that work starts. `.env` and every
-other `.env.*` file stay untracked.
+The app still runs entirely on mock data, so a live Firebase project is optional
+for UI work. `.env.local` is already created with placeholder `VITE_FIREBASE_*`
+values; replace them with the Web App configuration from Firebase Console to use
+the SDK. `.env.example` is the tracked template. `.env` and every other `.env.*`
+file, including `.env.local`, stay untracked.
 
 ## 8. Run the project locally
 
@@ -286,7 +292,26 @@ partner (`src/mock/partner.ts`, used by Home and Profile) and the earnings
 summary (`src/mock/earnings.ts`, used by Home) — and will move behind the planned
 service layer with the backend integration.
 
-## 12. Future Firebase integration plan
+## 12. Firebase setup and integration plan
+
+### Installed foundation
+
+- `src/firebase/config.ts` reads `VITE_FIREBASE_*` from `import.meta.env`.
+- `src/firebase/index.ts` initializes one Firebase app and exports `auth`, `db`
+  and `storage`. Import these from `src/firebase`; do not call `initializeApp`
+  inside a screen.
+- `.env.local` contains placeholders. Replace them before running live
+  authentication, database or storage operations.
+- No screen uses the SDK yet; auth, onboarding and delivery state remain mock.
+
+> **Security:** Vite embeds every `VITE_*` value in the browser bundle.
+> `.env.local` keeps the values out of Git, not out of the browser. Firebase Web
+> App values are public identifiers; protect data with Authentication,
+> Firestore/Storage Security Rules, authorized domains and API key
+> restrictions. Never put service-account credentials, private keys or admin SDK
+> secrets in a `VITE_*` variable.
+
+### Services still to connect
 
 1. **Authentication** — replace the demo OTP with Firebase phone auth and keep the
    existing protected-route behaviour.
@@ -302,6 +327,8 @@ Rules: configuration comes from `VITE_FIREBASE_*` environment variables, all dat
 access lives in a single `src/services/` layer, Security Rules restrict each
 partner to their own records, files are stored in Storage with only metadata and
 paths in Firestore, and the app must remain demo-able without live credentials.
+Installing the SDK does not enable services in Firebase Console: Authentication,
+Firestore and Storage must each be enabled there, with restrictive rules deployed.
 
 ## 13. Git workflow
 
@@ -328,7 +355,7 @@ paths in Firestore, and the app must remain demo-able without live credentials.
 | 9 | Maps, location permission and routes | Demo route preview 🟡 |
 | 10 | History, earnings and payments | ✅ Mock records |
 | 11 | Notifications, support and profile settings | ✅ Complete feature set |
-| 12 | Admin and existing-platform integration | ⏳ Pending decisions |
+| 12 | Admin and existing-platform integration | 🟡 Firebase SDK foundation; data connection pending |
 | 13 | Quality checks and release preparation | ⏳ Pending |
 
 ## Decisions still open
