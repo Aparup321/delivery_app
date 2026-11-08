@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import { useLanguage } from '../../context/language'
 import type { Delivery } from '../../types/delivery'
 import { cn } from '../../utils/cn'
 import { deliveryProgression, deliveryStatusLabels } from '../../utils/delivery'
@@ -9,6 +10,7 @@ export interface DeliveryTimelineProps {
 }
 
 export function DeliveryTimeline({ delivery }: DeliveryTimelineProps) {
+  const { t, locale } = useLanguage()
   const currentIndex = deliveryProgression.indexOf(delivery.status)
 
   return (
@@ -43,14 +45,14 @@ export function DeliveryTimeline({ delivery }: DeliveryTimelineProps) {
                   isDone ? 'text-ink' : 'text-ink-soft',
                 )}
               >
-                {deliveryStatusLabels[status]}
+                {t(deliveryStatusLabels[status])}
               </p>
               <p className="text-[11.5px] text-ink-muted">
                 {event
-                  ? formatTime(event.at)
+                  ? formatTime(event.at, locale)
                   : index === currentIndex + 1
-                    ? 'Next step'
-                    : 'Pending'}
+                    ? t('Next step')
+                    : t('Pending')}
               </p>
             </div>
           </li>

@@ -1,3 +1,5 @@
+import { useLanguage } from '../../context/language'
+
 export interface MapPreviewProps {
   pickup: string
   destination: string
@@ -8,6 +10,8 @@ export interface MapPreviewProps {
  * no map tiles or API keys are used yet.
  */
 export function MapPreview({ pickup, destination }: MapPreviewProps) {
+  const { t } = useLanguage()
+
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-[#f1eef8]">
       <div className="relative">
@@ -15,7 +19,10 @@ export function MapPreview({ pickup, destination }: MapPreviewProps) {
           viewBox="0 0 320 150"
           className="h-36 w-full"
           role="img"
-          aria-label={`Demo route preview from ${pickup} to ${destination}`}
+          aria-label={t('Demo route preview from {pickup} to {destination}', {
+            pickup,
+            destination,
+          })}
         >
           <rect width="320" height="150" fill="#f1eef8" />
           <g stroke="#e2dbf1" strokeWidth="10" strokeLinecap="round">
@@ -41,7 +48,7 @@ export function MapPreview({ pickup, destination }: MapPreviewProps) {
           <circle cx="252" cy="52" r="8" fill="#e0413e" stroke="#ffffff" strokeWidth="3" />
         </svg>
         <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10.5px] font-semibold text-ink-muted">
-          Demo route
+          {t('Demo route')}
         </span>
       </div>
 

@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLanguage } from '../../context/language'
 import { cn } from '../../utils/cn'
 
 export type ScreenHeaderVariant = 'brand' | 'surface'
@@ -26,6 +27,7 @@ export function ScreenHeader({
   className,
 }: ScreenHeaderProps) {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const isBrand = variant === 'brand'
 
   return (
@@ -43,7 +45,7 @@ export function ScreenHeader({
           <button
             type="button"
             onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
-            aria-label="Go back"
+            aria-label={t('Go back')}
             className={cn(
               'mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg transition-colors',
               isBrand

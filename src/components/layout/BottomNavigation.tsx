@@ -8,7 +8,7 @@ export function BottomNavigation() {
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t('Primary')}
       className="sticky bottom-0 z-20 border-t border-line bg-surface pb-[max(0.4rem,env(safe-area-inset-bottom))]"
     >
       <ul className="flex items-stretch justify-between px-2 pt-2">

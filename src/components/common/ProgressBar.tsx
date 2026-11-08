@@ -1,3 +1,4 @@
+import { useLanguage } from '../../context/language'
 import { cn } from '../../utils/cn'
 
 export interface ProgressBarProps {
@@ -15,6 +16,7 @@ export function ProgressBar({
   hint,
   className,
 }: ProgressBarProps) {
+  const { t } = useLanguage()
   const safeMax = max > 0 ? max : 100
   const percent = Math.min(100, Math.max(0, (value / safeMax) * 100))
 
@@ -29,7 +31,7 @@ export function ProgressBar({
 
       <div
         role="progressbar"
-        aria-label={label ?? 'Progress'}
+        aria-label={label ?? t('Progress')}
         aria-valuenow={Math.round(percent)}
         aria-valuemin={0}
         aria-valuemax={100}

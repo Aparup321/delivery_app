@@ -3,6 +3,7 @@ import type {
   ClipboardEvent,
   KeyboardEvent,
 } from 'react'
+import { useLanguage } from '../../context/language'
 import { cn } from '../../utils/cn'
 
 export interface OtpInputProps {
@@ -24,8 +25,10 @@ export function OtpInput({
   autoFocus = false,
   disabled = false,
 }: OtpInputProps) {
+  const { t } = useLanguage()
   const inputsRef = useRef<Array<HTMLInputElement | null>>([])
   const characters = Array.from({ length }, (_, index) => value[index] ?? '')
+  const labelText = t(label)
 
   function focusAt(index: number) {
     inputsRef.current[Math.min(Math.max(index, 0), length - 1)]?.focus()
@@ -92,11 +95,11 @@ export function OtpInput({
 
   return (
     <div>
-      <p className="mb-1.5 text-[13px] font-semibold text-ink">{label}</p>
+      <p className="mb-1.5 text-[13px] font-semibold text-ink">{labelText}</p>
       <div
         className="flex items-center justify-between gap-2"
         role="group"
-        aria-label={label}
+        aria-label={labelText}
       >
         {characters.map((character, index) => (
           <input
@@ -115,7 +118,10 @@ export function OtpInput({
             maxLength={1}
             disabled={disabled}
             autoFocus={autoFocus && index === 0}
-            aria-label={`${label} digit ${index + 1}`}
+            aria-label={t('{label} digit {number}', {
+              label: labelText,
+              number: index + 1,
+            })}
             aria-invalid={hasError || undefined}
             className={cn(
               'h-13 w-full min-w-0 rounded-2xl border bg-surface text-center text-lg font-bold text-ink transition-colors',

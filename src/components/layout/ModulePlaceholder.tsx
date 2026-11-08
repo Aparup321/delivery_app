@@ -5,6 +5,7 @@ import { Badge } from '../common/Badge'
 import { Button } from '../common/Button'
 import { Card } from '../common/Card'
 import { SectionHeading } from '../common/SectionHeading'
+import { useLanguage } from '../../context/language'
 import { ScreenHeader } from './ScreenHeader'
 
 export interface ModulePlaceholderProps {
@@ -27,10 +28,11 @@ export function ModulePlaceholder({
   upcoming,
 }: ModulePlaceholderProps) {
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   return (
     <div className="pb-8">
-      <ScreenHeader title={title} subtitle="Fafo Delivery Partner" />
+      <ScreenHeader title={title} subtitle={t('Fafo Delivery Partner')} />
 
       <div className="space-y-4 px-4 pt-5">
         <Card padding="lg" className="text-center">
@@ -47,7 +49,7 @@ export function ModulePlaceholder({
         </Card>
 
         <Card padding="md">
-          <SectionHeading title="Planned in this module" />
+          <SectionHeading title={t('Planned in this module')} />
           <ul className="mt-3 space-y-2.5">
             {upcoming.map((item) => (
               <li
@@ -62,7 +64,7 @@ export function ModulePlaceholder({
         </Card>
 
         <Button variant="secondary" fullWidth onClick={() => navigate('/')}>
-          Back to home
+          {t('Back to home')}
         </Button>
       </div>
     </div>
