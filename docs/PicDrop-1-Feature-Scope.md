@@ -197,4 +197,8 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 - **2026-11-07 — M8: required profile photo.** The personal step blocks progress
   without a photo, downscales the image to a 256px local preview, shows it in the
   review summary, and uses it as the avatar on Home and Profile.
+- **2026-11-08 — M9: per-number onboarding.** Each verified mobile number keeps
+  its own draft under `fafo.partner.onboarding.<phone>`, new numbers start blank,
+  and draft applications are redirected to the wizard until submitted. The demo
+  OTP stays `123456`.
 
