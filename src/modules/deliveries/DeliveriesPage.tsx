@@ -10,6 +10,7 @@ import { DeliveryRequestCard } from '../../components/deliveries/DeliveryRequest
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import { deliveryStatusLabels } from '../../utils/delivery'
 import { formatCurrency, formatShortDate } from '../../utils/format'
 
@@ -17,6 +18,7 @@ type DeliveryTab = 'available' | 'active' | 'completed'
 
 export function DeliveriesPage() {
   const navigate = useNavigate()
+  const { t, locale } = useLanguage()
   const {
     isOnline,
     setOnline,
@@ -31,25 +33,25 @@ export function DeliveriesPage() {
   return (
     <div className="pb-6">
       <ScreenHeader
-        title="Orders"
-        subtitle="Requests, active jobs and completed work"
+        title={t('Orders')}
+        subtitle={t('Requests, active jobs and completed work')}
         showBack
         backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">
         <SegmentedTabs
-          label="Delivery views"
+          label={t('Delivery views')}
           value={tab}
           onChange={(value) => setTab(value as DeliveryTab)}
           items={[
             {
               id: 'available',
-              label: 'Available',
+              label: t('Available'),
               count: isOnline ? requests.length : 0,
             },
-            { id: 'active', label: 'Active', count: activeDelivery ? 1 : 0 },
-            { id: 'completed', label: 'Completed' },
+            { id: 'active', label: t('Active'), count: activeDelivery ? 1 : 0 },
+            { id: 'completed', label: t('Completed') },
           ]}
         />
 
@@ -57,9 +59,13 @@ export function DeliveriesPage() {
           !isOnline ? (
             <EmptyState
               icon={Package}
-              title="You are offline"
-              description="Go online to receive nearby grocery and restaurant requests."
-              action={<Button onClick={() => setOnline(true)}>Go online</Button>}
+              title={t('You are offline')}
+              description={t(
+                'Go online to receive nearby grocery and restaurant requests.',
+              )}
+              action={
+                <Button onClick={() => setOnline(true)}>{t('Go online')}</Button>
+              }
             />
           ) : requests.length > 0 ? (
             <div className="space-y-3">
@@ -78,10 +84,12 @@ export function DeliveriesPage() {
           ) : (
             <EmptyState
               icon={Package}
-              title="No new requests"
-              description="When you are online, nearby grocery and restaurant requests will appear here."
+              title={t('No new requests')}
+              description={t(
+                'When you are online, nearby grocery and restaurant requests will appear here.',
+              )}
               action={
-                <Button onClick={() => navigate('/')}>Back to home</Button>
+                <Button onClick={() => navigate('/')}>{t('Back to home')}</Button>
               }
             />
           )
@@ -101,7 +109,7 @@ export function DeliveriesPage() {
                   </p>
                 </div>
                 <Badge tone="brand" size="sm">
-                  {deliveryStatusLabels[activeDelivery.status]}
+                  {t(deliveryStatusLabels[activeDelivery.status])}
                 </Badge>
               </div>
 
@@ -114,17 +122,19 @@ export function DeliveriesPage() {
                 fullWidth
                 onClick={() => navigate('/deliveries/active')}
               >
-                Open active delivery
+                {t('Open active delivery')}
               </Button>
             </Card>
           ) : (
             <EmptyState
               icon={Package}
-              title="No active delivery"
-              description="Accept a request from the Available tab to start a delivery."
+              title={t('No active delivery')}
+              description={t(
+                'Accept a request from the Available tab to start a delivery.',
+              )}
               action={
                 <Button onClick={() => setTab('available')}>
-                  View requests
+                  {t('View requests')}
                 </Button>
               }
             />
@@ -147,9 +157,11 @@ export function DeliveriesPage() {
                         }
                         size="sm"
                       >
-                        {delivery.status === 'cancelled'
-                          ? 'Cancelled'
-                          : 'Completed'}
+                        {t(
+                          delivery.status === 'cancelled'
+                            ? 'Cancelled'
+                            : 'Completed',
+                        )}
                       </Badge>
                     </div>
                     <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
@@ -159,11 +171,11 @@ export function DeliveriesPage() {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-[12.5px] font-bold text-ink">
-                      {formatCurrency(delivery.earnings)}
+                      {formatCurrency(delivery.earnings, locale)}
                     </p>
                     <p className="text-[10.5px] text-ink-soft">
                       {delivery.completedAt
-                        ? formatShortDate(delivery.completedAt)
+                        ? formatShortDate(delivery.completedAt, locale)
                         : '—'}
                     </p>
                   </div>

@@ -7,12 +7,14 @@ import { Input } from '../../components/common/Input'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import { formatCurrency, formatDate } from '../../utils/format'
 
 type HistoryFilter = 'all' | 'delivered' | 'cancelled'
 
 export function HistoryPage() {
   const { history } = useApp()
+  const { t, locale } = useLanguage()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<HistoryFilter>('all')
 
@@ -50,35 +52,39 @@ export function HistoryPage() {
   return (
     <div className="pb-6">
       <ScreenHeader
-        title="History"
-        subtitle="Every delivery you have completed or cancelled"
+        title={t('History')}
+        subtitle={t('Every delivery you have completed or cancelled')}
         showBack
         backTo="/"
       />
 
       <div className="space-y-4 px-4 pt-5">
         <Input
-          placeholder="Search by delivery ID or customer"
+          placeholder={t('Search by delivery ID or customer')}
           value={query}
           leftIcon={<Search className="size-4" aria-hidden="true" />}
-          aria-label="Search deliveries"
+          aria-label={t('Search deliveries')}
           onChange={(event) => setQuery(event.target.value)}
         />
 
         <SegmentedTabs
-          label="Filter deliveries"
+          label={t('Filter deliveries')}
           value={filter}
           onChange={(value) => setFilter(value as HistoryFilter)}
           items={[
-            { id: 'all', label: 'All' },
-            { id: 'delivered', label: 'Delivered' },
-            { id: 'cancelled', label: 'Cancelled' },
+            { id: 'all', label: t('All') },
+            { id: 'delivered', label: t('Delivered') },
+            { id: 'cancelled', label: t('Cancelled') },
           ]}
         />
 
         <div className="flex items-center justify-between rounded-2xl bg-brand-soft/60 px-3.5 py-2.5 text-[12px] font-semibold text-ink">
-          <span>{deliveredCount} delivered</span>
-          <span>{formatCurrency(totalEarnings)} earned</span>
+          <span>{t('{count} delivered', { count: deliveredCount })}</span>
+          <span>
+            {t('{amount} earned', {
+              amount: formatCurrency(totalEarnings, locale),
+            })}
+          </span>
         </div>
 
         {filtered.length > 0 ? (
@@ -97,9 +103,11 @@ export function HistoryPage() {
                         }
                         size="sm"
                       >
-                        {delivery.status === 'cancelled'
-                          ? 'Cancelled'
-                          : 'Delivered'}
+                        {t(
+                          delivery.status === 'cancelled'
+                            ? 'Cancelled'
+                            : 'Delivered',
+                        )}
                       </Badge>
                     </div>
                     <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
@@ -107,20 +115,20 @@ export function HistoryPage() {
                     </p>
                     <p className="mt-0.5 text-[11px] text-ink-soft">
                       {delivery.completedAt
-                        ? formatDate(delivery.completedAt)
-                        : 'Not completed'}{' '}
-                      · {delivery.distanceKm} km
+                        ? formatDate(delivery.completedAt, locale)
+                        : t('Not completed')}{' '}
+                      · {t('{count} km', { count: delivery.distanceKm })}
                     </p>
                   </div>
 
                   <p className="shrink-0 text-[12.5px] font-bold text-ink">
-                    {formatCurrency(delivery.earnings)}
+                    {formatCurrency(delivery.earnings, locale)}
                   </p>
                 </div>
 
                 {delivery.cancellationReason ? (
                   <p className="mt-2 rounded-xl bg-danger-soft px-2.5 py-1.5 text-[11px] text-danger">
-                    {delivery.cancellationReason}
+                    {t(delivery.cancellationReason)}
                   </p>
                 ) : null}
               </Card>
@@ -129,8 +137,8 @@ export function HistoryPage() {
         ) : (
           <EmptyState
             icon={HistoryIcon}
-            title="No deliveries found"
-            description="Try a different search term or status filter."
+            title={t('No deliveries found')}
+            description={t('Try a different search term or status filter.')}
           />
         )}
       </div>

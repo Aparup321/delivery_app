@@ -17,6 +17,7 @@ import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
 import { MapPreview } from '../../components/deliveries/MapPreview'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import {
   deliveryStatusLabels,
   nextDeliveryAction,
@@ -32,6 +33,7 @@ const issueReasons = [
 
 export function ActiveDeliveryPage() {
   const navigate = useNavigate()
+  const { t, locale } = useLanguage()
   const { activeDelivery, advanceDelivery, completeDelivery, cancelDelivery } =
     useApp()
   const [showIssues, setShowIssues] = useState(false)
@@ -42,19 +44,21 @@ export function ActiveDeliveryPage() {
     return (
       <div className="pb-8">
         <ScreenHeader
-          title="Active delivery"
-          subtitle="No delivery in progress"
+          title={t('Active delivery')}
+          subtitle={t('No delivery in progress')}
           showBack
           backTo="/deliveries"
         />
         <div className="px-4 pt-6">
           <EmptyState
             icon={MapPin}
-            title="No active delivery"
-            description="Accept a delivery request to see the route, timeline and delivery actions here."
+            title={t('No active delivery')}
+            description={t(
+              'Accept a delivery request to see the route, timeline and delivery actions here.',
+            )}
             action={
               <Button onClick={() => navigate('/deliveries')}>
-                View requests
+                {t('View requests')}
               </Button>
             }
           />
@@ -94,13 +98,13 @@ export function ActiveDeliveryPage() {
   return (
     <div className="pb-8">
       <ScreenHeader
-        title="Active delivery"
+        title={t('Active delivery')}
         subtitle={activeDelivery.id}
         showBack
         backTo="/deliveries"
         right={
           <Badge tone="brand" size="sm">
-            {deliveryStatusLabels[activeDelivery.status]}
+            {t(deliveryStatusLabels[activeDelivery.status])}
           </Badge>
         }
       />
@@ -112,10 +116,10 @@ export function ActiveDeliveryPage() {
               tone={activeDelivery.category === 'Grocery' ? 'success' : 'warning'}
               size="sm"
             >
-              {activeDelivery.category}
+              {t(activeDelivery.category)}
             </Badge>
             <span className="text-[11.5px] text-ink-muted">
-              {activeDelivery.paymentMode}
+              {t(activeDelivery.paymentMode)}
             </span>
           </div>
 
@@ -126,7 +130,7 @@ export function ActiveDeliveryPage() {
               </span>
               <div>
                 <p className="text-[11.5px] font-medium text-ink-muted">
-                  Pickup
+                  {t('Pickup')}
                 </p>
                 <p className="text-[12.5px] font-semibold text-ink">
                   {activeDelivery.pickup.name}
@@ -143,7 +147,7 @@ export function ActiveDeliveryPage() {
               </span>
               <div>
                 <p className="text-[11.5px] font-medium text-ink-muted">
-                  Deliver to
+                  {t('Deliver to')}
                 </p>
                 <p className="text-[12.5px] font-semibold text-ink">
                   {activeDelivery.destination.name}
@@ -156,11 +160,11 @@ export function ActiveDeliveryPage() {
           </div>
 
           <div className="mt-3 flex items-center gap-4 border-t border-line pt-3 text-[11.5px] font-medium text-ink-muted">
-            <span>{activeDelivery.distanceKm} km</span>
-            <span>{activeDelivery.etaMinutes} min</span>
+            <span>{t('{count} km', { count: activeDelivery.distanceKm })}</span>
+            <span>{t('{count} min', { count: activeDelivery.etaMinutes })}</span>
             <span className="flex items-center gap-1">
               <Wallet className="size-3.5" aria-hidden="true" />
-              {formatCurrency(activeDelivery.earnings)}
+              {formatCurrency(activeDelivery.earnings, locale)}
             </span>
           </div>
         </Card>
@@ -171,7 +175,7 @@ export function ActiveDeliveryPage() {
         />
 
         <Card padding="md">
-          <SectionHeading title="Delivery progress" />
+          <SectionHeading title={t('Delivery progress')} />
           <div className="mt-4">
             <DeliveryTimeline delivery={activeDelivery} />
           </div>
@@ -180,7 +184,7 @@ export function ActiveDeliveryPage() {
         {activeDelivery.note ? (
           <Card padding="sm" className="border-warning/20 bg-warning-soft">
             <p className="text-[11.5px] font-semibold text-ink">
-              Customer note
+              {t('Customer note')}
             </p>
             <p className="mt-0.5 text-[12px] text-ink-muted">
               {activeDelivery.note}
@@ -192,19 +196,21 @@ export function ActiveDeliveryPage() {
           {isAwaitingDropCode ? (
             <Card padding="md">
               <SectionHeading
-                title="Verify delivery OTP"
-                subtitle="Ask the customer for the 4-digit code to close this delivery."
+                title={t('Verify delivery OTP')}
+                subtitle={t(
+                  'Ask the customer for the 4-digit code to close this delivery.',
+                )}
               />
               <div className="mt-3">
                 <Input
-                  label="Delivery OTP"
+                  label={t('Delivery OTP')}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={4}
-                  placeholder="4-digit code"
+                  placeholder={t('4-digit code')}
                   value={otp}
-                  error={otpError}
-                  hint="Demo build: use 4821 to complete the delivery."
+                  error={otpError ? t(otpError) : undefined}
+                  hint={t('Demo build: use 4821 to complete the delivery.')}
                   onChange={(event) => {
                     setOtp(event.target.value.replace(/\D/g, ''))
                     setOtpError('')
@@ -217,12 +223,12 @@ export function ActiveDeliveryPage() {
                 size="lg"
                 onClick={handleComplete}
               >
-                Complete delivery
+                {t('Complete delivery')}
               </Button>
             </Card>
           ) : (
             <Button fullWidth size="lg" onClick={handleAdvance}>
-              {actionLabel ?? 'Delivery completed'}
+              {actionLabel ? t(actionLabel) : t('Delivery completed')}
             </Button>
           )}
 
@@ -234,14 +240,14 @@ export function ActiveDeliveryPage() {
               }}
               leftIcon={<Phone className="size-4" aria-hidden="true" />}
             >
-              Contact
+              {t('Contact')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowIssues((value) => !value)}
               leftIcon={<AlertTriangle className="size-4" aria-hidden="true" />}
             >
-              Report issue
+              {t('Report issue')}
             </Button>
           </div>
         </div>
@@ -249,8 +255,8 @@ export function ActiveDeliveryPage() {
         {showIssues ? (
           <Card padding="md">
             <SectionHeading
-              title="What went wrong?"
-              subtitle="This cancels the delivery and informs support."
+              title={t('What went wrong?')}
+              subtitle={t('This cancels the delivery and informs support.')}
             />
             <div className="mt-3 space-y-2">
               {issueReasons.map((reason) => (
@@ -260,7 +266,7 @@ export function ActiveDeliveryPage() {
                   onClick={() => handleCancel(reason)}
                   className="w-full rounded-2xl border border-line bg-surface px-3.5 py-2.5 text-left text-[12.5px] font-medium text-ink transition-colors hover:border-danger/40 hover:bg-danger-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30"
                 >
-                  {reason}
+                  {t(reason)}
                 </button>
               ))}
             </div>

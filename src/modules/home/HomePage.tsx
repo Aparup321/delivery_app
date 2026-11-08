@@ -51,7 +51,7 @@ export function HomePage() {
     unreadNotifications,
     onboarding,
   } = useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const partner = currentPartner
   const nextRequest = requests[0]
   const displayName = onboarding.fullName.trim() || t('Partner')
@@ -149,7 +149,7 @@ export function HomePage() {
               </p>
               {onboarding.submittedAt ? (
                 <p className="mt-1 text-[11px] text-ink-soft">
-                  {t('Submitted')} {formatDate(onboarding.submittedAt)}
+                  {t('Submitted')} {formatDate(onboarding.submittedAt, locale)}
                 </p>
               ) : null}
             </div>
@@ -226,7 +226,7 @@ export function HomePage() {
               {t('Earnings')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {formatCurrency(earningsSummary.today)}
+              {formatCurrency(earningsSummary.today, locale)}
             </p>
           </Link>
           <Link
@@ -304,7 +304,7 @@ export function HomePage() {
                   </p>
                 </div>
                 <p className="shrink-0 text-[13px] font-semibold tabular-nums text-brand-deep">
-                  {formatCurrency(nextRequest.earnings)}
+                  {formatCurrency(nextRequest.earnings, locale)}
                 </p>
               </div>
 
