@@ -8,6 +8,11 @@ backend.
 
 ### Added
 
+- Full app localization: Profile → App language switches every screen, shared
+  component, validation message, notification and FAQ immediately between
+  English, Hindi and Bengali. The choice persists under `fafo.partner.language`,
+  and dates, times and rupee amounts follow the selected `en-IN`, `hi-IN` or
+  `bn-IN` locale. Names, addresses, IDs and delivery content stay as entered.
 - A slim, brand-tinted scrollbar on the right edge of the app column. The app
   shell now owns vertical scrolling, so the scrollbar sits beside the phone-like
   layout instead of at the browser edge, and each route change resets the

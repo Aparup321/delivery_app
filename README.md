@@ -79,7 +79,7 @@ material for the project and are not part of the deployed application.
 | Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (mock) |
 | Notifications | Request, account, delivery and payment alerts with read state | Built (mock) |
 | Help & support | FAQs, ticket submission and ticket status | Built (mock) |
-| Profile & settings | Partner details, documents, language, alerts, application status and sign-out | Built (mock) |
+| Profile & settings | Partner details, documents, English/Hindi/Bengali language switching, alerts, application status and sign-out | Built (mock) |
 
 ### Demo access
 
@@ -138,6 +138,11 @@ shared mock state layer:
   screen offers a "Go online" action when availability is off.
 - Notifications can be read individually or all at once; support tickets can be
   raised and tracked.
+- Profile → App language switches the whole interface immediately between
+  English, Hindi and Bengali. The choice is saved in `localStorage`, every screen,
+  shared component, validation message and the mock notification/FAQ copy uses
+  the selected language, and dates, times and rupee amounts follow the matching
+  `en-IN`, `hi-IN` or `bn-IN` locale.
 
 **Remaining:** Phase 12 (existing-platform integration, admin functions, Firebase)
 and Phase 13 (release QA). Both depend on the open decisions listed at the end.
@@ -156,8 +161,9 @@ delivery_app/
 │   │   ├── deliveries/       # DeliveryRequestCard, DeliveryTimeline, MapPreview
 │   │   └── layout/           # AppLayout, AuthLayout, BottomNavigation,
 │   │                         # ScreenHeader, ModulePlaceholder
-│   ├── context/              # AuthProvider, AppProvider, delivery reducer, hooks
+│   ├── context/              # LanguageProvider, AuthProvider, AppProvider, hooks
 │   ├── hooks/                # useCountdown
+│   ├── i18n/                 # English keys and Hindi/Bengali translations
 │   ├── mock/                 # partner, auth (demo OTP), deliveries, earnings,
 │   │                         # notifications, onboarding, support
 │   ├── modules/

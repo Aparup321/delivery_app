@@ -50,6 +50,10 @@ What exists today:
   timeline, route preview, status actions and issue reporting.
 - Searchable history, earnings with period tabs/chart/payouts, notifications with
   read state, support FAQs and tickets, profile with documents and sign-out.
+- English, Hindi and Bengali interface with immediate switching from Profile →
+  App language. The choice persists in `localStorage`, covers every screen and
+  shared component, and switches date, time and currency formatting to the
+  matching locale.
 - Realistic mock data for partner, deliveries, earnings, notifications and
   support, all routed through `src/context/` and `src/mock/`.
 
@@ -105,8 +109,9 @@ delivery_app/
 │   │   ├── common/        # Button, Input, Card, Toggle, Tabs, StatCard, ...
 │   │   ├── deliveries/    # Request card, timeline, route preview
 │   │   └── layout/        # AppLayout, AuthLayout, BottomNavigation, headers
-│   ├── context/           # Auth session and app state (provider + hook files)
+│   ├── context/           # Language, auth and app state (provider + hook files)
 │   ├── hooks/             # Shared hooks (useCountdown)
+│   ├── i18n/              # English keys, Hindi/Bengali maps, locale map
 │   ├── mock/              # Mock data and demo OTP, separated from UI
 │   ├── modules/           # One folder per product module
 │   │   ├── auth/
@@ -420,6 +425,12 @@ Firebase is a **later phase**. Until then:
   demo earnings, read/unread notifications, FAQ + ticket creation, and profile
   with documents, language, alerts and sign-out. Every section header has a back
   control with an explicit fallback; Home is the root and has none.
+- **Language** — Profile → App language switches every screen, shared component,
+  validation message and mock notification/FAQ string immediately between
+  English, Hindi and Bengali. The selection persists under
+  `fafo.partner.language`; dates, times and amounts use the matching `en-IN`,
+  `hi-IN` or `bn-IN` locale. User-entered content, names, addresses, IDs and
+  delivery data are not translated.
 
 ### Intentionally missing (do not fake these)
 
