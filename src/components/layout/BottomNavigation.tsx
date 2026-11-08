@@ -1,8 +1,11 @@
 import { NavLink } from 'react-router-dom'
+import { useLanguage } from '../../context/language'
 import { primaryNavItems } from '../../routes/navigation'
 import { cn } from '../../utils/cn'
 
 export function BottomNavigation() {
+  const { t } = useLanguage()
+
   return (
     <nav
       aria-label="Primary"
@@ -39,7 +42,7 @@ export function BottomNavigation() {
                       aria-hidden="true"
                     />
                   </span>
-                  <span>{label}</span>
+                  <span>{t(label)}</span>
                 </>
               )}
             </NavLink>

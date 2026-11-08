@@ -17,6 +17,7 @@ import { IconButton } from '../../components/common/IconButton'
 import { SectionHeading } from '../../components/common/SectionHeading'
 import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import { dashboardStats, earningsSummary } from '../../mock/earnings'
 import { currentPartner } from '../../mock/partner'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
@@ -50,9 +51,10 @@ export function HomePage() {
     unreadNotifications,
     onboarding,
   } = useApp()
+  const { t } = useLanguage()
   const partner = currentPartner
   const nextRequest = requests[0]
-  const displayName = onboarding.fullName.trim() || 'Partner'
+  const displayName = onboarding.fullName.trim() || t('Partner')
   const firstName = displayName.split(' ')[0] ?? displayName
   const applicationStatus = applicationStatusMeta[onboarding.status]
 
@@ -62,7 +64,7 @@ export function HomePage() {
         <div className="flex items-center justify-between gap-3">
           <Link
             to="/profile"
-            aria-label="Open profile"
+            aria-label={t('Open profile')}
             className="flex min-w-0 items-center gap-3 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
             <Avatar
@@ -72,7 +74,7 @@ export function HomePage() {
             />
             <div className="min-w-0">
               <p className="text-[11.5px] font-medium text-ink-muted">
-                Delivery partner
+                {t('Delivery partner')}
               </p>
               <h1 className="truncate text-[19px] font-semibold tracking-tight text-ink">
                 {firstName}
@@ -84,8 +86,10 @@ export function HomePage() {
             <IconButton
               label={
                 unreadNotifications > 0
-                  ? `Notifications, ${unreadNotifications} unread`
-                  : 'Notifications'
+                  ? t('Notifications, {count} unread', {
+                      count: unreadNotifications,
+                    })
+                  : t('Notifications')
               }
               variant="soft"
               onClick={() => navigate('/notifications')}
@@ -115,16 +119,22 @@ export function HomePage() {
               />
               <div>
                 <p className="text-[13.5px] font-semibold text-ink">
-                  {isOnline ? 'You are Online' : 'You are Offline'}
+                  {t(isOnline ? 'You are Online' : 'You are Offline')}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
-                  {isOnline
-                    ? 'Receiving delivery requests'
-                    : 'Go online to receive requests'}
+                  {t(
+                    isOnline
+                      ? 'Receiving delivery requests'
+                      : 'Go online to receive requests',
+                  )}
                 </p>
               </div>
             </div>
-            <Toggle checked={isOnline} onChange={setOnline} label="Availability" />
+            <Toggle
+              checked={isOnline}
+              onChange={setOnline}
+              label={t('Availability')}
+            />
           </div>
         </Card>
 
@@ -132,19 +142,19 @@ export function HomePage() {
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-ink">
-                {applicationStatus.headline}
+                {t(applicationStatus.headline)}
               </p>
               <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
-                {applicationStatus.description}
+                {t(applicationStatus.description)}
               </p>
               {onboarding.submittedAt ? (
                 <p className="mt-1 text-[11px] text-ink-soft">
-                  Submitted {formatDate(onboarding.submittedAt)}
+                  {t('Submitted')} {formatDate(onboarding.submittedAt)}
                 </p>
               ) : null}
             </div>
             <Badge tone={applicationStatus.tone} size="sm">
-              {applicationStatus.label}
+              {t(applicationStatus.label)}
             </Badge>
           </div>
           <Button
@@ -160,7 +170,9 @@ export function HomePage() {
             }
             rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
           >
-            {onboarding.status === 'draft' ? 'Continue setup' : 'Track status'}
+            {t(
+              onboarding.status === 'draft' ? 'Continue setup' : 'Track status',
+            )}
           </Button>
         </Card>
 
@@ -169,14 +181,14 @@ export function HomePage() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-[11.5px] font-medium text-ink-muted">
-                  Active delivery
+                  {t('Active delivery')}
                 </p>
                 <p className="mt-0.5 text-[13.5px] font-semibold text-ink">
                   {activeDelivery.id}
                 </p>
               </div>
               <Badge tone="brand" size="sm">
-                {deliveryStatusLabels[activeDelivery.status]}
+                {t(deliveryStatusLabels[activeDelivery.status])}
               </Badge>
             </div>
             <p className="mt-1.5 text-[12px] text-ink-muted">
@@ -189,7 +201,7 @@ export function HomePage() {
               onClick={() => navigate('/deliveries/active')}
               rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
             >
-              Continue delivery
+              {t('Continue delivery')}
             </Button>
           </Card>
         ) : null}
@@ -199,7 +211,9 @@ export function HomePage() {
             to="/deliveries"
             className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
-            <p className="text-[11px] font-medium text-ink-muted">Deliveries</p>
+            <p className="text-[11px] font-medium text-ink-muted">
+              {t('Deliveries')}
+            </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
               {earningsSummary.deliveriesToday}
             </p>
@@ -208,7 +222,9 @@ export function HomePage() {
             to="/earnings"
             className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
-            <p className="text-[11px] font-medium text-ink-muted">Earnings</p>
+            <p className="text-[11px] font-medium text-ink-muted">
+              {t('Earnings')}
+            </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
               {formatCurrency(earningsSummary.today)}
             </p>
@@ -217,7 +233,9 @@ export function HomePage() {
             to="/profile"
             className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
-            <p className="text-[11px] font-medium text-ink-muted">Rating</p>
+            <p className="text-[11px] font-medium text-ink-muted">
+              {t('Rating')}
+            </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
               {dashboardStats.rating.toFixed(1)}
             </p>
@@ -225,7 +243,7 @@ export function HomePage() {
         </div>
 
         <section>
-          <SectionHeading title="Quick actions" />
+          <SectionHeading title={t('Quick actions')} />
           <div className="mt-2 grid grid-cols-2 gap-x-2">
             {quickActions.map(({ label, to, icon: Icon }) => (
               <Link
@@ -239,7 +257,7 @@ export function HomePage() {
                   aria-hidden="true"
                 />
                 <span className="text-[12.5px] font-medium leading-tight text-ink">
-                  {label}
+                  {t(label)}
                 </span>
               </Link>
             ))}
@@ -248,15 +266,19 @@ export function HomePage() {
 
         <section>
           <SectionHeading
-            title="New requests"
-            subtitle={isOnline ? `${requests.length} waiting` : 'Offline'}
+            title={t('New requests')}
+            subtitle={
+              isOnline
+                ? t('{count} waiting', { count: requests.length })
+                : t('Offline')
+            }
             action={
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/deliveries')}
               >
-                View all
+                {t('View all')}
               </Button>
             }
           />
@@ -274,7 +296,7 @@ export function HomePage() {
                       }
                       size="sm"
                     >
-                      {nextRequest.category}
+                      {t(nextRequest.category)}
                     </Badge>
                   </div>
                   <p className="mt-1 truncate text-[12px] text-ink-muted">
@@ -287,9 +309,15 @@ export function HomePage() {
               </div>
 
               <div className="mt-2 flex items-center gap-3 text-[11.5px] text-ink-muted">
-                <span>{nextRequest.distanceKm} km</span>
-                <span>{nextRequest.etaMinutes} min</span>
-                <span>{nextRequest.itemCount} items</span>
+                <span>
+                  {t('{count} km', { count: nextRequest.distanceKm })}
+                </span>
+                <span>
+                  {t('{count} min', { count: nextRequest.etaMinutes })}
+                </span>
+                <span>
+                  {t('{count} items', { count: nextRequest.itemCount })}
+                </span>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -297,7 +325,7 @@ export function HomePage() {
                   variant="outline"
                   onClick={() => rejectRequest(nextRequest.id)}
                 >
-                  Reject
+                  {t('Reject')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -305,15 +333,17 @@ export function HomePage() {
                     navigate('/deliveries/active')
                   }}
                 >
-                  Accept
+                  {t('Accept')}
                 </Button>
               </div>
             </Card>
           ) : (
             <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
-              {isOnline
-                ? 'No requests right now. Stay online to get the next job.'
-                : 'Turn on availability to start receiving nearby grocery and restaurant requests.'}
+              {t(
+                isOnline
+                  ? 'No requests right now. Stay online to get the next job.'
+                  : 'Turn on availability to start receiving nearby grocery and restaurant requests.',
+              )}
             </p>
           )}
         </section>
