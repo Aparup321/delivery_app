@@ -119,8 +119,9 @@ shared mock state layer:
   (`fafo.partner.onboarding.<phone>`), so each demo number has its own
   application and a new number starts from a blank draft.
 - Draft applications are held inside the onboarding wizard; Home, Orders,
-  Earnings and Profile only open once the application is submitted. The demo OTP
-  is still `123456` for every number.
+  Earnings and Profile only open once the application is submitted. The bottom
+  navigation is hidden while the draft form is open. The demo OTP is still
+  `123456` for every number.
 - A profile photo is mandatory on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
   Profile, and blocks progress until added.

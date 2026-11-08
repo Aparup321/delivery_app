@@ -399,9 +399,9 @@ Firebase is a **later phase**. Until then:
   submitted/under-review state. Progress is stored under
   `fafo.partner.onboarding.<phone>`, one draft per verified number, and the demo
   OTP is the same for every number. Draft partners are redirected back to the
-  wizard until they submit; the wizard header offers Sign out. The flow renders
-  inside the app shell, so the bottom navigation is present on every
-  authenticated screen.
+  wizard until they submit; the wizard header offers Sign out. The wizard hides
+  the bottom navigation while a draft is being completed; the submitted
+  confirmation renders inside the shell.
 - **Application status** — Profile → Application status shows pending,
   submitted, under review, approved or rejected, with submitted and updated
   dates and a four-step tracker. Submitted, under-review, approved and rejected

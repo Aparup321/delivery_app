@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { useApp } from '../../context/app-store'
 import { BottomNavigation } from './BottomNavigation'
 
 /**
@@ -11,6 +12,9 @@ import { BottomNavigation } from './BottomNavigation'
  */
 export function AppLayout() {
   const { pathname } = useLocation()
+  const { onboarding } = useApp()
+  const isOnboardingForm =
+    pathname === '/onboarding' && onboarding.status === 'draft'
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -22,7 +26,7 @@ export function AppLayout() {
         <main className="flex-1">
           <Outlet />
         </main>
-        <BottomNavigation />
+        {isOnboardingForm ? null : <BottomNavigation />}
       </div>
     </div>
   )

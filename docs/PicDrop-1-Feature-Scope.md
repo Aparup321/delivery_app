@@ -212,4 +212,7 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   shows pending, submitted, under review, approved or rejected with dates and a
   four-step tracker. Home and the submitted screen reflect the current stage; a
   labelled demo control previews each state. Verification remains mock data.
+- **2026-11-08 — M13: full-screen onboarding form.** The bottom navigation is
+  hidden while a draft application is being completed, giving the KYC form the
+  full screen. The submitted confirmation still renders inside the app shell.
 

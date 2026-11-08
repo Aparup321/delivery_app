@@ -38,6 +38,9 @@ backend.
 
 ### Changed
 
+- The onboarding wizard now hides the bottom navigation while a draft
+  application is being completed, so the KYC form uses the full screen. The
+  submitted confirmation and every other section keep the navigation.
 - UI pass against AI-template tells: removed the purple hue gradients, decorative
   header blobs and coloured shadows, flattened cards and buttons, replaced the
   dashboard's repeated icon cards with a quiet stat strip and a two-column tool
