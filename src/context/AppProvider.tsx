@@ -41,9 +41,20 @@ function readOnboarding(phone: string | null): OnboardingState {
       return initialOnboarding
     }
 
+    // Earlier drafts stored the Aadhaar number at the top level.
+    const legacyAadhaarNumber = (
+      parsed as { aadhaarNumber?: string }
+    ).aadhaarNumber
+
     return {
       ...initialOnboarding,
       ...parsed,
+      documentNumbers: {
+        ...initialOnboarding.documentNumbers,
+        ...parsed.documentNumbers,
+        aadhaar:
+          parsed.documentNumbers?.aadhaar ?? legacyAadhaarNumber ?? '',
+      },
       documents: { ...initialOnboarding.documents, ...parsed.documents },
       vehicle: { ...initialOnboarding.vehicle, ...parsed.vehicle },
       bank: { ...initialOnboarding.bank, ...parsed.bank },

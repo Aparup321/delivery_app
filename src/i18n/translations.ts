@@ -474,6 +474,30 @@ const hindi: Record<string, string> = {
   '{label} digit {number}': '{label} अंक {number}',
   'Customer unreachable at the delivery address.':
     'डिलीवरी पते पर ग्राहक से संपर्क नहीं हो सका।',
+  'Aadhaar number': 'आधार नंबर',
+  '12-digit number on your Aadhaar card':
+    'आधार कार्ड पर लिखा 12 अंकों का नंबर',
+  'Enter a valid 12-digit Aadhaar number.':
+    'मान्य 12 अंकों का आधार नंबर दर्ज करें।',
+  'JPG / PDF': 'JPG / PDF',
+  Change: 'बदलें',
+  'PAN number': 'PAN नंबर',
+  '10-character PAN, e.g. ABCDE1234F':
+    '10 अक्षरों का PAN, जैसे ABCDE1234F',
+  'Enter a valid 10-character PAN number.':
+    'मान्य 10 अक्षरों का PAN नंबर दर्ज करें।',
+  'Licence number': 'लाइसेंस नंबर',
+  'Licence number as printed on the card': 'लाइसेंस कार्ड पर लिखा नंबर',
+  'Enter a valid driving licence number.':
+    'मान्य ड्राइविंग लाइसेंस नंबर दर्ज करें।',
+  'Upload your driving licence to continue.':
+    'जारी रखने के लिए ड्राइविंग लाइसेंस अपलोड करें।',
+  'Registration number printed on the RC': 'RC पर लिखा रजिस्ट्रेशन नंबर',
+  'Upload your vehicle RC to continue.':
+    'जारी रखने के लिए वाहन RC अपलोड करें।',
+  'Bank passbook': 'बैंक पासबुक',
+  'Passbook or cancelled cheque · JPG or PDF · max 2 MB':
+    'पासबुक या कैंसिल चेक · JPG या PDF · अधिकतम 2 MB',
 }
 
 const bengali: Record<string, string> = {
@@ -935,6 +959,29 @@ const bengali: Record<string, string> = {
   '{label} digit {number}': '{label} সংখ্যা {number}',
   'Customer unreachable at the delivery address.':
     'ডেলিভারির ঠিকানায় গ্রাহকের সঙ্গে যোগাযোগ করা যায়নি।',
+  'Aadhaar number': 'আধার নম্বর',
+  '12-digit number on your Aadhaar card':
+    'আধার কার্ডে লেখা 12 সংখ্যার নম্বর',
+  'Enter a valid 12-digit Aadhaar number.':
+    'সঠিক 12 সংখ্যার আধার নম্বর দিন।',
+  'JPG / PDF': 'JPG / PDF',
+  Change: 'পরিবর্তন করুন',
+  'PAN number': 'PAN নম্বর',
+  '10-character PAN, e.g. ABCDE1234F': '10 অক্ষরের PAN, যেমন ABCDE1234F',
+  'Enter a valid 10-character PAN number.':
+    'সঠিক 10 অক্ষরের PAN নম্বর দিন।',
+  'Licence number': 'লাইসেন্স নম্বর',
+  'Licence number as printed on the card': 'লাইসেন্স কার্ডে লেখা নম্বর',
+  'Enter a valid driving licence number.':
+    'সঠিক ড্রাইভিং লাইসেন্স নম্বর দিন।',
+  'Upload your driving licence to continue.':
+    'চালিয়ে যেতে ড্রাইভিং লাইসেন্স আপলোড করুন।',
+  'Registration number printed on the RC': 'RC-তে লেখা রেজিস্ট্রেশন নম্বর',
+  'Upload your vehicle RC to continue.':
+    'চালিয়ে যেতে গাড়ির RC আপলোড করুন।',
+  'Bank passbook': 'ব্যাঙ্ক পাসবুক',
+  'Passbook or cancelled cheque · JPG or PDF · max 2 MB':
+    'পাসবুক বা বাতিল চেক · JPG বা PDF · সর্বোচ্চ 2 MB',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =

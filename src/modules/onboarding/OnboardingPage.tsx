@@ -7,7 +7,6 @@ import {
   Camera,
   Check,
   Clock3,
-  FileText,
   Footprints,
   Play,
 } from 'lucide-react'
@@ -26,44 +25,16 @@ import type { DocumentKey, OnboardingState } from '../../types/onboarding'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { cn } from '../../utils/cn'
 import { formatDate } from '../../utils/format'
+import { DocumentUploadTile } from './DocumentUploadTile'
+import { KycDocumentCard } from './KycDocumentCard'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PINCODE_PATTERN = /^\d{6}$/
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/
+const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/
+const LICENCE_PATTERN = /^[A-Z]{2}[- ]?\d{2}[- ]?\d{4}[- ]?\d{7}$/
 const REGISTRATION_PATTERN =
   /^[A-Z]{2}[- ]?\d{1,2}[- ]?[A-Z]{1,2}[- ]?\d{4}$/i
-
-const documentFields: Array<{
-  key: DocumentKey
-  title: string
-  hint: string
-  required: boolean
-}> = [
-  {
-    key: 'aadhaar',
-    title: 'Aadhaar card',
-    hint: 'Front and back, JPG or PDF · max 2 MB',
-    required: true,
-  },
-  {
-    key: 'pan',
-    title: 'PAN card',
-    hint: 'Clear photo of the card · max 2 MB',
-    required: true,
-  },
-  {
-    key: 'licence',
-    title: 'Driving licence',
-    hint: 'Needed for motorised vehicles · max 2 MB',
-    required: false,
-  },
-  {
-    key: 'registration',
-    title: 'Vehicle RC',
-    hint: 'Registration certificate · max 2 MB',
-    required: false,
-  },
-]
 
 const vehicleOptions: Array<{
   value: OnboardingState['vehicle']['type']
@@ -161,13 +132,40 @@ function validateStep(step: number, state: OnboardingState): string {
         return 'Enter a 6-digit PIN code.'
       }
       return ''
-    case 1:
+    case 1: {
+      if (!/^\d{12}$/.test(state.documentNumbers.aadhaar)) {
+        return 'Enter a valid 12-digit Aadhaar number.'
+      }
       if (!state.documents.aadhaar) {
         return 'Upload your Aadhaar card to continue.'
+      }
+      if (!PAN_PATTERN.test(state.documentNumbers.pan)) {
+        return 'Enter a valid 10-character PAN number.'
       }
       if (!state.documents.pan) {
         return 'Upload your PAN card to continue.'
       }
+
+      const hasLicence = Boolean(
+        state.documents.licence || state.documentNumbers.licence,
+      )
+      if (hasLicence && !LICENCE_PATTERN.test(state.documentNumbers.licence)) {
+        return 'Enter a valid driving licence number.'
+      }
+      if (hasLicence && !state.documents.licence) {
+        return 'Upload your driving licence to continue.'
+      }
+
+      const hasRc = Boolean(
+        state.documents.registration || state.vehicle.registrationNumber,
+      )
+      if (hasRc && !REGISTRATION_PATTERN.test(state.vehicle.registrationNumber)) {
+        return 'Enter a valid registration number, for example WB02AB1234.'
+      }
+      if (hasRc && !state.documents.registration) {
+        return 'Upload your vehicle RC to continue.'
+      }
+
       if (state.bank.accountHolder.trim().length < 3) {
         return "Enter the account holder's name."
       }
@@ -178,6 +176,7 @@ function validateStep(step: number, state: OnboardingState): string {
         return 'Enter a valid IFSC code, for example HDFC0001234.'
       }
       return ''
+    }
     case 2: {
       const needsRegistration =
         state.vehicle.type === 'bike' || state.vehicle.type === 'scooter'
@@ -246,6 +245,21 @@ export function OnboardingPage() {
     } catch {
       setPhotoError('Could not read that image. Try another file.')
     }
+  }
+
+  function handleDocumentChange(key: DocumentKey, file: File) {
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setDocumentErrors((current) => ({
+        ...current,
+        [key]: 'File is larger than 2 MB. Choose a smaller file.',
+      }))
+      return
+    }
+
+    setDocumentErrors((current) => ({ ...current, [key]: '' }))
+    updateOnboarding({
+      documents: { ...onboarding.documents, [key]: file.name },
+    })
   }
 
   function handleBack() {
@@ -550,88 +564,117 @@ export function OnboardingPage() {
             </div>
 
             <div className="space-y-2.5">
-              {documentFields.map((field) => {
-                const fileName = onboarding.documents[field.key]
+              <KycDocumentCard
+                title={t('Aadhaar card')}
+                numberLabel={t('Aadhaar number')}
+                numberValue={onboarding.documentNumbers.aadhaar}
+                numberPlaceholder="1234 5678 9012"
+                numberHint={t('12-digit number on your Aadhaar card')}
+                inputMode="numeric"
+                maxLength={12}
+                required
+                fileName={onboarding.documents.aadhaar}
+                fileHint={t('Front and back, JPG or PDF · max 2 MB')}
+                fileError={
+                  documentErrors.aadhaar
+                    ? t(documentErrors.aadhaar)
+                    : undefined
+                }
+                onNumberChange={(value) =>
+                  updateOnboarding({
+                    documentNumbers: {
+                      ...onboarding.documentNumbers,
+                      aadhaar: value.replace(/\D/g, '').slice(0, 12),
+                    },
+                  })
+                }
+                onFileChange={(file) => handleDocumentChange('aadhaar', file)}
+              />
 
-                return (
-                  <label key={field.key} className="block cursor-pointer">
-                    <Card padding="sm">
-                      <div className="flex items-center gap-3">
-                        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-deep">
-                          <FileText className="size-4" aria-hidden="true" />
-                        </span>
+              <KycDocumentCard
+                title={t('PAN card')}
+                numberLabel={t('PAN number')}
+                numberValue={onboarding.documentNumbers.pan}
+                numberPlaceholder="ABCDE1234F"
+                numberHint={t('10-character PAN, e.g. ABCDE1234F')}
+                maxLength={10}
+                autoCapitalize="characters"
+                required
+                fileName={onboarding.documents.pan}
+                fileHint={t('Clear photo of the card · max 2 MB')}
+                fileError={
+                  documentErrors.pan ? t(documentErrors.pan) : undefined
+                }
+                onNumberChange={(value) =>
+                  updateOnboarding({
+                    documentNumbers: {
+                      ...onboarding.documentNumbers,
+                      pan: value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '')
+                        .slice(0, 10),
+                    },
+                  })
+                }
+                onFileChange={(file) => handleDocumentChange('pan', file)}
+              />
 
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[12.5px] font-semibold text-ink">
-                            {t(field.title)}
-                            {field.required ? (
-                              <span className="text-danger"> *</span>
-                            ) : null}
-                          </p>
-                          <p className="truncate text-[11px] text-ink-muted">
-                            {fileName || t(field.hint)}
-                          </p>
-                        </div>
+              <KycDocumentCard
+                title={t('Driving licence')}
+                numberLabel={t('Licence number')}
+                numberValue={onboarding.documentNumbers.licence}
+                numberPlaceholder="WB-0120210012345"
+                numberHint={t('Licence number as printed on the card')}
+                maxLength={18}
+                autoCapitalize="characters"
+                fileName={onboarding.documents.licence}
+                fileHint={t('Needed for motorised vehicles · max 2 MB')}
+                fileError={
+                  documentErrors.licence
+                    ? t(documentErrors.licence)
+                    : undefined
+                }
+                onNumberChange={(value) =>
+                  updateOnboarding({
+                    documentNumbers: {
+                      ...onboarding.documentNumbers,
+                      licence: value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9- ]/g, '')
+                        .slice(0, 18),
+                    },
+                  })
+                }
+                onFileChange={(file) => handleDocumentChange('licence', file)}
+              />
 
-                        {fileName ? (
-                          <span className="grid size-6 place-items-center rounded-full bg-success text-white">
-                            <Check className="size-3.5" aria-hidden="true" />
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-semibold text-brand">
-                            {t('Upload')}
-                          </span>
-                        )}
-                      </div>
-
-                      {documentErrors[field.key] ? (
-                        <p
-                          role="alert"
-                          className="mt-2 text-[11px] font-medium text-danger"
-                        >
-                          {t(documentErrors[field.key] ?? '')}
-                        </p>
-                      ) : null}
-
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        aria-label={t('Upload {document}', {
-                          document: t(field.title),
-                        })}
-                        className="sr-only"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0]
-                          event.target.value = ''
-
-                          if (!file) {
-                            return
-                          }
-
-                          if (file.size > MAX_DOCUMENT_BYTES) {
-                            setDocumentErrors((current) => ({
-                              ...current,
-                              [field.key]: 'File is larger than 2 MB. Choose a smaller file.',
-                            }))
-                            return
-                          }
-
-                          setDocumentErrors((current) => ({
-                            ...current,
-                            [field.key]: '',
-                          }))
-                          updateOnboarding({
-                            documents: {
-                              ...onboarding.documents,
-                              [field.key]: file.name,
-                            },
-                          })
-                        }}
-                      />
-                    </Card>
-                  </label>
-                )
-              })}
+              <KycDocumentCard
+                title={t('Vehicle RC')}
+                numberLabel={t('Registration number')}
+                numberValue={onboarding.vehicle.registrationNumber}
+                numberPlaceholder="WB02AB1234"
+                numberHint={t('Registration number printed on the RC')}
+                maxLength={13}
+                autoCapitalize="characters"
+                fileName={onboarding.documents.registration}
+                fileHint={t('Registration certificate · max 2 MB')}
+                fileError={
+                  documentErrors.registration
+                    ? t(documentErrors.registration)
+                    : undefined
+                }
+                onNumberChange={(value) =>
+                  updateOnboarding({
+                    vehicle: {
+                      ...onboarding.vehicle,
+                      registrationNumber: value.toUpperCase().slice(0, 13),
+                    },
+                  })
+                }
+                onFileChange={(file) =>
+                  handleDocumentChange('registration', file)
+                }
+              />
             </div>
 
             <Card padding="sm" className="border-warning/25 bg-warning-soft">
@@ -673,23 +716,51 @@ export function OnboardingPage() {
                   })
                 }
               />
-              <Input
-                label={t('Account number')}
-                required
-                inputMode="numeric"
-                value={onboarding.bank.accountNumber}
-                placeholder="50100 1234 5678"
-                onChange={(event) =>
-                  updateOnboarding({
-                    bank: {
-                      ...onboarding.bank,
-                      accountNumber: event.target.value
-                        .replace(/\D/g, '')
-                        .slice(0, 18),
-                    },
-                  })
-                }
-              />
+              <div>
+                <div className="flex items-start gap-3">
+                  <Input
+                    containerClassName="min-w-0 flex-1"
+                    label={t('Account number')}
+                    required
+                    inputMode="numeric"
+                    value={onboarding.bank.accountNumber}
+                    placeholder="50100 1234 5678"
+                    onChange={(event) =>
+                      updateOnboarding({
+                        bank: {
+                          ...onboarding.bank,
+                          accountNumber: event.target.value
+                            .replace(/\D/g, '')
+                            .slice(0, 18),
+                        },
+                      })
+                    }
+                  />
+
+                  <DocumentUploadTile
+                    className="mt-[26px]"
+                    documentName={t('Bank passbook')}
+                    fileName={onboarding.documents.passbook}
+                    onFileChange={(file) =>
+                      handleDocumentChange('passbook', file)
+                    }
+                  />
+                </div>
+
+                <p className="mt-2 break-words text-[11px] leading-relaxed text-ink-muted">
+                  {onboarding.documents.passbook ||
+                    t('Passbook or cancelled cheque · JPG or PDF · max 2 MB')}
+                </p>
+
+                {documentErrors.passbook ? (
+                  <p
+                    role="alert"
+                    className="mt-2 text-[11px] font-medium text-danger"
+                  >
+                    {t(documentErrors.passbook)}
+                  </p>
+                ) : null}
+              </div>
               <Input
                 label={t('IFSC code')}
                 required
@@ -957,6 +1028,14 @@ export function OnboardingPage() {
                   {t(onboarding.documents.aadhaar ? 'uploaded' : 'missing')} ·{' '}
                   {t('PAN card')}{' '}
                   {t(onboarding.documents.pan ? 'uploaded' : 'missing')}
+                </p>
+                <p className="text-[11.5px] text-ink-muted">
+                  {t('Driving licence')}{' '}
+                  {t(onboarding.documents.licence ? 'uploaded' : 'missing')} ·{' '}
+                  {t('Vehicle RC')}{' '}
+                  {t(onboarding.documents.registration ? 'uploaded' : 'missing')}{' '}
+                  · {t('Bank passbook')}{' '}
+                  {t(onboarding.documents.passbook ? 'uploaded' : 'missing')}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.bank.accountHolder} ····{' '}

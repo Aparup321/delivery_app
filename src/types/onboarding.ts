@@ -7,13 +7,26 @@ export type OnboardingStatus =
   | 'approved'
   | 'rejected'
 
-export type DocumentKey = 'aadhaar' | 'pan' | 'licence' | 'registration'
+export type DocumentKey =
+  | 'aadhaar'
+  | 'pan'
+  | 'licence'
+  | 'registration'
+  | 'passbook'
 
 export interface OnboardingDocuments {
   aadhaar: string
   pan: string
   licence: string
   registration: string
+  passbook: string
+}
+
+/** Numbers printed on the KYC documents. The RC number lives on the vehicle. */
+export interface OnboardingDocumentNumbers {
+  aadhaar: string
+  pan: string
+  licence: string
 }
 
 export interface OnboardingVehicle {
@@ -41,6 +54,8 @@ export interface OnboardingState {
   city: string
   addressLine: string
   pincode: string
+  /** Numbers printed on the Aadhaar, PAN and driving licence. */
+  documentNumbers: OnboardingDocumentNumbers
   documents: OnboardingDocuments
   vehicle: OnboardingVehicle
   bank: OnboardingBank

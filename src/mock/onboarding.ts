@@ -11,11 +11,17 @@ export const initialOnboarding: OnboardingState = {
   city: '',
   addressLine: '',
   pincode: '',
+  documentNumbers: {
+    aadhaar: '',
+    pan: '',
+    licence: '',
+  },
   documents: {
     aadhaar: '',
     pan: '',
     licence: '',
     registration: '',
+    passbook: '',
   },
   vehicle: {
     type: 'bike',
