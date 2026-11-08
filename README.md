@@ -120,8 +120,9 @@ shared mock state layer:
 - Draft applications are held inside the onboarding wizard; Home, Orders,
   Earnings and Profile only open once the application is submitted. The demo OTP
   is still `123456` for every number.
-- A profile photo is mandatory on the personal step; it is downscaled locally to
-  a 256px preview, shown on Home and Profile, and blocks progress until added.
+- A profile photo is mandatory on the personal step; it must be JPG or PNG and
+  within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
+  Profile, and blocks progress until added.
 - KYC documents accept JPG images or PDFs up to 2 MB each. Larger files are
   rejected inline and are not recorded as uploaded.
 - Accepting a request moves it into an active delivery with a live status

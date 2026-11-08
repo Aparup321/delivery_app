@@ -201,6 +201,7 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   its own draft under `fafo.partner.onboarding.<phone>`, new numbers start blank,
   and draft applications are redirected to the wizard until submitted. The demo
   OTP stays `123456`.
-- **2026-11-08 — M10: 2 MB document limit.** KYC uploads reject files larger than
-  2 MB with an inline message, and the KYC step states the limit before upload.
+- **2026-11-08 — M10: 2 MB upload limit.** KYC documents and the profile photo
+  reject files larger than 2 MB with an inline message, and both upload surfaces
+  state the limit before selection.
 

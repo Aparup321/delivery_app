@@ -74,7 +74,7 @@ const vehicleOptions: Array<{
   { value: 'foot', label: 'On foot', icon: Footprints },
 ]
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024
 const MAX_DOCUMENT_BYTES = 2 * 1024 * 1024
 const PHOTO_EDGE = 256
 
@@ -228,7 +228,7 @@ export function OnboardingPage() {
     }
 
     if (file.size > MAX_PHOTO_BYTES) {
-      setPhotoError('Choose an image smaller than 5 MB.')
+      setPhotoError('Choose an image smaller than 2 MB.')
       return
     }
 
@@ -441,8 +441,8 @@ export function OnboardingPage() {
               </p>
               <p className="text-center text-[11px] text-ink-muted">
                 {onboarding.profilePhoto
-                  ? 'Tap the photo to change it'
-                  : 'Clear front-facing photo, JPG or PNG'}
+                  ? 'Tap the photo to change it · max 2 MB'
+                  : 'Clear front-facing photo, JPG or PNG · max 2 MB'}
               </p>
               {photoError ? (
                 <p role="alert" className="text-xs font-medium text-danger">

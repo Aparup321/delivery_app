@@ -10,7 +10,8 @@ backend.
 
 - KYC document uploads are capped at 2 MB per file. Larger images or PDFs are
   rejected with an inline error before the file name is recorded, and the KYC
-  step states the limit up front.
+  step states the limit up front. The profile photo uses the same 2 MB cap and
+  shows it in the upload helper.
 - Onboarding is now isolated per verified mobile number. A new number starts
   with a blank application instead of inheriting another demo account's
   submission, and draft applications are redirected back to the wizard until

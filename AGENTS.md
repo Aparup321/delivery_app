@@ -425,7 +425,8 @@ Firebase is a **later phase**. Until then:
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
   as demo where they could be mistaken for live data.
 - Onboarding quiz, working shifts and service zones are not built. The profile
-  photo is captured (downscaled locally) but not uploaded to storage.
+  photo is captured (downscaled locally, 2 MB limit) but not uploaded to
+  storage.
 
 ### Verification (run before handing work back)
 
