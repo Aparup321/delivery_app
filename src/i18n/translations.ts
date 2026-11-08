@@ -280,8 +280,10 @@ const hindi: Record<string, string> = {
   Vehicle: 'वाहन',
   'Walking delivery': 'पैदल डिलीवरी',
   'Model not added': 'मॉडल नहीं जोड़ा गया',
-  'No vehicle or registration needed': 'वाहन या पंजीकरण की जरूरत नहीं',
-  'No registration needed': 'पंजीकरण की जरूरत नहीं',
+  'No vehicle, licence or registration needed':
+    'वाहन, लाइसेंस या पंजीकरण की जरूरत नहीं',
+  'No licence or registration needed':
+    'लाइसेंस या पंजीकरण की जरूरत नहीं',
   'Registration number not added': 'पंजीकरण संख्या नहीं जोड़ी गई',
   Documents: 'दस्तावेज',
   'Aadhaar card': 'आधार कार्ड',
@@ -374,10 +376,10 @@ const hindi: Record<string, string> = {
   'Registration number': 'पंजीकरण संख्या',
   'Enter the number printed on the number plate.':
     'नंबर प्लेट पर छपी संख्या डालें।',
-  'Walking deliveries do not need a vehicle registration.':
-    'पैदल डिलीवरी के लिए वाहन पंजीकरण नहीं चाहिए।',
-  'Bicycles do not need a registration number.':
-    'साइकिल के लिए पंजीकरण संख्या नहीं चाहिए।',
+  'Walking deliveries do not need a licence or registration.':
+    'पैदल डिलीवरी के लिए लाइसेंस या पंजीकरण नहीं चाहिए।',
+  'Bicycles do not need a licence or registration number.':
+    'साइकिल के लिए लाइसेंस या पंजीकरण संख्या नहीं चाहिए।',
   'Vehicle model': 'वाहन मॉडल',
   'Vehicle colour': 'वाहन का रंग',
   'Training & Onboarding': 'प्रशिक्षण और ऑनबोर्डिंग',
@@ -392,8 +394,8 @@ const hindi: Record<string, string> = {
   uploaded: 'अपलोड किया गया',
   missing: 'नहीं है',
   'Walking delivery partner': 'पैदल डिलीवरी पार्टनर',
-  'On foot · no vehicle or registration needed':
-    'पैदल · वाहन या पंजीकरण की जरूरत नहीं',
+  'On foot · no vehicle, licence or registration needed':
+    'पैदल · वाहन, लाइसेंस या पंजीकरण की जरूरत नहीं',
   '{completed} of {total} modules complete':
     '{total} में से {completed} मॉड्यूल पूरे',
   'By submitting, you confirm these details are correct. The review team may contact you for clearer documents.':
@@ -761,8 +763,10 @@ const bengali: Record<string, string> = {
   Vehicle: 'যানবাহন',
   'Walking delivery': 'হেঁটে ডেলিভারি',
   'Model not added': 'মডেল যোগ করা হয়নি',
-  'No vehicle or registration needed': 'যানবাহন বা নিবন্ধনের প্রয়োজন নেই',
-  'No registration needed': 'নিবন্ধনের প্রয়োজন নেই',
+  'No vehicle, licence or registration needed':
+    'যানবাহন, লাইসেন্স বা নিবন্ধন প্রয়োজন নেই',
+  'No licence or registration needed':
+    'লাইসেন্স বা নিবন্ধন প্রয়োজন নেই',
   'Registration number not added': 'নিবন্ধন নম্বর যোগ করা হয়নি',
   Documents: 'নথি',
   'Aadhaar card': 'আধার কার্ড',
@@ -855,10 +859,10 @@ const bengali: Record<string, string> = {
   'Registration number': 'নিবন্ধন নম্বর',
   'Enter the number printed on the number plate.':
     'নম্বর প্লেটে লেখা নম্বর দিন।',
-  'Walking deliveries do not need a vehicle registration.':
-    'হেঁটে ডেলিভারির জন্য যানবাহন নিবন্ধন লাগে না।',
-  'Bicycles do not need a registration number.':
-    'সাইকেলের জন্য নিবন্ধন নম্বর লাগে না।',
+  'Walking deliveries do not need a licence or registration.':
+    'হেঁটে ডেলিভারির জন্য লাইসেন্স বা নিবন্ধন লাগে না।',
+  'Bicycles do not need a licence or registration number.':
+    'সাইকেলের জন্য লাইসেন্স বা নিবন্ধন নম্বর লাগে না।',
   'Vehicle model': 'যানবাহনের মডেল',
   'Vehicle colour': 'যানবাহনের রঙ',
   'Training & Onboarding': 'প্রশিক্ষণ ও অনবোর্ডিং',
@@ -873,8 +877,8 @@ const bengali: Record<string, string> = {
   uploaded: 'আপলোড করা হয়েছে',
   missing: 'নেই',
   'Walking delivery partner': 'হেঁটে ডেলিভারি পার্টনার',
-  'On foot · no vehicle or registration needed':
-    'হেঁটে · যানবাহন বা নিবন্ধনের প্রয়োজন নেই',
+  'On foot · no vehicle, licence or registration needed':
+    'পায়ে হেঁটে · যানবাহন, লাইসেন্স বা নিবন্ধন প্রয়োজন নেই',
   '{completed} of {total} modules complete':
     '{total}-এর মধ্যে {completed}টি মডিউল সম্পূর্ণ',
   'By submitting, you confirm these details are correct. The review team may contact you for clearer documents.':
