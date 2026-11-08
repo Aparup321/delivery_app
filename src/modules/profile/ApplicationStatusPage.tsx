@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useLanguage } from '../../context/language'
 import type { OnboardingStatus } from '../../types/onboarding'
 import {
   applicationStageIndex,
@@ -23,6 +24,7 @@ const previewStatuses: OnboardingStatus[] = [
 export function ApplicationStatusPage() {
   const navigate = useNavigate()
   const { onboarding, setApplicationStatus } = useApp()
+  const { t, locale } = useLanguage()
   const status = applicationStatusMeta[onboarding.status]
   const currentStage = applicationStageIndex[onboarding.status]
   const isRejected = onboarding.status === 'rejected'
@@ -59,8 +61,8 @@ export function ApplicationStatusPage() {
   return (
     <div className="pb-8">
       <ScreenHeader
-        title="Application status"
-        subtitle="Partner verification"
+        title={t('Application status')}
+        subtitle={t('Partner verification')}
         showBack
         backTo="/profile"
       />
@@ -70,33 +72,33 @@ export function ApplicationStatusPage() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[11.5px] font-medium text-ink-muted">
-                Current status
+                {t('Current status')}
               </p>
               <h2 className="mt-1 text-[20px] font-semibold text-ink">
-                {status.label}
+                {t(status.label)}
               </h2>
             </div>
-            <Badge tone={status.tone}>{status.label}</Badge>
+            <Badge tone={status.tone}>{t(status.label)}</Badge>
           </div>
 
           <p className="mt-2 text-[12.5px] leading-relaxed text-ink-muted">
-            {status.description}
+            {t(status.description)}
           </p>
 
           <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3">
             <div>
-              <dt className="text-[11px] text-ink-muted">Submitted</dt>
+              <dt className="text-[11px] text-ink-muted">{t('Submitted')}</dt>
               <dd className="mt-0.5 text-[12.5px] font-medium text-ink">
                 {onboarding.submittedAt
-                  ? formatDate(onboarding.submittedAt)
-                  : 'Not yet'}
+                  ? formatDate(onboarding.submittedAt, locale)
+                  : t('Not yet')}
               </dd>
             </div>
             <div>
-              <dt className="text-[11px] text-ink-muted">Last update</dt>
+              <dt className="text-[11px] text-ink-muted">{t('Last update')}</dt>
               <dd className="mt-0.5 text-[12.5px] font-medium text-ink">
                 {onboarding.statusUpdatedAt
-                  ? formatDate(onboarding.statusUpdatedAt)
+                  ? formatDate(onboarding.statusUpdatedAt, locale)
                   : '—'}
               </dd>
             </div>
@@ -104,7 +106,7 @@ export function ApplicationStatusPage() {
         </Card>
 
         <Card padding="lg">
-          <h2 className="text-[15px] font-semibold text-ink">Progress</h2>
+          <h2 className="text-[15px] font-semibold text-ink">{t('Progress')}</h2>
 
           <ol className="mt-4">
             {stages.map((stage, index) => {
@@ -158,10 +160,10 @@ export function ApplicationStatusPage() {
                         isCurrent ? 'text-ink' : 'text-ink-muted',
                       )}
                     >
-                      {stage.label}
+                      {t(stage.label)}
                     </p>
                     <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
-                      {stage.description}
+                      {t(stage.description)}
                     </p>
                   </div>
                 </li>
@@ -173,11 +175,12 @@ export function ApplicationStatusPage() {
         {isRejected ? (
           <Card padding="md" className="border-danger/30 bg-danger-soft">
             <p className="text-[12.5px] font-semibold text-danger">
-              Application not approved
+              {t('Application not approved')}
             </p>
             <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
-              Contact support to understand what needs to change before you
-              apply again.
+              {t(
+                'Contact support to understand what needs to change before you apply again.',
+              )}
             </p>
             <Button
               className="mt-3"
@@ -185,18 +188,19 @@ export function ApplicationStatusPage() {
               variant="outline"
               onClick={() => navigate('/support')}
             >
-              Contact support
+              {t('Contact support')}
             </Button>
           </Card>
         ) : null}
 
         <details className="rounded-card border border-line bg-surface px-4 py-3">
           <summary className="cursor-pointer list-none text-[12px] font-medium text-ink-muted">
-            Preview another status (demo)
+            {t('Preview another status (demo)')}
           </summary>
           <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
-            No verification service is connected in this prototype. Use these
-            to preview each stage.
+            {t(
+              'No verification service is connected in this prototype. Use these to preview each stage.',
+            )}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {previewStatuses.map((preview) => (
@@ -206,14 +210,14 @@ export function ApplicationStatusPage() {
                 variant={onboarding.status === preview ? 'secondary' : 'outline'}
                 onClick={() => setApplicationStatus(preview)}
               >
-                {applicationStatusMeta[preview].label}
+                {t(applicationStatusMeta[preview].label)}
               </Button>
             ))}
           </div>
         </details>
 
         <p className="px-1 text-center text-[11px] leading-relaxed text-ink-soft">
-          Status is demo data until the verification service is connected.
+          {t('Status is demo data until the verification service is connected.')}
         </p>
       </div>
     </div>

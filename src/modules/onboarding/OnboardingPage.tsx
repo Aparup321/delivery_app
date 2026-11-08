@@ -20,6 +20,7 @@ import { Input } from '../../components/common/Input'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
+import { useLanguage } from '../../context/language'
 import { onboardingSteps, trainingTopics } from '../../mock/onboarding'
 import type { DocumentKey, OnboardingState } from '../../types/onboarding'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
@@ -206,6 +207,7 @@ export function OnboardingPage() {
   const navigate = useNavigate()
   const { session, signOut } = useAuth()
   const { onboarding, updateOnboarding, submitOnboarding } = useApp()
+  const { t, locale } = useLanguage()
   const [error, setError] = useState('')
   const [photoError, setPhotoError] = useState('')
   const [documentErrors, setDocumentErrors] = useState<
@@ -215,6 +217,9 @@ export function OnboardingPage() {
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
   const isSubmitted = onboarding.status !== 'draft'
   const applicationStatus = applicationStatusMeta[onboarding.status]
+  const vehicleLabel =
+    vehicleOptions.find((option) => option.value === onboarding.vehicle.type)
+      ?.label ?? ''
 
   async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -287,8 +292,8 @@ export function OnboardingPage() {
     return (
       <div className="pb-8">
         <ScreenHeader
-          title="Partner setup"
-          subtitle="Application status"
+          title={t('Partner setup')}
+          subtitle={t('Application status')}
           showBack
           backTo="/"
         />
@@ -299,17 +304,19 @@ export function OnboardingPage() {
               <BadgeCheck className="size-7" aria-hidden="true" />
             </span>
             <h2 className="mt-4 text-base font-semibold text-ink">
-              {applicationStatus.headline}
+              {t(applicationStatus.headline)}
             </h2>
             <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
-              {applicationStatus.description}
+              {t(applicationStatus.description)}
               {onboarding.submittedAt
-                ? ` Submitted on ${formatDate(onboarding.submittedAt)}.`
+                ? ` ${t('Submitted on {date}.', {
+                    date: formatDate(onboarding.submittedAt, locale),
+                  })}`
                 : ''}
             </p>
             <div className="mt-4 flex justify-center">
               <Badge tone={applicationStatus.tone}>
-                {applicationStatus.label}
+                {t(applicationStatus.label)}
               </Badge>
             </div>
 
@@ -318,7 +325,7 @@ export function OnboardingPage() {
               fullWidth
               onClick={() => navigate('/application-status')}
             >
-              Track application status
+              {t('Track application status')}
             </Button>
             <Button
               className="mt-2"
@@ -326,7 +333,7 @@ export function OnboardingPage() {
               fullWidth
               onClick={() => navigate('/')}
             >
-              Back to home
+              {t('Back to home')}
             </Button>
           </Card>
         </div>
@@ -340,21 +347,21 @@ export function OnboardingPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            aria-label="Go back"
+            aria-label={t('Go back')}
             onClick={handleBack}
             className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
           <h1 className="text-[17px] font-bold tracking-tight">
-            Partner Onboarding
+            {t('Partner Onboarding')}
           </h1>
           <button
             type="button"
             onClick={handleSignOut}
             className="ml-auto rounded-full bg-white/10 px-3 py-1.5 text-[11.5px] font-semibold transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
-            Sign out
+            {t('Sign out')}
           </button>
         </div>
 
@@ -395,7 +402,7 @@ export function OnboardingPage() {
                       isDone || isActive ? 'text-white' : 'text-white/70',
                     )}
                   >
-                    {item.label}
+                    {t(item.label)}
                   </span>
                 </li>
               )
@@ -409,20 +416,20 @@ export function OnboardingPage() {
           <>
             <div>
               <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                Personal Details
+                {t('Personal Details')}
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Tell us about yourself
+                {t('Tell us about yourself')}
               </p>
             </div>
 
             <div className="flex flex-col items-center gap-1.5">
               <label className="relative cursor-pointer">
-                <span className="sr-only">Profile photo</span>
+                <span className="sr-only">{t('Profile photo')}</span>
                 {onboarding.profilePhoto ? (
                   <img
                     src={onboarding.profilePhoto}
-                    alt="Profile photo preview"
+                    alt={t('Profile photo preview')}
                     className="size-24 rounded-full object-cover ring-4 ring-brand-soft"
                   />
                 ) : (
@@ -436,47 +443,49 @@ export function OnboardingPage() {
                 <input
                   type="file"
                   accept="image/*"
-                  aria-label="Upload profile photo"
+                  aria-label={t('Upload profile photo')}
                   className="sr-only"
                   onChange={handlePhotoChange}
                 />
               </label>
 
               <p className="text-[12.5px] font-semibold text-ink">
-                Profile photo <span className="text-danger">*</span>
+                {t('Profile photo')} <span className="text-danger">*</span>
               </p>
               <p className="text-center text-[11px] text-ink-muted">
-                {onboarding.profilePhoto
-                  ? 'Tap the photo to change it · max 2 MB'
-                  : 'Clear front-facing photo, JPG or PNG · max 2 MB'}
+                {t(
+                  onboarding.profilePhoto
+                    ? 'Tap the photo to change it · max 2 MB'
+                    : 'Clear front-facing photo, JPG or PNG · max 2 MB',
+                )}
               </p>
               {photoError ? (
                 <p role="alert" className="text-xs font-medium text-danger">
-                  {photoError}
+                  {t(photoError)}
                 </p>
               ) : null}
             </div>
 
             <Card padding="md" className="space-y-3">
               <Input
-                label="Full name"
+                label={t('Full name')}
                 required
                 value={onboarding.fullName}
-                placeholder="Name as on documents"
+                placeholder={t('Name as on documents')}
                 onChange={(event) =>
                   updateOnboarding({ fullName: event.target.value })
                 }
               />
               <Input
-                label="Mobile number"
+                label={t('Mobile number')}
                 required
                 value={session ? `+91 ${session.phone}` : ''}
-                hint="Your verified number cannot be changed here."
+                hint={t('Your verified number cannot be changed here.')}
                 readOnly
                 disabled
               />
               <Input
-                label="Email"
+                label={t('Email')}
                 type="email"
                 required
                 value={onboarding.email}
@@ -486,7 +495,7 @@ export function OnboardingPage() {
                 }
               />
               <Input
-                label="Date of birth"
+                label={t('Date of birth')}
                 type="date"
                 required
                 value={onboarding.dateOfBirth}
@@ -495,7 +504,7 @@ export function OnboardingPage() {
                 }
               />
               <Input
-                label="City"
+                label={t('City')}
                 required
                 value={onboarding.city}
                 placeholder="Kolkata"
@@ -504,16 +513,16 @@ export function OnboardingPage() {
                 }
               />
               <Input
-                label="Address"
+                label={t('Address')}
                 required
                 value={onboarding.addressLine}
-                placeholder="House, street, area"
+                placeholder={t('House, street, area')}
                 onChange={(event) =>
                   updateOnboarding({ addressLine: event.target.value })
                 }
               />
               <Input
-                label="PIN code"
+                label={t('PIN code')}
                 required
                 inputMode="numeric"
                 maxLength={6}
@@ -533,10 +542,10 @@ export function OnboardingPage() {
           <>
             <div>
               <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                KYC Verification
+                {t('KYC Verification')}
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Each file must be JPG or PDF and within 2 MB
+                {t('Each file must be JPG or PDF and within 2 MB')}
               </p>
             </div>
 
@@ -554,13 +563,13 @@ export function OnboardingPage() {
 
                         <div className="min-w-0 flex-1">
                           <p className="text-[12.5px] font-semibold text-ink">
-                            {field.title}
+                            {t(field.title)}
                             {field.required ? (
                               <span className="text-danger"> *</span>
                             ) : null}
                           </p>
                           <p className="truncate text-[11px] text-ink-muted">
-                            {fileName || field.hint}
+                            {fileName || t(field.hint)}
                           </p>
                         </div>
 
@@ -570,7 +579,7 @@ export function OnboardingPage() {
                           </span>
                         ) : (
                           <span className="text-[11px] font-semibold text-brand">
-                            Upload
+                            {t('Upload')}
                           </span>
                         )}
                       </div>
@@ -580,14 +589,16 @@ export function OnboardingPage() {
                           role="alert"
                           className="mt-2 text-[11px] font-medium text-danger"
                         >
-                          {documentErrors[field.key]}
+                          {t(documentErrors[field.key] ?? '')}
                         </p>
                       ) : null}
 
                       <input
                         type="file"
                         accept="image/*,.pdf"
-                        aria-label={`Upload ${field.title}`}
+                        aria-label={t('Upload {document}', {
+                          document: t(field.title),
+                        })}
                         className="sr-only"
                         onChange={(event) => {
                           const file = event.target.files?.[0]
@@ -630,28 +641,29 @@ export function OnboardingPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[12px] font-bold text-ink">
-                    Verification status
+                    {t('Verification status')}
                   </p>
                   <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
-                    Documents are checked after you submit, usually within one
-                    working day.
+                    {t(
+                      'Documents are checked after you submit, usually within one working day.',
+                    )}
                   </p>
                 </div>
                 <Badge tone="warning" size="sm">
-                  Pending
+                  {t('Pending')}
                 </Badge>
               </div>
             </Card>
 
             <Card padding="md" className="space-y-3">
               <p className="text-[13px] font-semibold text-ink">
-                Bank account details
+                {t('Bank account details')}
               </p>
               <Input
-                label="Account holder name"
+                label={t('Account holder name')}
                 required
                 value={onboarding.bank.accountHolder}
-                placeholder="Name as on the bank account"
+                placeholder={t('Name as on the bank account')}
                 onChange={(event) =>
                   updateOnboarding({
                     bank: {
@@ -662,7 +674,7 @@ export function OnboardingPage() {
                 }
               />
               <Input
-                label="Account number"
+                label={t('Account number')}
                 required
                 inputMode="numeric"
                 value={onboarding.bank.accountNumber}
@@ -679,11 +691,11 @@ export function OnboardingPage() {
                 }
               />
               <Input
-                label="IFSC code"
+                label={t('IFSC code')}
                 required
                 value={onboarding.bank.ifsc}
                 placeholder="HDFC0001234"
-                hint="Find this on your cheque book or bank app."
+                hint={t('Find this on your cheque book or bank app.')}
                 onChange={(event) =>
                   updateOnboarding({
                     bank: {
@@ -701,21 +713,21 @@ export function OnboardingPage() {
           <>
             <div>
               <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                Vehicle Details
+                {t('Vehicle Details')}
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Provide your vehicle and licence information
+                {t('Provide your vehicle and licence information')}
               </p>
             </div>
 
             <Card padding="md" className="space-y-4">
               <div>
                 <p className="mb-2 text-[13px] font-semibold text-ink">
-                  Vehicle type <span className="text-danger">*</span>
+                  {t('Vehicle type')} <span className="text-danger">*</span>
                 </p>
                 <div
                   role="radiogroup"
-                  aria-label="Vehicle type"
+                  aria-label={t('Vehicle type')}
                   className="grid grid-cols-2 gap-2"
                 >
                   {vehicleOptions.map(({ value, label, icon: Icon }) => {
@@ -740,7 +752,7 @@ export function OnboardingPage() {
                         )}
                       >
                         <Icon className="size-5" aria-hidden="true" />
-                        {label}
+                        {t(label)}
                       </button>
                     )
                   })}
@@ -750,11 +762,11 @@ export function OnboardingPage() {
               {onboarding.vehicle.type === 'bike' ||
               onboarding.vehicle.type === 'scooter' ? (
                 <Input
-                  label="Registration number"
+                  label={t('Registration number')}
                   required
                   value={onboarding.vehicle.registrationNumber}
                   placeholder="WB02AB1234"
-                  hint="Enter the number printed on the number plate."
+                  hint={t('Enter the number printed on the number plate.')}
                   onChange={(event) =>
                     updateOnboarding({
                       vehicle: {
@@ -766,15 +778,17 @@ export function OnboardingPage() {
                 />
               ) : (
                 <p className="text-[11.5px] leading-relaxed text-ink-muted">
-                  {onboarding.vehicle.type === 'foot'
-                    ? 'Walking deliveries do not need a vehicle registration.'
-                    : 'Bicycles do not need a registration number.'}
+                  {t(
+                    onboarding.vehicle.type === 'foot'
+                      ? 'Walking deliveries do not need a vehicle registration.'
+                      : 'Bicycles do not need a registration number.',
+                  )}
                 </p>
               )}
               {onboarding.vehicle.type !== 'foot' ? (
                 <>
                   <Input
-                    label="Vehicle model"
+                    label={t('Vehicle model')}
                     required
                     value={onboarding.vehicle.model}
                     placeholder="Honda Activa 6G"
@@ -788,7 +802,7 @@ export function OnboardingPage() {
                     }
                   />
                   <Input
-                    label="Vehicle colour"
+                    label={t('Vehicle colour')}
                     value={onboarding.vehicle.colour}
                     placeholder="Black"
                     onChange={(event) =>
@@ -810,10 +824,10 @@ export function OnboardingPage() {
           <>
             <div>
               <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                Training &amp; Onboarding
+                {t('Training & Onboarding')}
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Complete every module before your account is approved
+                {t('Complete every module before your account is approved')}
               </p>
             </div>
 
@@ -846,10 +860,10 @@ export function OnboardingPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[12.5px] font-semibold text-ink">
-                        {topic.title}
+                        {t(topic.title)}
                       </span>
                       <span className="block text-[11px] text-ink-muted">
-                        {topic.duration}
+                        {t(topic.duration)}
                       </span>
                     </span>
                     <span
@@ -873,10 +887,10 @@ export function OnboardingPage() {
           <>
             <div>
               <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                Review &amp; Submit
+                {t('Review & Submit')}
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
-                Check your details before sending them for verification
+                {t('Check your details before sending them for verification')}
               </p>
             </div>
 
@@ -884,14 +898,14 @@ export function OnboardingPage() {
               <section>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11.5px] font-medium text-ink-muted">
-                    Personal
+                    {t('Personal')}
                   </p>
                   <button
                     type="button"
                     onClick={() => updateOnboarding({ step: 0 })}
                     className="text-[11.5px] font-semibold text-brand"
                   >
-                    Edit
+                    {t('Edit')}
                   </button>
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">
@@ -907,13 +921,16 @@ export function OnboardingPage() {
                   </p>
                 </div>
                 <p className="text-[11.5px] text-ink-muted">
-                  Profile photo{' '}
-                  {onboarding.profilePhoto ? 'added' : 'missing'}
+                  {t(
+                    onboarding.profilePhoto
+                      ? 'Profile photo added'
+                      : 'Profile photo missing',
+                  )}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.email}
                   {onboarding.dateOfBirth
-                    ? ` · ${formatDate(onboarding.dateOfBirth)}`
+                    ? ` · ${formatDate(onboarding.dateOfBirth, locale)}`
                     : ''}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
@@ -925,19 +942,21 @@ export function OnboardingPage() {
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11.5px] font-medium text-ink-muted">
-                    KYC &amp; bank
+                    {t('KYC & bank')}
                   </p>
                   <button
                     type="button"
                     onClick={() => updateOnboarding({ step: 1 })}
                     className="text-[11.5px] font-semibold text-brand"
                   >
-                    Edit
+                    {t('Edit')}
                   </button>
                 </div>
                 <p className="mt-1.5 text-[11.5px] text-ink-muted">
-                  Aadhaar {onboarding.documents.aadhaar ? 'uploaded' : 'missing'}{' '}
-                  · PAN {onboarding.documents.pan ? 'uploaded' : 'missing'}
+                  {t('Aadhaar card')}{' '}
+                  {t(onboarding.documents.aadhaar ? 'uploaded' : 'missing')} ·{' '}
+                  {t('PAN card')}{' '}
+                  {t(onboarding.documents.pan ? 'uploaded' : 'missing')}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.bank.accountHolder} ····{' '}
@@ -948,52 +967,55 @@ export function OnboardingPage() {
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11.5px] font-medium text-ink-muted">
-                    Vehicle
+                    {t('Vehicle')}
                   </p>
                   <button
                     type="button"
                     onClick={() => updateOnboarding({ step: 2 })}
                     className="text-[11.5px] font-semibold text-brand"
                   >
-                    Edit
+                    {t('Edit')}
                   </button>
                 </div>
                 <p className="mt-1.5 text-[12px] text-ink">
                   {onboarding.vehicle.type === 'foot'
-                    ? 'Walking delivery partner'
+                    ? t('Walking delivery partner')
                     : `${onboarding.vehicle.model} · ${onboarding.vehicle.colour}`}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.vehicle.type === 'foot'
-                    ? 'On foot · no vehicle or registration needed'
+                    ? t('On foot · no vehicle or registration needed')
                     : onboarding.vehicle.type === 'bicycle'
-                      ? `Bicycle · ${onboarding.vehicle.colour}`
-                      : `${onboarding.vehicle.registrationNumber} · ${onboarding.vehicle.type}`}
+                      ? `${t('Bicycle')} · ${onboarding.vehicle.colour}`
+                      : `${onboarding.vehicle.registrationNumber} · ${t(vehicleLabel)}`}
                 </p>
               </section>
 
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11.5px] font-medium text-ink-muted">
-                    Training
+                    {t('Training')}
                   </p>
                   <button
                     type="button"
                     onClick={() => updateOnboarding({ step: 3 })}
                     className="text-[11.5px] font-semibold text-brand"
                   >
-                    Edit
+                    {t('Edit')}
                   </button>
                 </div>
                 <p className="mt-1.5 text-[11.5px] text-ink-muted">
-                  {onboarding.training.filter(Boolean).length} of{' '}
-                  {trainingTopics.length} modules complete
+                  {t('{completed} of {total} modules complete', {
+                    completed: onboarding.training.filter(Boolean).length,
+                    total: trainingTopics.length,
+                  })}
                 </p>
               </section>
 
               <p className="border-t border-line pt-3 text-[11.5px] leading-relaxed text-ink-muted">
-                By submitting, you confirm these details are correct. The review
-                team may contact you for clearer documents.
+                {t(
+                  'By submitting, you confirm these details are correct. The review team may contact you for clearer documents.',
+                )}
               </p>
             </Card>
           </>
@@ -1001,18 +1023,18 @@ export function OnboardingPage() {
 
         {error ? (
           <p role="alert" className="text-xs font-medium text-danger">
-            {error}
+            {t(error)}
           </p>
         ) : null}
 
         <div className="grid grid-cols-2 gap-2">
           <Button variant="outline" onClick={handleBack}>
-            Back
+            {t('Back')}
           </Button>
           <Button onClick={handleContinue}>
             {step === onboardingSteps.length - 1
-              ? 'Submit application'
-              : 'Continue'}
+              ? t('Submit application')
+              : t('Continue')}
           </Button>
         </div>
       </div>
