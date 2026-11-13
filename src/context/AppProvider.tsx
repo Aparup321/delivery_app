@@ -6,10 +6,16 @@ import {
   initialRequests,
 } from '../mock/deliveries'
 import { initialNotifications } from '../mock/notifications'
+import { isFirebaseConfigured } from '../firebase/config'
 import { initialOnboarding } from '../mock/onboarding'
 import { initialTickets } from '../mock/support'
+import {
+  loadPartnerOnboarding,
+  savePartnerOnboarding,
+} from '../services/partnerOnboarding'
 import type { AppNotification } from '../types/notification'
 import type {
+  OnboardingFiles,
   OnboardingState,
   OnboardingStatus,
 } from '../types/onboarding'
@@ -73,8 +79,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppDataProvider
-      key={session?.phone ?? 'signed-out'}
+      key={session?.uid ?? 'signed-out'}
       phone={session?.phone ?? null}
+      uid={session?.uid ?? null}
     >
       {children}
     </AppDataProvider>
@@ -84,9 +91,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 function AppDataProvider({
   children,
   phone,
+  uid,
 }: {
   children: ReactNode
   phone: string | null
+  uid: string | null
 }) {
   const [deliveries, dispatch] = useReducer(deliveryReducer, {
     requests: initialRequests,
@@ -100,6 +109,10 @@ function AppDataProvider({
   const [onboarding, setOnboarding] = useState<OnboardingState>(() =>
     readOnboarding(phone),
   )
+  const remoteEnabled = Boolean(
+    uid && isFirebaseConfigured && !uid.startsWith('demo:'),
+  )
+  const [isLoading, setIsLoading] = useState(remoteEnabled)
 
   useEffect(() => {
     if (!phone) {
@@ -115,6 +128,33 @@ function AppDataProvider({
       // Progress stays in memory when storage is blocked.
     }
   }, [onboarding, phone])
+
+  useEffect(() => {
+    if (!remoteEnabled || !uid) {
+      return
+    }
+
+    let active = true
+
+    void loadPartnerOnboarding(uid)
+      .then((remote) => {
+        if (active && remote) {
+          setOnboarding(remote)
+        }
+      })
+      .catch(() => {
+        // Keep the local draft if Firestore is unavailable or rules deny read.
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [remoteEnabled, uid])
 
   const acceptRequest = useCallback((id: string) => {
     dispatch({ type: 'accept', id, at: new Date().toISOString() })
@@ -177,16 +217,40 @@ function AppDataProvider({
     setOnboarding((current) => ({ ...current, ...patch }))
   }, [])
 
-  const submitOnboarding = useCallback(() => {
-    const at = new Date().toISOString()
-    setOnboarding((current) => ({
-      ...current,
-      status: 'submitted',
-      submittedAt: at,
-      statusUpdatedAt: at,
-      step: 0,
-    }))
-  }, [])
+  const submitOnboarding = useCallback(
+    async (files: OnboardingFiles) => {
+      const at = new Date().toISOString()
+      const isDemoSession = !uid || uid.startsWith('demo:')
+
+      if (isDemoSession) {
+        if (isFirebaseConfigured) {
+          // Writing to localStorage and showing "submitted" would fake a
+          // Firebase submission. Block it so the setup problem stays visible.
+          const error = new Error(
+            'Firebase is not connected. Reconnect from the banner, then submit again.',
+          )
+          Object.assign(error, { code: 'firebase/not-connected' })
+          throw error
+        }
+      } else {
+        await savePartnerOnboarding({
+          uid,
+          phone: phone ?? '',
+          state: onboarding,
+          files,
+        })
+      }
+
+      setOnboarding((current) => ({
+        ...current,
+        status: 'submitted',
+        submittedAt: at,
+        statusUpdatedAt: at,
+        step: 0,
+      }))
+    },
+    [uid, phone, onboarding],
+  )
 
   const setApplicationStatus = useCallback((status: OnboardingStatus) => {
     setOnboarding((current) => {
@@ -224,6 +288,7 @@ function AppDataProvider({
       markAllNotificationsRead,
       tickets,
       createTicket,
+      isLoading,
       onboarding,
       updateOnboarding,
       submitOnboarding,
@@ -243,6 +308,7 @@ function AppDataProvider({
       markAllNotificationsRead,
       tickets,
       createTicket,
+      isLoading,
       onboarding,
       updateOnboarding,
       submitOnboarding,

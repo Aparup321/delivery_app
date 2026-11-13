@@ -6,6 +6,7 @@ import { Card } from '../../components/common/Card'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
+import { isFirebaseConfigured } from '../../firebase/config'
 import type { OnboardingStatus } from '../../types/onboarding'
 import {
   applicationStageIndex,
@@ -193,32 +194,40 @@ export function ApplicationStatusPage() {
           </Card>
         ) : null}
 
-        <details className="rounded-card border border-line bg-surface px-4 py-3">
-          <summary className="cursor-pointer list-none text-[12px] font-medium text-ink-muted">
-            {t('Preview another status (demo)')}
-          </summary>
-          <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
-            {t(
-              'No verification service is connected in this prototype. Use these to preview each stage.',
-            )}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {previewStatuses.map((preview) => (
-              <Button
-                key={preview}
-                size="sm"
-                variant={onboarding.status === preview ? 'secondary' : 'outline'}
-                onClick={() => setApplicationStatus(preview)}
-              >
-                {t(applicationStatusMeta[preview].label)}
-              </Button>
-            ))}
-          </div>
-        </details>
+        {isFirebaseConfigured ? null : (
+          <>
+            <details className="rounded-card border border-line bg-surface px-4 py-3">
+              <summary className="cursor-pointer list-none text-[12px] font-medium text-ink-muted">
+                {t('Preview another status (demo)')}
+              </summary>
+              <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
+                {t(
+                  'No verification service is connected in this prototype. Use these to preview each stage.',
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {previewStatuses.map((preview) => (
+                  <Button
+                    key={preview}
+                    size="sm"
+                    variant={
+                      onboarding.status === preview ? 'secondary' : 'outline'
+                    }
+                    onClick={() => setApplicationStatus(preview)}
+                  >
+                    {t(applicationStatusMeta[preview].label)}
+                  </Button>
+                ))}
+              </div>
+            </details>
 
-        <p className="px-1 text-center text-[11px] leading-relaxed text-ink-soft">
-          {t('Status is demo data until the verification service is connected.')}
-        </p>
+            <p className="px-1 text-center text-[11px] leading-relaxed text-ink-soft">
+              {t(
+                'Status is demo data until the verification service is connected.',
+              )}
+            </p>
+          </>
+        )}
       </div>
     </div>
   )

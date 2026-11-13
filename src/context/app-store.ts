@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import type { Delivery } from '../types/delivery'
 import type { AppNotification } from '../types/notification'
 import type {
+  OnboardingFiles,
   OnboardingState,
   OnboardingStatus,
 } from '../types/onboarding'
@@ -29,9 +30,11 @@ export interface AppContextValue {
   tickets: SupportTicket[]
   createTicket: (subject: string, message: string) => void
 
+  /** True while a submitted application is loading from Firestore. */
+  isLoading: boolean
   onboarding: OnboardingState
   updateOnboarding: (patch: Partial<OnboardingState>) => void
-  submitOnboarding: () => void
+  submitOnboarding: (files: OnboardingFiles) => Promise<void>
   /** Demo helper for moving the application through verification. */
   setApplicationStatus: (status: OnboardingStatus) => void
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import {
   ArrowLeft,
@@ -21,9 +21,17 @@ import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
 import { onboardingSteps, trainingTopics } from '../../mock/onboarding'
-import type { DocumentKey, OnboardingState } from '../../types/onboarding'
+import type {
+  DocumentKey,
+  OnboardingFiles,
+  OnboardingState,
+} from '../../types/onboarding'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { cn } from '../../utils/cn'
+import {
+  getFirebaseErrorCode,
+  getFirebaseWriteErrorKey,
+} from '../../utils/firebaseError'
 import { formatDate } from '../../utils/format'
 import { DocumentUploadTile } from './DocumentUploadTile'
 import { KycDocumentCard } from './KycDocumentCard'
@@ -191,13 +199,21 @@ function validateStep(step: number, state: OnboardingState): string {
 export function OnboardingPage() {
   const navigate = useNavigate()
   const { session, signOut } = useAuth()
-  const { onboarding, updateOnboarding, submitOnboarding } = useApp()
+  const {
+    onboarding,
+    updateOnboarding,
+    submitOnboarding,
+    isLoading,
+  } = useApp()
   const { t, locale } = useLanguage()
   const [error, setError] = useState('')
+  const [errorCode, setErrorCode] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [documentErrors, setDocumentErrors] = useState<
     Partial<Record<DocumentKey, string>>
   >({})
+  const uploadFiles = useRef<OnboardingFiles>({ documents: {} })
 
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
   const isSubmitted = onboarding.status !== 'draft'
@@ -229,6 +245,7 @@ export function OnboardingPage() {
 
     try {
       const preview = await createPhotoPreview(file)
+      uploadFiles.current.profilePhoto = file
       updateOnboarding({ profilePhoto: preview })
       setPhotoError('')
     } catch {
@@ -246,6 +263,7 @@ export function OnboardingPage() {
     }
 
     setDocumentErrors((current) => ({ ...current, [key]: '' }))
+    uploadFiles.current.documents[key] = file
     updateOnboarding({
       documents: { ...onboarding.documents, [key]: file.name },
     })
@@ -253,6 +271,7 @@ export function OnboardingPage() {
 
   function handleBack() {
     setError('')
+    setErrorCode(null)
     if (step > 0) {
       updateOnboarding({ step: step - 1 })
       return
@@ -265,7 +284,7 @@ export function OnboardingPage() {
     navigate('/login', { replace: true })
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     const message = validateStep(step, onboarding)
     if (message) {
       setError(message)
@@ -273,6 +292,7 @@ export function OnboardingPage() {
     }
 
     setError('')
+    setErrorCode(null)
 
     if (step < onboardingSteps.length - 1) {
       updateOnboarding({ step: step + 1 })
@@ -288,7 +308,46 @@ export function OnboardingPage() {
       }
     }
 
-    submitOnboarding()
+    const missingDocumentFiles = (
+      Object.keys(onboarding.documents) as DocumentKey[]
+    ).filter(
+      (key) => onboarding.documents[key] && !uploadFiles.current.documents[key],
+    )
+
+    if (missingDocumentFiles.length > 0) {
+      setError(
+        'Re-select your documents before submitting so they can be uploaded.',
+      )
+      updateOnboarding({ step: 1 })
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await submitOnboarding(uploadFiles.current)
+    } catch (caught) {
+      const code = getFirebaseErrorCode(caught)
+      setErrorCode(code)
+      setError(
+        getFirebaseWriteErrorKey(code) ??
+          'Could not submit your application. Check your connection and try again.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div
+        className="grid min-h-[60svh] place-items-center"
+        role="status"
+        aria-label={t('Loading')}
+      >
+        <span className="size-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      </div>
+    )
   }
 
   if (isSubmitted) {
@@ -1091,18 +1150,27 @@ export function OnboardingPage() {
         ) : null}
 
         {error ? (
-          <p role="alert" className="text-xs font-medium text-danger">
-            {t(error)}
-          </p>
+          <div role="alert" className="space-y-0.5">
+            <p className="text-xs font-medium text-danger">{t(error)}</p>
+            {errorCode ? (
+              <p className="font-mono text-[10.5px] text-ink-soft">
+                {t('Error: {code}', { code: errorCode })}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" onClick={handleBack}>
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={isSubmitting}
+          >
             {t('Back')}
           </Button>
-          <Button onClick={handleContinue}>
+          <Button onClick={handleContinue} isLoading={isSubmitting}>
             {step === onboardingSteps.length - 1
-              ? t('Submit application')
+              ? t(isSubmitting ? 'Submitting…' : 'Submit application')
               : t('Continue')}
           </Button>
         </div>
