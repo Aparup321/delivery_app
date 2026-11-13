@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ArrowRight, Phone } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
@@ -10,8 +10,32 @@ import { useLanguage } from '../../context/language'
 
 const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/
 
+interface LoginLocationState {
+  from?: string
+}
+
+/**
+ * Accepts pasted numbers with a +91/91 or trunk-0 prefix and spacing, and
+ * keeps only the 10-digit local number. Without this, a pasted "+91 98765
+ * 43210" would be truncated to the wrong 10 digits by the field length.
+ */
+function normalizeIndianMobile(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+
+  if (digits.length > 10 && digits.startsWith('91')) {
+    return digits.slice(2, 12)
+  }
+
+  if (digits.length === 11 && digits.startsWith('0')) {
+    return digits.slice(1)
+  }
+
+  return digits.slice(0, 10)
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useLanguage()
   const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
@@ -30,7 +54,15 @@ export function LoginPage() {
     }
 
     setError('')
-    navigate('/verify-otp', { state: { phone } })
+
+    // The demo OTP is the default verification path while the project's own
+    // OTP API is pending. The intended screen survives the detour.
+    navigate('/verify-otp', {
+      state: {
+        phone,
+        from: (location.state as LoginLocationState | null)?.from,
+      },
+    })
   }
 
   return (
@@ -54,10 +86,9 @@ export function LoginPage() {
             hint={t('We will send a 6-digit verification code.')}
             error={error ? t(error) : undefined}
             value={phone}
-            maxLength={10}
             leftIcon={<Phone className="size-4" aria-hidden="true" />}
             onChange={(event) => {
-              setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))
+              setPhone(normalizeIndianMobile(event.target.value))
               if (error) {
                 setError('')
               }
@@ -77,7 +108,7 @@ export function LoginPage() {
 
       <p className="mt-4 px-1 text-center text-[11.5px] leading-relaxed text-ink-soft">
         {t(
-          'Prototype build: verification codes are simulated, no SMS is sent, and no account is created.',
+          'Prototype build: verification codes are simulated and no SMS is sent.',
         )}
       </p>
     </AuthLayout>

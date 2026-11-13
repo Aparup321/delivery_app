@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ArrowRight, ShieldCheck } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
@@ -25,7 +25,7 @@ interface VerifyLocationState {
 export function VerifyOtpPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn } = useAuth()
+  const { signIn, isAuthenticated } = useAuth()
   const { t } = useLanguage()
   const state = (location.state ?? null) as VerifyLocationState | null
   const phone = state?.phone
@@ -33,7 +33,14 @@ export function VerifyOtpPage() {
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [issuedAt, setIssuedAt] = useState(() => Date.now())
+  const [isVerifying, setIsVerifying] = useState(false)
   const { secondsLeft, restart } = useCountdown(RESEND_COOLDOWN_SECONDS)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(state?.from ?? '/', { replace: true })
+    }
+  }, [isAuthenticated, navigate, state?.from])
 
   if (!phone) {
     return <Navigate to="/login" replace />
@@ -44,7 +51,7 @@ export function VerifyOtpPage() {
     ? t(error, { length: OTP_LENGTH })
     : undefined
 
-  function handleVerify(event: FormEvent<HTMLFormElement>) {
+  async function handleVerify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     if (!phone) {
@@ -67,8 +74,20 @@ export function VerifyOtpPage() {
     }
 
     setError('')
-    signIn(phone)
-    navigate(state?.from ?? '/', { replace: true })
+    setIsVerifying(true)
+
+    // The demo OTP is the default verification path while the project's own
+    // OTP API is pending. AuthProvider bridges the accepted code to an
+    // anonymous Firebase session when it can and records the error code for
+    // the connection banner when it cannot.
+    try {
+      await signIn(phone)
+      navigate(state?.from ?? '/', { replace: true })
+    } catch {
+      setError('Could not verify the code. Try again.')
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
   function handleResend() {
@@ -123,6 +142,7 @@ export function VerifyOtpPage() {
             type="submit"
             fullWidth
             size="lg"
+            isLoading={isVerifying}
             rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
           >
             {t('Verify and continue')}

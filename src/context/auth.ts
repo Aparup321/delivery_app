@@ -1,15 +1,35 @@
 import { createContext, useContext } from 'react'
 
 export interface Session {
+  uid: string
   phone: string
   signedInAt: string
+}
+
+export interface FirebaseConnection {
+  /** True when the VITE_FIREBASE_* configuration is present. */
+  enabled: boolean
+  /** True when the session belongs to Firebase instead of the local fallback. */
+  connected: boolean
+  /** Firebase error code from the last failed connection attempt. */
+  errorCode: string | null
 }
 
 export interface AuthContextValue {
   session: Session | null
   isAuthenticated: boolean
-  signIn: (phone: string) => void
-  signOut: () => void
+  /** False until Firebase has restored the persisted session. */
+  isReady: boolean
+  /**
+   * Verifies the demo OTP. When Firebase is configured it also creates an
+   * anonymous Firebase session so Firestore and Storage use a real UID; when
+   * that fails, it falls back to a local demo session and records the error.
+   */
+  signIn: (phone: string) => Promise<void>
+  /** Retries the Firebase session for the signed-in number. */
+  retryFirebaseConnection: () => Promise<boolean>
+  firebase: FirebaseConnection
+  signOut: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
