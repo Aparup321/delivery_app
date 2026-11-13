@@ -65,8 +65,8 @@ const hindi: Record<string, string> = {
   'We will send a 6-digit verification code.':
     'हम 6 अंकों का सत्यापन कोड भेजेंगे।',
   'Send OTP': 'OTP भेजें',
-  'Prototype build: verification codes are simulated, no SMS is sent, and no account is created.':
-    'प्रोटोटाइप बिल्ड: सत्यापन कोड नकली हैं, कोई SMS नहीं भेजा जाता और कोई खाता नहीं बनता।',
+  'Prototype build: verification codes are simulated and no SMS is sent.':
+    'प्रोटोटाइप बिल्ड: सत्यापन कोड नकली हैं और कोई SMS नहीं भेजा जाता।',
   'Enter a valid 10-digit mobile number.':
     'मान्य 10 अंकों का मोबाइल नंबर डालें।',
   'Indian mobile numbers start with 6, 7, 8 or 9.':
@@ -500,6 +500,49 @@ const hindi: Record<string, string> = {
   'Bank passbook': 'बैंक पासबुक',
   'Passbook or cancelled cheque · JPG or PDF · max 2 MB':
     'पासबुक या कैंसिल चेक · JPG या PDF · अधिकतम 2 MB',
+  'Could not send the code. Try again.':
+    'कोड नहीं भेजा जा सका। फिर कोशिश करें।',
+  'Enter a valid mobile number.': 'मान्य मोबाइल नंबर दर्ज करें।',
+  'Too many attempts. Wait a few minutes and try again.':
+    'बहुत ज्यादा कोशिशें। कुछ मिनट रुकें और फिर कोशिश करें।',
+  'SMS quota exceeded. Try again later.':
+    'SMS कोटा पूरा हो गया। बाद में कोशिश करें।',
+  'The verification check failed. Refresh the page and try again.':
+    'सत्यापन जांच विफल रही। पेज रीफ्रेश करें और फिर कोशिश करें।',
+  'This domain is not authorized in Firebase.':
+    'यह डोमेन Firebase में अधिकृत नहीं है।',
+  'Phone sign-in is not enabled in Firebase.':
+    'Firebase में फोन साइन-इन चालू नहीं है।',
+  'Network error. Check your connection and try again.':
+    'नेटवर्क त्रुटि। कनेक्शन जांचें और फिर कोशिश करें।',
+  'No verification is in progress. Send a new code.':
+    'कोई सत्यापन जारी नहीं है। नया कोड भेजें।',
+  'Could not verify the code. Try again.':
+    'कोड सत्यापित नहीं हो सका। फिर कोशिश करें।',
+  'Submitting…': 'जमा किया जा रहा है…',
+  Loading: 'लोड हो रहा है',
+  'Could not submit your application. Check your connection and try again.':
+    'आपका आवेदन जमा नहीं हो सका। कनेक्शन जांचें और फिर कोशिश करें।',
+  'Firebase is not connected. Reconnect from the banner, then submit again.':
+    'Firebase कनेक्ट नहीं है। बैनर से दोबारा कनेक्ट करें, फिर आवेदन जमा करें।',
+  'Firestore blocked the submission. Deploy the Firestore rules, then try again.':
+    'Firestore ने आवेदन रोक दिया। Firestore नियम डिप्लॉय करें, फिर कोशिश करें।',
+  'Storage blocked the upload. Deploy the Storage rules, then try again.':
+    'Storage ने अपलोड रोक दिया। Storage नियम डिप्लॉय करें, फिर कोशिश करें।',
+  'The Storage bucket is missing or unreachable. Create Firebase Storage in the console, then try again.':
+    'Storage बकेट मौजूद नहीं है या उपलब्ध नहीं है। Firebase कंसोल में Firebase Storage बनाएं, फिर कोशिश करें।',
+  'Firebase is unreachable. Check your connection and try again.':
+    'Firebase उपलब्ध नहीं है। कनेक्शन जांचें और फिर कोशिश करें।',
+  'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.':
+    'Storage अपलोड का समय समाप्त हो गया। कनेक्शन जांचें और सुनिश्चित करें कि Firebase Storage चालू है, फिर कोशिश करें।',
+  'Firebase is not connected': 'Firebase कनेक्ट नहीं है',
+  'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.':
+    'यह सत्र केवल इस डिवाइस पर सहेजा गया है। Firebase कंसोल में Authentication और Anonymous प्रोवाइडर चालू करें, फिर दोबारा कोशिश करें।',
+  'Retry connection': 'कनेक्शन दोबारा जोड़ें',
+  'Retrying…': 'दोबारा कोशिश हो रही है…',
+  'Error: {code}': 'त्रुटि: {code}',
+  'Re-select your documents before submitting so they can be uploaded.':
+    'जमा करने से पहले अपने दस्तावेज फिर से चुनें ताकि उन्हें अपलोड किया जा सके।',
 }
 
 const bengali: Record<string, string> = {
@@ -548,8 +591,8 @@ const bengali: Record<string, string> = {
   'We will send a 6-digit verification code.':
     'আমরা ৬ সংখ্যার যাচাই কোড পাঠাব।',
   'Send OTP': 'OTP পাঠান',
-  'Prototype build: verification codes are simulated, no SMS is sent, and no account is created.':
-    'প্রোটোটাইপ বিল্ড: যাচাই কোড সিমুলেট করা, কোনো SMS পাঠানো হয় না এবং কোনো অ্যাকাউন্ট তৈরি হয় না।',
+  'Prototype build: verification codes are simulated and no SMS is sent.':
+    'প্রোটোটাইপ বিল্ড: যাচাই কোড সিমুলেট করা হয় এবং কোনো SMS পাঠানো হয় না।',
   'Enter a valid 10-digit mobile number.':
     'বৈধ ১০ সংখ্যার মোবাইল নম্বর দিন।',
   'Indian mobile numbers start with 6, 7, 8 or 9.':
@@ -986,6 +1029,49 @@ const bengali: Record<string, string> = {
   'Bank passbook': 'ব্যাঙ্ক পাসবুক',
   'Passbook or cancelled cheque · JPG or PDF · max 2 MB':
     'পাসবুক বা বাতিল চেক · JPG বা PDF · সর্বোচ্চ 2 MB',
+  'Could not send the code. Try again.':
+    'কোড পাঠানো যায়নি। আবার চেষ্টা করুন।',
+  'Enter a valid mobile number.': 'বৈধ মোবাইল নম্বর দিন।',
+  'Too many attempts. Wait a few minutes and try again.':
+    'অনেকবার চেষ্টা হয়েছে। কয়েক মিনিট অপেক্ষা করে আবার চেষ্টা করুন।',
+  'SMS quota exceeded. Try again later.':
+    'SMS কোটা শেষ। পরে আবার চেষ্টা করুন।',
+  'The verification check failed. Refresh the page and try again.':
+    'যাচাই ব্যর্থ হয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।',
+  'This domain is not authorized in Firebase.':
+    'এই ডোমেইন Firebase-এ অনুমোদিত নয়।',
+  'Phone sign-in is not enabled in Firebase.':
+    'Firebase-এ ফোন সাইন-ইন চালু নেই।',
+  'Network error. Check your connection and try again.':
+    'নেটওয়ার্ক সমস্যা। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  'No verification is in progress. Send a new code.':
+    'কোনো যাচাই চলছে না। নতুন কোড পাঠান।',
+  'Could not verify the code. Try again.':
+    'কোড যাচাই করা যায়নি। আবার চেষ্টা করুন।',
+  'Submitting…': 'জমা দেওয়া হচ্ছে…',
+  Loading: 'লোড হচ্ছে',
+  'Could not submit your application. Check your connection and try again.':
+    'আবেদন জমা দেওয়া যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  'Firebase is not connected. Reconnect from the banner, then submit again.':
+    'Firebase কানেক্ট করা নেই। ব্যানার থেকে আবার সংযোগ করে আবার জমা দিন।',
+  'Firestore blocked the submission. Deploy the Firestore rules, then try again.':
+    'Firestore আবেদন আটকে দিয়েছে। Firestore নিয়ম ডিপ্লয় করে আবার চেষ্টা করুন।',
+  'Storage blocked the upload. Deploy the Storage rules, then try again.':
+    'Storage আপলোড আটকে দিয়েছে। Storage নিয়ম ডিপ্লয় করে আবার চেষ্টা করুন।',
+  'The Storage bucket is missing or unreachable. Create Firebase Storage in the console, then try again.':
+    'Storage বাকেট নেই বা পৌঁছানো যাচ্ছে না। Firebase কনসোলে Firebase Storage তৈরি করে আবার চেষ্টা করুন।',
+  'Firebase is unreachable. Check your connection and try again.':
+    'Firebase-এ পৌঁছানো যাচ্ছে না। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.':
+    'Storage আপলোডের সময় শেষ হয়ে গেছে। সংযোগ পরীক্ষা করুন এবং Firebase Storage চালু আছে কিনা দেখে আবার চেষ্টা করুন।',
+  'Firebase is not connected': 'Firebase কানেক্ট করা নেই',
+  'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.':
+    'এই সেশন শুধু এই ডিভাইসে সংরক্ষিত আছে। Firebase কনসোলে Authentication এবং Anonymous প্রোভাইডার চালু করে আবার চেষ্টা করুন।',
+  'Retry connection': 'সংযোগ আবার করুন',
+  'Retrying…': 'আবার চেষ্টা হচ্ছে…',
+  'Error: {code}': 'ত্রুটি: {code}',
+  'Re-select your documents before submitting so they can be uploaded.':
+    'জমা দেওয়ার আগে আপনার নথিগুলো আবার বেছে নিন যাতে সেগুলো আপলোড করা যায়।',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =
