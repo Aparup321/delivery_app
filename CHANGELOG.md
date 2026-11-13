@@ -1,18 +1,35 @@
 # Changelog
 
 Notable changes to the PicDrop delivery module. Dates use ISO format, newest
-first. All current functionality is mock-driven; nothing here is connected to a
-backend.
+first. Firebase authentication (demo OTP bridge) and onboarding persistence are
+connected; delivery, earnings, notification and support data remain mock.
 
 ## [Unreleased]
 
 ### Added
 
+- Firebase authentication and onboarding persistence. The login screens verify
+  the demo OTP (`123456`) — the default path until the project's own OTP API is
+  connected — and, when `VITE_FIREBASE_*` is configured, sign the verified
+  number in with an anonymous Firebase session so Firestore and Storage enforce
+  the UID rules. The retained phone-SMS functions stay in the service layer. On
+  submit, the profile photo and KYC files upload to Storage while `partners`,
+  `partner_documents`, `vehicles` and `training_progress` records are written to
+  Firestore and reloaded on the next sign-in. Added owner-only Firestore and
+  Storage rules plus `firebase.json`; the application-status demo switcher is
+  hidden when Firebase is active.
+- Firebase connection status is now visible. When the anonymous session fails,
+  every signed-in screen shows the Firebase error code with a **Retry
+  connection** action, and onboarding submission is blocked instead of storing
+  a local-only "submitted" state. Submission failures also show the Firebase
+  error code (for example `permission-denied` or a `storage/…` code). Storage
+  retries are capped at about 15 seconds so a missing bucket fails visibly
+  instead of leaving the submit spinner running.
 - Firebase SDK foundation: installed `firebase@13`, added `src/firebase/config.ts`
   and `src/firebase/index.ts` with single-instance `auth`, `db` and `storage`
-  exports, and documented the `VITE_FIREBASE_*` template. `.env.local` contains
-  placeholders and remains ignored. Existing screens still use mock data because
-  no service layer is connected yet.
+  exports, and documented the `VITE_FIREBASE_*` template. `.env.local` is
+  git-ignored and was never committed. Existing screens still use mock data
+  because no service layer is connected yet.
 - The KYC step collects the Aadhaar and PAN numbers beside their upload tiles
   and provides upload-only cards for the driving licence and vehicle RC. For
   bike and scooter partners, the licence and registration numbers are now

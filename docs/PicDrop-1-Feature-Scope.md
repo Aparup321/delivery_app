@@ -222,6 +222,13 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   the new layout.
 - **2026-11-08 — M15: Firebase SDK foundation.** Installed the Firebase Web SDK
   and added configuration plus single-instance Auth, Firestore and Storage
-  exports under `src/firebase/`. No partner screen or mock module reads live
-  Firebase data yet.
+  exports under `src/firebase/`.
+- **2026-11-08 — M16: Firebase phone auth and onboarding persistence.** The
+  existing login screens now use Firebase Phone Authentication, with the local
+  demo OTP retained only when configuration is absent. Onboarding submission
+  uploads the profile photo and KYC files to Storage and writes partner,
+  document, vehicle and training records to Firestore; the submitted state is
+  reloaded on the next sign-in. Owner-only Firestore and Storage rules and a
+  Firebase CLI config were added. Delivery, earnings, notification, support and
+  admin data remain mock.
 

@@ -7,12 +7,13 @@ The app is designed as a phone experience: it runs in the browser, looks like a
 modern mobile app, and is built for a 390 × 844 px screen. On larger screens it
 stays a centered app column instead of stretching into a desktop dashboard.
 
-> **Status:** Phases 1–11 of the partner experience are complete as a fully
-> interactive prototype using mock data. Sign-in, onboarding, deliveries,
-> earnings, notifications, support and profile all work in the browser.
-> The Firebase SDK foundation (Auth, Firestore and Storage exports) is installed,
-> but the screens still run on mock data. A real map provider and the
-> existing-platform integration (Phases 12–13) are not connected yet.
+> **Status:** Phases 1–11 of the partner experience are complete as an
+> interactive prototype. Firebase Phone Authentication and onboarding
+> persistence (Firestore + Storage) are connected when `VITE_FIREBASE_*` is
+> configured; without configuration the app falls back to the demo OTP.
+> Deliveries, earnings, notifications, support, map and payment data remain
+> mock. A real map provider and the existing-platform integration (Phases
+> 12–13) are not connected yet.
 >
 > The product direction is now **PicDrop + HopNgo**, and this repository is its
 > **delivery-partner module**. The PicDrop delivery requirements have been
@@ -66,12 +67,12 @@ material for the project and are not part of the deployed application.
 
 | Module | What it does | Status |
 | --- | --- | --- |
-| Authentication | Mobile number + demo OTP, persisted session, protected routes, logout | Built (mock) |
-| Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (mock) |
-| KYC & documents | Aadhaar and PAN numbers with upload controls, plus licence, RC and bank passbook uploads and review status | Built (mock) |
-| Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (mock) |
-| Training & approval | Training checklist and submitted-application status | Built (mock) |
-| Application status | Pending, submitted, under review, approved or rejected with a progress timeline | Built (mock) |
+| Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), anonymous Firebase session when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
+| Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (Firebase) |
+| KYC & documents | Aadhaar and PAN numbers with upload controls, plus licence, RC and bank passbook uploads; files go to Storage and metadata to Firestore | Built (Firebase) |
+| Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
+| Training & approval | Training checklist and submitted-application status | Built (Firebase) |
+| Application status | Pending, submitted, under review, approved or rejected with a progress timeline; submitted state comes from Firestore, review outcomes are demo | Built (Firebase + demo review) |
 | Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (mock) |
 | Delivery requests | Request cards with countdown, accept or reject | Built (mock) |
 | Active delivery | Timeline, status actions, drop OTP proof, contact and issue reporting | Built (mock) |
@@ -84,9 +85,21 @@ material for the project and are not part of the deployed application.
 
 ### Demo access
 
-No SMS is sent and no account is created. On the login screen enter any valid
-10-digit Indian mobile number (for example `9832979005`), then use the demo code
-**`123456`** on the verification screen.
+The demo OTP is the default verification path for now: enter any valid 10-digit
+Indian mobile number (for example `9832979005`) and use the code **`123456`**.
+No SMS is sent; the project's own OTP API will replace this step later.
+
+When `VITE_FIREBASE_*` is configured, accepting the demo code also signs the
+partner in with an **anonymous Firebase session**, so the app talks to Firebase
+under the UID-based Security Rules instead of staying fully local. If that
+session cannot be created, the app falls back to a local demo session and shows
+a **Firebase is not connected** banner on every signed-in screen with the
+Firebase error code and a **Retry connection** action. Onboarding submission is
+blocked in that state, so a local draft is never presented as a Firebase
+submission.
+
+The Firebase phone-SMS code path (`sendPhoneOtp` / `confirmPhoneOtp`) stays in
+`src/services/auth.ts` for when the OTP API integration begins.
 
 ## 4. Technology stack
 
@@ -101,33 +114,36 @@ No SMS is sent and no account is created. On the login screen enter any valid
 | [Lucide React](https://lucide.dev/) | latest | Icons |
 | [Oxlint](https://oxc.rs/) | latest | Code linting |
 
-Firebase is installed as the backend foundation, but no screen reads or writes
-live data yet.
+Firebase provides the demo-OTP auth bridge plus Firestore and Storage
+persistence for partner onboarding. The delivery, earnings, notification and
+support data still come from `src/mock/`.
 
 ## 5. Current development status
 
 All partner-facing screens in the roadmap are implemented and connected to a
 shared mock state layer:
 
-- `/login` and `/verify-otp` — mobile number entry, 6-digit OTP with a resend
-  timer, expiry handling and clear error messages.
+- `/login` and `/verify-otp` — mobile number entry, demo OTP verification with a
+  resend timer and clear error messages. When Firebase is configured, the
+  verified number signs in with an anonymous Firebase session.
 - Protected app shell with Home, Orders, History, Earnings, Profile and a
   404 screen, plus Notifications, Active Delivery, Support and Onboarding, all
   inside the same shell with the bottom navigation.
 - Every section header carries a back control (Orders, History, Earnings,
   Profile, Notifications, Support, Active delivery, Onboarding and 404). Home is
   the app root, so it has no back button.
-- Session persists across reloads; signing out returns to the login screen.
-- Onboarding progress is saved per verified mobile number
-  (`fafo.partner.onboarding.<phone>`), so each demo number has its own
-  application and a new number starts from a blank draft.
+- Firebase restores the session across reloads; signing out returns to the
+  login screen.
+- Onboarding drafts are saved per verified mobile number under
+  `fafo.partner.onboarding.<phone>`. Submitting uploads selected files to
+  Storage and saves partner, document, vehicle and training records to
+  Firestore; signing in again reloads the submitted application from Firestore.
 - Draft applications are held inside the onboarding wizard; Home, Orders,
   Earnings and Profile only open once the application is submitted. The bottom
-  navigation is hidden while the draft form is open. The demo OTP is still
-  `123456` for every number.
+  navigation is hidden while the draft form is open.
 - A profile photo is mandatory on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
-  Profile, and blocks progress until added.
+  Profile, and is uploaded to Firebase Storage on submission.
 - KYC collects the Aadhaar and PAN numbers beside their upload controls and
   provides upload-only cards for the driving licence and vehicle RC, with
   JPG/PDF and 2 MB guidance. For bike and scooter partners, the licence and
@@ -137,8 +153,9 @@ shared mock state layer:
   2 MB; larger files are rejected inline and are not recorded as uploaded.
 - Application status is available from Profile → Application status. It shows
   pending, submitted, under review, approved or rejected with submitted and
-  updated dates plus a four-step tracker. A labelled demo control lets testers
-  preview each stage; no verification service is connected.
+  updated dates plus a four-step tracker. The submitted state is read from
+  Firestore; the labelled demo control is shown only when Firebase is not
+  configured because no verification service is connected.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
   completed or cancelled jobs are added to history.
@@ -152,8 +169,9 @@ shared mock state layer:
   the selected language, and dates, times and rupee amounts follow the matching
   `en-IN`, `hi-IN` or `bn-IN` locale.
 
-**Remaining:** Phase 12 (existing-platform integration, admin functions, Firebase)
-and Phase 13 (release QA). Both depend on the open decisions listed at the end.
+**Remaining:** the rest of Phase 12 (delivery, earnings, notification, support
+and admin integration) and Phase 13 (release QA). Both depend on the open
+decisions listed at the end.
 
 ## 6. Folder structure
 
@@ -171,6 +189,7 @@ delivery_app/
 │   │                         # ScreenHeader, ModulePlaceholder
 │   ├── context/              # LanguageProvider, AuthProvider, AppProvider, hooks
 │   ├── firebase/             # SDK config plus auth, db and storage exports
+│   ├── services/             # Auth bridge and onboarding persistence
 │   ├── hooks/                # useCountdown
 │   ├── i18n/                 # English keys and Hindi/Bengali translations
 │   ├── mock/                 # partner, auth (demo OTP), deliveries, earnings,
@@ -195,6 +214,9 @@ delivery_app/
 │   └── main.tsx
 ├── AGENTS.md                 # Rules for AI coding agents
 ├── README.md
+├── firebase.json             # Firestore and Storage rules deployment config
+├── firestore.rules           # Owner-only partner records
+├── storage.rules             # Owner-only uploads, 2 MB and image/PDF limits
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -212,11 +234,12 @@ cd delivery_app
 npm install
 ```
 
-The app still runs entirely on mock data, so a live Firebase project is optional
-for UI work. `.env.local` is already created with placeholder `VITE_FIREBASE_*`
-values; replace them with the Web App configuration from Firebase Console to use
-the SDK. `.env.example` is the tracked template. `.env` and every other `.env.*`
-file, including `.env.local`, stay untracked.
+The app falls back to the demo OTP when Firebase is not configured, so UI work
+still runs without a live project. To use Firebase Phone Auth and onboarding
+persistence, create `.env.local` from `.env.example`, fill in the six
+`VITE_FIREBASE_*` values from Firebase Console, enable Phone sign-in, Firestore
+and Storage, and deploy the rules in this repository. `.env` and every other
+`.env.*` file, including `.env.local`, stay untracked.
 
 ## 8. Run the project locally
 
@@ -272,37 +295,105 @@ scrollbar on its right edge; auth screens use the same treatment.
 
 ## 11. Mock data and app state
 
-No backend is connected. `src/mock/` holds realistic Kolkata-based data for the
-partner, delivery requests, completed deliveries, earnings, payouts,
-notifications, onboarding defaults and support FAQs.
+Firebase is connected for authentication and onboarding only. `src/mock/` still
+holds realistic Kolkata-based data for the partner fixture, delivery requests,
+completed deliveries, earnings, payouts, notifications, onboarding defaults and
+support FAQs.
 
 `src/context/AppProvider.tsx` owns the interactive state behind those screens:
 online availability, requests, the active delivery, history, notifications,
 support tickets and onboarding progress. `src/context/AuthProvider.tsx` owns the
-demo session.
+Firebase session, with a local demo fallback when configuration is absent.
 
-- The session and onboarding progress survive a reload (`localStorage`).
+- Firebase persists the authenticated session; submitted onboarding data is
+  stored in Firestore and Storage and reloaded on the next sign-in.
+- Draft onboarding progress and the language choice use `localStorage`.
 - Delivery and notification changes live in memory and reset on reload.
 - Every figure shown on the earnings screen is demo data and labelled as such.
 
-Replacing this layer with Firebase should not change the screens: they read state
-from the context hooks (`useApp`, `useAuth`) and render typed models from
-`src/types/`. Two exceptions still import fixtures directly — the signed-in
-partner (`src/mock/partner.ts`, used by Home and Profile) and the earnings
-summary (`src/mock/earnings.ts`, used by Home) — and will move behind the planned
-service layer with the backend integration.
+Screens read state from the context hooks (`useApp`, `useAuth`) and render typed
+models from `src/types/`. Two exceptions still import fixtures directly — the
+signed-in partner (`src/mock/partner.ts`, used by Home and Profile) and the
+earnings summary (`src/mock/earnings.ts`, used by Home) — and will move behind
+the service layer with the remaining backend integration.
 
-## 12. Firebase setup and integration plan
+## 12. Firebase setup and connected scope
 
-### Installed foundation
+### Connected now
 
-- `src/firebase/config.ts` reads `VITE_FIREBASE_*` from `import.meta.env`.
-- `src/firebase/index.ts` initializes one Firebase app and exports `auth`, `db`
-  and `storage`. Import these from `src/firebase`; do not call `initializeApp`
-  inside a screen.
-- `.env.local` contains placeholders. Replace them before running live
-  authentication, database or storage operations.
-- No screen uses the SDK yet; auth, onboarding and delivery state remain mock.
+- `src/firebase/config.ts` reads the six `VITE_FIREBASE_*` values and exports a
+  configuration check. `src/firebase/index.ts` initializes one Firebase app and
+  exports `auth`, `db` and `storage`.
+- `src/services/auth.ts` verifies the demo OTP and signs the partner in with an
+  anonymous Firebase session when configured; the Firebase phone-SMS functions
+  stay there for the upcoming OTP API. `AuthProvider` restores the Firebase
+  session, exposes the signed-in UID to the app and records the Firebase error
+  code when the bridge fails.
+- `src/components/layout/FirebaseStatusBanner.tsx` shows that error code across
+  the signed-in app with a retry action. The onboarding submit path refuses to
+  write a local-only "submitted" state while the app is on the demo session, and
+  shows the Firebase error code when a write fails.
+- `src/services/partnerOnboarding.ts` uploads the profile photo and selected
+  documents to Storage, then writes `partners/{uid}`, `partner_documents/{uid}`,
+  `vehicles/{uid}` and `training_progress/{uid}`. Signing in again rebuilds the
+  onboarding state from those records.
+- `firestore.rules` and `storage.rules` restrict each partner to their own UID.
+  `firebase.json` points the Firebase CLI at both rule files and `.firebaserc`
+  sets `delivery-231a0` as the default project.
+- If configuration is absent, the app uses the local demo OTP and keeps data in
+  `localStorage`, so UI work does not depend on live credentials.
+
+### Required Firebase Console setup
+
+1. Enable **Authentication → Sign-in method → Anonymous** so the demo-OTP
+   bridge can create a Firebase session. Add `localhost` under
+   Authentication → Settings → Authorized domains. When the SMS flow returns,
+   also enable **Phone** and add test phone numbers under
+   Phone → Phone numbers for testing.
+2. Create a **Firestore Database** and a **Storage** bucket in the same project
+   as the Web App configuration. The bucket name must match
+   `VITE_FIREBASE_STORAGE_BUCKET`.
+3. Deploy the rules with the Firebase CLI:
+
+   ```bash
+   firebase deploy --only firestore:rules,storage
+   ```
+
+   Alternatively paste `firestore.rules` and `storage.rules` into the matching
+   rules editors in Firebase Console.
+4. Put the Web App configuration into `.env.local` and restart `npm run dev`.
+
+### Verifying the connection
+
+1. Sign in with the demo OTP. **Authentication → Users** should list an
+   anonymous user immediately.
+2. If the app shows the **Firebase is not connected** banner, read its error
+   code:
+
+   | Code | Meaning |
+   | --- | --- |
+   | `auth/configuration-not-found` | Authentication has not been initialized in the project |
+   | `auth/operation-not-allowed` | The Anonymous provider is not enabled |
+   | `auth/unauthorized-domain` | `localhost` (or the deployed host) is not an authorized domain |
+   | `auth/network-request-failed` | The browser cannot reach Firebase |
+
+3. Fix the console setting and press **Retry connection** in the banner. The
+   banner disappears once the anonymous session exists.
+4. Complete onboarding and submit. **Firestore** should then contain
+   `partners/{uid}`, `partner_documents/{uid}`, `vehicles/{uid}` and
+   `training_progress/{uid}`, and **Storage** should contain
+   `partners/{uid}/…`. A submission error shows `permission-denied` when the
+   rules are not deployed and a `storage/…` code when the bucket or its rules
+   are missing. Uploads stop retrying after about 15 seconds, so a missing
+   bucket or a blocked network surfaces instead of leaving the submit spinner
+   running.
+
+### Still mock
+
+Deliveries, delivery requests, earnings, payouts, notifications, support tickets,
+partner ratings, the map preview and the delivery OTP are still demo data. They
+need the remaining Phase 12 service layer; no delivery or payment collection is
+written by this change.
 
 > **Security:** Vite embeds every `VITE_*` value in the browser bundle.
 > `.env.local` keeps the values out of Git, not out of the browser. Firebase Web
@@ -310,25 +401,6 @@ service layer with the backend integration.
 > Firestore/Storage Security Rules, authorized domains and API key
 > restrictions. Never put service-account credentials, private keys or admin SDK
 > secrets in a `VITE_*` variable.
-
-### Services still to connect
-
-1. **Authentication** — replace the demo OTP with Firebase phone auth and keep the
-   existing protected-route behaviour.
-2. **Firestore** — `partners`, `partner_documents`, `vehicles`, `training`,
-   `training_progress`, `deliveries`, `delivery_types`, `earnings`, `payments`,
-   `notifications`, `support_tickets`, `admin_users`.
-3. **Storage** — profile photos, Aadhaar/PAN images, licence, RC and insurance.
-4. **Cloud Functions** — assigning deliveries, validating status transitions and
-   calculating earnings.
-5. **Cloud Messaging** — request and payment notifications.
-
-Rules: configuration comes from `VITE_FIREBASE_*` environment variables, all data
-access lives in a single `src/services/` layer, Security Rules restrict each
-partner to their own records, files are stored in Storage with only metadata and
-paths in Firestore, and the app must remain demo-able without live credentials.
-Installing the SDK does not enable services in Firebase Console: Authentication,
-Firestore and Storage must each be enabled there, with restrictive rules deployed.
 
 ## 13. Git workflow
 
@@ -355,7 +427,7 @@ Firestore and Storage must each be enabled there, with restrictive rules deploye
 | 9 | Maps, location permission and routes | Demo route preview 🟡 |
 | 10 | History, earnings and payments | ✅ Mock records |
 | 11 | Notifications, support and profile settings | ✅ Complete feature set |
-| 12 | Admin and existing-platform integration | 🟡 Firebase SDK foundation; data connection pending |
+| 12 | Admin and existing-platform integration | 🟡 Firebase auth bridge + onboarding connected; deliveries, earnings, notifications, support and admin pending |
 | 13 | Quality checks and release preparation | ⏳ Pending |
 
 ## Decisions still open

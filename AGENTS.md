@@ -36,15 +36,23 @@ does not already exist. **Do not invent backend endpoints.**
 
 ## 2. Current development status
 
-**Phases 1–11 — partner app (mock-driven UI): complete.**
+**Phases 1–11 — partner app: complete. The Firebase demo-auth bridge and
+onboarding persistence are connected; the remaining modules stay mock-driven.**
 
 What exists today:
 
 - Vite + React 19 + TypeScript project with the Tailwind CSS v4 design system.
-- Mobile-number + OTP sign-in (demo code `123456`), persisted session and
-  protected routes with redirect back to the requested screen.
-- Seven-step onboarding wizard (personal, address, KYC uploads, vehicle, bank,
-  training, review) whose progress is saved to `localStorage`.
+- Mobile-number + demo OTP (`123456`) sign-in, the default verification path
+  until the project's own OTP API is connected. When Firebase is configured the
+  verified number also signs in with an anonymous Firebase session so Firestore
+  and Storage enforce the UID rules; the Firebase phone-SMS code path stays in
+  `src/services/auth.ts` for the OTP API integration. Protected routes redirect
+  back to the requested screen. A signed-in banner shows the Firebase error code
+  and a retry action when that session cannot be created, and onboarding
+  submission stays blocked until it succeeds.
+- Five-step onboarding wizard (personal, KYC + bank, vehicle, training, review).
+  Draft progress is saved to `localStorage`; submission uploads files to Storage
+  and writes partner records to Firestore.
 - Dashboard with online/offline availability, daily stats and live request
   preview; delivery requests with countdown, accept/reject; active delivery with
   timeline, route preview, status actions and issue reporting.
@@ -54,14 +62,13 @@ What exists today:
   App language. The choice persists in `localStorage`, covers every screen and
   shared component, and switches date, time and currency formatting to the
   matching locale.
-- Realistic mock data for partner, deliveries, earnings, notifications and
-  support, all routed through `src/context/` and `src/mock/`.
+- Realistic mock data for deliveries, earnings, notifications and support;
+  Firebase data for the authenticated partner and submitted onboarding.
 
-**Remaining: Phase 12 (backend/platform integration, admin functions) and Phase
-13 (release QA).** Both need the open decisions in README to be answered. The
-Firebase SDK foundation is installed, but no screen reads or writes live data;
-there is no real map provider or backend data yet, and earnings and request
-timers are demo data.
+**Remaining: the rest of Phase 12 (delivery, earnings, notification, support and
+admin integration) and Phase 13 (release QA).** Both need the open decisions in
+README to be answered. There is no real map provider or delivery backend yet,
+and earnings and request timers are demo data.
 
 ---
 
@@ -79,8 +86,9 @@ timers are demo data.
 | Oxlint | Linting |
 
 **Only the libraries listed above are installed.** Do not add a dependency unless
-the task needs it. The Firebase SDK is present for Phase 12, but screens must keep
-using mock data until the service layer is connected (see section 15).
+the task needs it. Firebase is connected for the demo-OTP auth bridge and
+onboarding persistence through `src/services/`; other screens keep using mock
+data until their service layer is connected (see section 15).
 
 ---
 
@@ -326,19 +334,20 @@ lint/type rules to make a check pass.
 Allowed now:
 
 - Improving any existing screen, the design system, layout and navigation.
-- Fixing bugs in the mock flows (auth, onboarding, deliveries, earnings,
-  notifications, support, profile).
-- Firebase SDK configuration, environment setup and service-layer groundwork.
+- Fixing bugs in the Firebase auth/onboarding flows or the remaining mock flows.
+- The demo-OTP authentication bridge, onboarding persistence and Security Rules.
 
 Not allowed without explicit instruction:
 
-- Connecting existing screens to live Firebase data or replacing the mock flows.
-- Real APIs, backend logic or new network services.
+- Connecting deliveries, earnings, notifications, support or profile fixtures to
+  live Firebase data (the next part of Phase 12).
+- Real delivery/payment APIs, backend logic or new network services.
 - Replacing the demo map with a paid provider.
 - Changing the colour palette or design language.
 - Removing or rewriting working screens.
 - Adding dependencies, test runners or CI.
-- Building admin/platform-integration features (Phase 12).
+- Building admin/platform-integration features beyond the approved auth and
+  onboarding scope.
 - Implementing the PicDrop delivery requirements before the owner has answered
   the open decisions from the analysis.
 
@@ -371,12 +380,12 @@ If a requirement conflicts with this document, ask before proceeding.
 
 ## 15. Firebase integration rules
 
-The Firebase SDK foundation is installed, but screens remain mock-driven until
-the service layer is connected:
+Firebase is connected for the demo-OTP auth bridge and onboarding persistence.
+The remaining product modules stay mock-driven until their service layer is
+added:
 
-- Keep data access out of components: screens receive props from mock modules.
-- When integration starts, introduce `src/services/` as the only layer that talks
-  to Firebase, and `src/context/` for shared auth/app state.
+- Keep data access out of components: use `src/services/` as the only layer that
+  talks to Firebase, and `src/context/` for shared auth/app state.
 - Initialize Firebase once in `src/firebase/index.ts` and import `auth`, `db` and
   `storage` from `src/firebase`. Never import the Firebase SDK directly inside a
   page or component.
@@ -410,27 +419,39 @@ the service layer is connected:
 
 ### What is implemented
 
-- **Auth** — mobile number + demo OTP (`123456`), session in `localStorage`
-  (`fafo.partner.session`), protected routes that return to the requested screen.
-- **Firebase foundation** — the `firebase` SDK is installed, `src/firebase/`
-  reads `VITE_FIREBASE_*` and exports `auth`, `db` and `storage`. No screen uses
-  it yet; all auth, onboarding and delivery behaviour remains mock-driven.
+- **Auth** — mobile number + demo OTP (`123456`), the default verification path
+  until the project's own OTP API is connected. When Firebase is configured the
+  verified number signs in with an anonymous Firebase session, so Firestore and
+  Storage enforce the UID rules. If the session cannot be created, the app falls
+  back to the local demo session, shows a **Firebase is not connected** banner
+  with the Firebase error code and a retry action on every signed-in screen, and
+  refuses to record a local-only onboarding submission. Protected routes return
+  to the requested screen.
+- **Firebase integration** — `src/firebase/` reads `VITE_FIREBASE_*` and exports
+  `auth`, `db` and `storage`. `src/services/auth.ts` verifies the demo OTP and
+  owns the retained phone-SMS functions; `src/services/partnerOnboarding.ts`
+  handles Storage uploads and the Firestore partner, document, vehicle and
+  training records. Submission failures surface the Firebase error code next to
+  the error message. Delivery, earnings, notification and support data remain
+  mock.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, number-plus-upload cards for
   Aadhaar and PAN, upload-only cards for the driving licence and vehicle RC, an
   optional bank passbook upload beside the account number, vehicle tiles (bike,
   scooter, bicycle, on foot), licence and registration fields for motorised
   vehicles, a required profile photo and a submitted/under-review state.
-  Progress is stored under
-  `fafo.partner.onboarding.<phone>`, one draft per verified number, and the demo
-  OTP is the same for every number. Draft partners are redirected back to the
-  wizard until they submit; the wizard header offers Sign out. The wizard hides
-  the bottom navigation while a draft is being completed; the submitted
-  confirmation renders inside the shell.
+  Draft progress is stored under `fafo.partner.onboarding.<phone>`, one draft
+  per verified number. Submission uploads the profile photo and selected
+  documents to Storage and writes `partners`, `partner_documents`, `vehicles`
+  and `training_progress` documents in Firestore. Draft partners are redirected
+  back to the wizard until they submit; the wizard header offers Sign out. The
+  wizard hides the bottom navigation while a draft is being completed; the
+  submitted confirmation renders inside the shell.
 - **Application status** — Profile → Application status shows pending,
   submitted, under review, approved or rejected, with submitted and updated
-  dates and a four-step tracker. Submitted, under-review, approved and rejected
-  are available from a labelled demo control; no verification service exists.
+  dates and a four-step tracker. The submitted state comes from Firestore; the
+  labelled demo control for review outcomes appears only when Firebase is not
+  configured because no verification service exists.
 - **Dashboard** — light header, availability switch, three headline stats, six
   quick actions and a request preview. Requests only appear when online.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
@@ -451,19 +472,18 @@ the service layer is connected:
 
 ### Intentionally missing (do not fake these)
 
-- No live backend data: Firebase is initialized, but no screen or mock module
-  reads or writes it. No real map provider, push notifications or payments.
+- No live delivery, earnings, notification, support or payment data. Firebase
+  is connected for auth and onboarding only. No real map provider, push
+  notifications or payments.
 - No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
   other PicDrop + HopNgo modules and are out of scope here.
-- Document uploads store only the selected file name in local state; no file is
-  uploaded and no document-level review workflow exists. Application status is
-  demo state changed from a labelled control. Files over 2 MB are rejected
-  before the name is recorded.
+- Document uploads use Firebase Storage when configured; on submit, Firestore
+  stores metadata and paths, not file contents. There is no document-level
+  review workflow. Files over 2 MB are rejected before the name is recorded.
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
   as demo where they could be mistaken for live data.
-- Onboarding quiz, working shifts and service zones are not built. The profile
-  photo is captured (downscaled locally, 2 MB limit) but not uploaded to
-  storage.
+- Onboarding quiz, working shifts, service zones and post-submission editing are
+  not built.
 
 ### Verification (run before handing work back)
 
@@ -480,13 +500,14 @@ errors.
 
 ### Next recommended work
 
-1. Connect the application-status UI to a real verification service, then add
-   document-level review states and eligibility gating before going online.
-2. Onboarding editing after submission (currently the submitted screen is
+1. Connect the application-status review flow to a real verification service,
+   then add document-level review states and eligibility gating before going
+   online.
+2. Persist availability, requests, history, earnings, notifications and support
+   tickets in the planned service layer.
+3. Add onboarding editing after submission (currently the submitted screen is
    read-only and the profile button says "View partner details").
-3. Persist availability, requests and tickets in the planned service layer when
-   the backend phase starts.
-4. Design alignment for the remaining screens (login, history, support, profile).
+4. Design alignment for the remaining screens (history, support, profile).
 
 ### Working agreements that still apply
 
