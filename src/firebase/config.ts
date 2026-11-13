@@ -11,6 +11,15 @@ const env = import.meta.env
  * Firestore/Storage Security Rules. Never put service-account credentials,
  * private keys or admin SDK secrets in a VITE_* variable.
  */
+export const isFirebaseConfigured = Boolean(
+  env.VITE_FIREBASE_API_KEY &&
+    env.VITE_FIREBASE_AUTH_DOMAIN &&
+    env.VITE_FIREBASE_PROJECT_ID &&
+    env.VITE_FIREBASE_STORAGE_BUCKET &&
+    env.VITE_FIREBASE_MESSAGING_SENDER_ID &&
+    env.VITE_FIREBASE_APP_ID,
+)
+
 export const firebaseConfig = {
   apiKey: env.VITE_FIREBASE_API_KEY,
   authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,

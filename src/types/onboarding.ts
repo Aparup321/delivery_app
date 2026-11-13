@@ -42,6 +42,11 @@ export interface OnboardingBank {
   ifsc: string
 }
 
+export interface OnboardingFiles {
+  profilePhoto?: File
+  documents: Partial<Record<DocumentKey, File>>
+}
+
 export interface OnboardingState {
   step: number
   status: OnboardingStatus
