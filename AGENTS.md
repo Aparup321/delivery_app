@@ -210,7 +210,8 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 | --- | --- |
 | `Button` | `primary`, `secondary`, `outline`, `ghost`, `danger`; `sm`/`md`/`lg`; `isLoading`, `leftIcon`, `rightIcon`, `fullWidth` |
 | `IconButton` | Requires `label` for accessibility; `surface`/`soft`/`ghost`/`onBrand` |
-| `Card` | `padding` (`none`/`sm`/`md`/`lg`), `interactive` hover lift |
+| `IconTile` | Decorative icon tile used by cards, lists and empty states; `sm`/`md`/`lg` sizes and `brand`/`success`/`warning`/`danger`/`neutral` tones |
+| `Card` | `padding` (`none`/`sm`/`md`/`lg`), `interactive` hover lift, quiet `shadow-card` elevation |
 | `Badge` | Tones `neutral`, `brand`, `success`, `warning`, `danger`, `info` |
 | `Avatar` | Initials fallback when no image is available |
 | `Input` | Label, `hint`, `error`, left/right icon, `useId` wiring |
@@ -422,18 +423,20 @@ added:
 - **Auth** — mobile number + demo OTP (`123456`), the default verification path
   until the project's own OTP API is connected. When Firebase is configured the
   verified number signs in with an anonymous Firebase session, so Firestore and
-  Storage enforce the UID rules. If the session cannot be created, the app falls
-  back to the local demo session, shows a **Firebase is not connected** banner
-  with the Firebase error code and a retry action on every signed-in screen, and
-  refuses to record a local-only onboarding submission. Protected routes return
-  to the requested screen.
+  Storage enforce the UID rules. The anonymous user's display name is set to the
+  verified number and `partners/{uid}` is written at sign-in, so the number is
+  visible in the Firebase console before onboarding is submitted. If the session
+  cannot be created, the app falls back to the local demo session, shows a
+  **Firebase is not connected** banner with the Firebase error code and a retry
+  action on every signed-in screen, and refuses to record a local-only
+  onboarding submission. Protected routes return to the requested screen.
 - **Firebase integration** — `src/firebase/` reads `VITE_FIREBASE_*` and exports
   `auth`, `db` and `storage`. `src/services/auth.ts` verifies the demo OTP and
-  owns the retained phone-SMS functions; `src/services/partnerOnboarding.ts`
-  handles Storage uploads and the Firestore partner, document, vehicle and
-  training records. Submission failures surface the Firebase error code next to
-  the error message. Delivery, earnings, notification and support data remain
-  mock.
+  owns the retained phone-SMS functions; `src/services/partner.ts` records the
+  sign-in number in Firestore, and `src/services/partnerOnboarding.ts` handles
+  Storage uploads and the Firestore partner, document, vehicle and training
+  records. Submission failures surface the Firebase error code next to the error
+  message. Delivery, earnings, notification and support data remain mock.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, number-plus-upload cards for
   Aadhaar and PAN, upload-only cards for the driving licence and vehicle RC, an

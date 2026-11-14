@@ -25,6 +25,10 @@ connected; delivery, earnings, notification and support data remain mock.
   error code (for example `permission-denied` or a `storage/…` code). Storage
   retries are capped at about 15 seconds so a missing bucket fails visibly
   instead of leaving the submit spinner running.
+- A successful demo-OTP sign-in now leaves a visible trace in Firebase: the
+  anonymous Auth user's display name is the verified mobile number, and
+  `partners/{uid}` is written immediately with `phone`, `authProvider` and
+  `lastSignInAt`. Onboarding later merges its fields into the same document.
 - Firebase SDK foundation: installed `firebase@13`, added `src/firebase/config.ts`
   and `src/firebase/index.ts` with single-instance `auth`, `db` and `storage`
   exports, and documented the `VITE_FIREBASE_*` template. `.env.local` is
@@ -77,6 +81,11 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ### Changed
 
+- Restrained UI polish pass: shared cards use a one-pixel neutral shadow, a new
+  `IconTile` primitive gives Home quick actions, Profile contact/document rows
+  and onboarding step headings a consistent soft-purple anchor, inputs and
+  selects share a 12px radius with explicit disabled styling, and the auth card
+  now overlaps the brand header. Palette, layout and flows are unchanged.
 - The onboarding wizard now hides the bottom navigation while a draft
   application is being completed, so the KYC form uses the full screen. The
   submitted confirmation and every other section keep the navigation.

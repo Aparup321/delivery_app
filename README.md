@@ -183,7 +183,8 @@ delivery_app/
 │   ├── components/
 │   │   ├── common/           # Button, IconButton, Card, Badge, Avatar, Input,
 │   │   │                     # Select, OtpInput, Toggle, ProgressBar,
-│   │   │                     # SegmentedTabs, StatCard, SectionHeading, EmptyState
+│   │   │                     # SegmentedTabs, StatCard, SectionHeading, EmptyState,
+│   │   │                     # IconTile
 │   │   ├── deliveries/       # DeliveryRequestCard, DeliveryTimeline, MapPreview
 │   │   └── layout/           # AppLayout, AuthLayout, BottomNavigation,
 │   │                         # ScreenHeader, ModulePlaceholder
@@ -288,10 +289,11 @@ Visual direction: a dispatch-desk tool — flat ink-and-paper surfaces, one soli
 deep-purple accent and route-line details. No hue gradients, glows or decorative
 blobs.
 
-Style rules: flat cards (`rounded-card`, 16px) with hairline borders, 40–44px touch
-targets, short colour transitions, and a centered `max-w-[430px]` app column on every
-size. The app column owns its vertical scrolling, with a 6px brand-tinted
-scrollbar on its right edge; auth screens use the same treatment.
+Style rules: flat cards (`rounded-card`, 16px) with hairline borders and a
+one-pixel neutral shadow, 40–44px touch targets, short colour transitions, and a
+centered `max-w-[430px]` app column on every size. The app column owns its
+vertical scrolling, with a 6px brand-tinted scrollbar on its right edge; auth
+screens use the same treatment and pull their card over the brand header.
 
 ## 11. Mock data and app state
 
@@ -333,6 +335,10 @@ the service layer with the remaining backend integration.
   the signed-in app with a retry action. The onboarding submit path refuses to
   write a local-only "submitted" state while the app is on the demo session, and
   shows the Firebase error code when a write fails.
+- `src/services/partner.ts` records the signed-in mobile number under
+  `partners/{uid}` immediately, so the Firebase console reflects a login before
+  onboarding is submitted. The anonymous Auth user's display name is set to the
+  same number.
 - `src/services/partnerOnboarding.ts` uploads the profile photo and selected
   documents to Storage, then writes `partners/{uid}`, `partner_documents/{uid}`,
   `vehicles/{uid}` and `training_progress/{uid}`. Signing in again rebuilds the
@@ -345,10 +351,12 @@ the service layer with the remaining backend integration.
 
 ### Required Firebase Console setup
 
-1. Enable **Authentication → Sign-in method → Anonymous** so the demo-OTP
-   bridge can create a Firebase session. Add `localhost` under
-   Authentication → Settings → Authorized domains. When the SMS flow returns,
-   also enable **Phone** and add test phone numbers under
+1. Open **Authentication** and click **Get started** if the project has never
+   used it; on the Spark plan the public API cannot initialize Authentication,
+   so the console button is required. Then enable **Sign-in method →
+   Anonymous** so the demo-OTP bridge can create a Firebase session. Add
+   `localhost` under Authentication → Settings → Authorized domains. When the
+   SMS flow returns, also enable **Phone** and add test phone numbers under
    Phone → Phone numbers for testing.
 2. Create a **Firestore Database** and a **Storage** bucket in the same project
    as the Web App configuration. The bucket name must match
@@ -366,7 +374,9 @@ the service layer with the remaining backend integration.
 ### Verifying the connection
 
 1. Sign in with the demo OTP. **Authentication → Users** should list an
-   anonymous user immediately.
+   anonymous user whose display name is the mobile number, and
+   **Firestore → Data → partners** should contain a document with `phone`
+   (`+91…`), `authProvider` and `lastSignInAt`.
 2. If the app shows the **Firebase is not connected** banner, read its error
    code:
 
