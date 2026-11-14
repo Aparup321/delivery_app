@@ -9,7 +9,8 @@ export interface StatCardProps {
   to?: string
 }
 
-const cardClasses = 'rounded-card border border-line bg-surface p-4'
+const cardClasses =
+  'rounded-card border border-line bg-surface p-4 shadow-card'
 
 export function StatCard({ value, label, hint, to }: StatCardProps) {
   const content = (

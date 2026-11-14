@@ -51,8 +51,9 @@ export function Select({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(
-            'h-12 w-full appearance-none rounded-2xl border bg-surface pl-4 pr-10 text-sm font-medium text-ink transition-colors',
+            'h-12 w-full appearance-none rounded-xl border bg-surface pl-4 pr-10 text-sm font-medium text-ink transition-colors',
             'focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10',
+            'disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-muted',
             error ? 'border-danger/60' : 'border-line hover:border-brand/30',
             className,
           )}

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../utils/cn'
+import { IconTile } from './IconTile'
 
 export interface EmptyStateProps {
   icon: LucideIcon
@@ -24,12 +25,10 @@ export function EmptyState({
         className,
       )}
     >
-      <Icon
-        className="size-6 text-ink-soft"
-        strokeWidth={1.5}
-        aria-hidden="true"
-      />
-      <h2 className="mt-3 text-[15px] font-semibold text-ink">{title}</h2>
+      <IconTile size="lg">
+        <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
+      </IconTile>
+      <h2 className="mt-4 text-[15px] font-semibold text-ink">{title}</h2>
       <p className="mt-1 max-w-[32ch] text-[12.5px] leading-relaxed text-ink-muted">
         {description}
       </p>

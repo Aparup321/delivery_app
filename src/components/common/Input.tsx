@@ -51,9 +51,10 @@ export function Input({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(
-            'h-12 w-full rounded-2xl border bg-surface px-4 text-sm font-medium text-ink transition-colors',
+            'h-12 w-full rounded-xl border bg-surface px-4 text-sm font-medium text-ink transition-colors',
             'placeholder:font-normal placeholder:text-ink-soft',
             'focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10',
+            'disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-muted',
             leftIcon ? 'pl-10' : null,
             rightIcon ? 'pr-10' : null,
             error ? 'border-danger/60' : 'border-line hover:border-brand/30',
