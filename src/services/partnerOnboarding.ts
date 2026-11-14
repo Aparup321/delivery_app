@@ -301,6 +301,19 @@ export async function loadPartnerOnboarding(
   }
 
   const partner = asRecord(partnerSnap.data())
+
+  // A partner document created at sign-in only carries phone/session fields.
+  // It must not be treated as a submitted application, otherwise a first-time
+  // partner would skip the onboarding wizard.
+  const hasApplication =
+    typeof partner.applicationStatus === 'string' ||
+    typeof partner.fullName === 'string' ||
+    typeof partner.submittedAt === 'string'
+
+  if (!hasApplication) {
+    return null
+  }
+
   const documents = documentsSnap.exists()
     ? asRecord(documentsSnap.data())
     : {}
