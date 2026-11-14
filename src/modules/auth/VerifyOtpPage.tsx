@@ -5,6 +5,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
+import { IconTile } from '../../components/common/IconTile'
 import { OtpInput } from '../../components/common/OtpInput'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { useAuth } from '../../context/auth'
@@ -100,9 +101,9 @@ export function VerifyOtpPage() {
   return (
     <AuthLayout>
       <Card padding="lg">
-        <span className="grid size-12 place-items-center rounded-2xl bg-brand-soft text-brand-deep">
+        <IconTile size="lg">
           <ShieldCheck className="size-6" aria-hidden="true" />
-        </span>
+        </IconTile>
 
         <h1 className="mt-4 text-[21px] font-semibold tracking-tight text-ink">
           {t('Verify your number')}

@@ -12,7 +12,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="flex h-svh justify-center overflow-hidden bg-canvas">
       <div className="app-scrollbar flex h-svh w-full max-w-[430px] flex-col overflow-y-auto bg-canvas">
-        <header className="rounded-b-2xl bg-brand-deep px-6 pb-7 pt-8 text-white">
+        <header className="rounded-b-2xl bg-brand-deep px-6 pb-14 pt-8 text-white">
           <div className="flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-xl bg-white/10">
               <Bike className="size-5" aria-hidden="true" />
@@ -32,7 +32,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </p>
         </header>
 
-        <main className="flex-1 px-4 pb-8 pt-6">{children}</main>
+        <main className="relative -mt-8 flex-1 px-4 pb-8">{children}</main>
       </div>
     </div>
   )

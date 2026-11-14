@@ -6,9 +6,12 @@ import {
   Bike,
   Camera,
   Check,
+  ClipboardCheck,
   Clock3,
   Footprints,
   Play,
+  ShieldCheck,
+  UserRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -28,6 +31,7 @@ import type {
 } from '../../types/onboarding'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { cn } from '../../utils/cn'
+import { OnboardingStepHeading } from './OnboardingStepHeading'
 import {
   getFirebaseErrorCode,
   getFirebaseWriteErrorKey,
@@ -476,14 +480,11 @@ export function OnboardingPage() {
       <div className="space-y-4 px-4 pt-5">
         {step === 0 ? (
           <>
-            <div>
-              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                {t('Personal Details')}
-              </h2>
-              <p className="mt-0.5 text-[12px] text-ink-muted">
-                {t('Tell us about yourself')}
-              </p>
-            </div>
+            <OnboardingStepHeading
+              icon={UserRound}
+              title={t('Personal Details')}
+              subtitle={t('Tell us about yourself')}
+            />
 
             <div className="flex flex-col items-center gap-1.5">
               <label className="relative cursor-pointer">
@@ -602,14 +603,11 @@ export function OnboardingPage() {
 
         {step === 1 ? (
           <>
-            <div>
-              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                {t('KYC Verification')}
-              </h2>
-              <p className="mt-0.5 text-[12px] text-ink-muted">
-                {t('Each file must be JPG or PDF and within 2 MB')}
-              </p>
-            </div>
+            <OnboardingStepHeading
+              icon={ShieldCheck}
+              title={t('KYC Verification')}
+              subtitle={t('Each file must be JPG or PDF and within 2 MB')}
+            />
 
             <div className="space-y-2.5">
               <KycDocumentCard
@@ -799,14 +797,11 @@ export function OnboardingPage() {
 
         {step === 2 ? (
           <>
-            <div>
-              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                {t('Vehicle Details')}
-              </h2>
-              <p className="mt-0.5 text-[12px] text-ink-muted">
-                {t('Provide your vehicle and licence information')}
-              </p>
-            </div>
+            <OnboardingStepHeading
+              icon={Bike}
+              title={t('Vehicle Details')}
+              subtitle={t('Provide your vehicle and licence information')}
+            />
 
             <Card padding="md" className="space-y-4">
               <div>
@@ -935,14 +930,13 @@ export function OnboardingPage() {
 
         {step === 3 ? (
           <>
-            <div>
-              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                {t('Training & Onboarding')}
-              </h2>
-              <p className="mt-0.5 text-[12px] text-ink-muted">
-                {t('Complete every module before your account is approved')}
-              </p>
-            </div>
+            <OnboardingStepHeading
+              icon={Play}
+              title={t('Training & Onboarding')}
+              subtitle={t(
+                'Complete every module before your account is approved',
+              )}
+            />
 
             <div className="space-y-2.5">
               {trainingTopics.map((topic, index) => {
@@ -998,14 +992,13 @@ export function OnboardingPage() {
 
         {step === 4 ? (
           <>
-            <div>
-              <h2 className="text-[17px] font-semibold tracking-tight text-ink">
-                {t('Review & Submit')}
-              </h2>
-              <p className="mt-0.5 text-[12px] text-ink-muted">
-                {t('Check your details before sending them for verification')}
-              </p>
-            </div>
+            <OnboardingStepHeading
+              icon={ClipboardCheck}
+              title={t('Review & Submit')}
+              subtitle={t(
+                'Check your details before sending them for verification',
+              )}
+            />
 
             <Card padding="md" className="space-y-4">
               <section>
