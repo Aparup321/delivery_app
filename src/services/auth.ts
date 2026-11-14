@@ -4,6 +4,7 @@ import {
   signInAnonymously,
   signInWithPhoneNumber,
   signOut,
+  updateProfile,
 } from 'firebase/auth'
 import type { ConfirmationResult, User } from 'firebase/auth'
 import { auth } from '../firebase'
@@ -123,6 +124,15 @@ export async function signInDemoPartner(
 
   try {
     const credential = await signInAnonymously(firebaseAuth)
+
+    // Anonymous users have no phone number field, so put the verified demo
+    // number in the display name. It is visible in Authentication → Users as
+    // soon as the partner signs in.
+    try {
+      await updateProfile(credential.user, { displayName: `+91${phone}` })
+    } catch {
+      // The display name is cosmetic; the session itself is still valid.
+    }
 
     // The caller sets the session from this value, so it does not have to wait
     // for the next auth-state callback before navigating.

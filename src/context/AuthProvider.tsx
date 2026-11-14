@@ -6,6 +6,7 @@ import {
   signOutFirebase,
   subscribeToAuth,
 } from '../services/auth'
+import { recordPartnerSignIn } from '../services/partner'
 import { getFirebaseErrorCode } from '../utils/firebaseError'
 import { AuthContext } from './auth'
 import type { Session } from './auth'
@@ -154,6 +155,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setSession(firebaseSession)
+
+      // Leave a visible record in Firestore immediately, not only after the
+      // onboarding form is submitted. A failure here must not block sign-in.
+      void recordPartnerSignIn(firebaseSession).catch((error) => {
+        console.warn(
+          '[auth] Could not record the sign-in in Firestore.',
+          error,
+        )
+      })
+
       return true
     } catch (error) {
       const code = getFirebaseErrorCode(error) ?? 'auth/unknown'
