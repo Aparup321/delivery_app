@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  BadgeCheck,
   ChevronRight,
   FileText,
   LogOut,
@@ -14,6 +15,7 @@ import { Avatar } from '../../components/common/Avatar'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
+import { IconTile } from '../../components/common/IconTile'
 import { Select } from '../../components/common/Select'
 import { Toggle } from '../../components/common/Toggle'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
@@ -103,22 +105,25 @@ export function ProfilePage() {
 
           <ul className="mt-2 space-y-2.5 text-[12px]">
             <li className="flex items-center gap-2.5">
-              <Phone className="size-4 shrink-0 text-brand" aria-hidden="true" />
+              <IconTile size="sm">
+                <Phone className="size-4" aria-hidden="true" />
+              </IconTile>
               <span className="text-ink">
                 {session ? `+91 ${session.phone}` : t('Not available')}
               </span>
             </li>
             <li className="flex items-center gap-2.5">
-              <Mail className="size-4 shrink-0 text-brand" aria-hidden="true" />
+              <IconTile size="sm">
+                <Mail className="size-4" aria-hidden="true" />
+              </IconTile>
               <span className="truncate text-ink">
                 {onboarding.email || t('Not added')}
               </span>
             </li>
             <li className="flex items-start gap-2.5">
-              <MapPin
-                className="mt-0.5 size-4 shrink-0 text-brand"
-                aria-hidden="true"
-              />
+              <IconTile size="sm">
+                <MapPin className="size-4" aria-hidden="true" />
+              </IconTile>
               <span className="text-ink">
                 {onboarding.addressLine
                   ? `${onboarding.addressLine}, ${onboarding.city} ${onboarding.pincode}`
@@ -130,9 +135,14 @@ export function ProfilePage() {
 
         <Card padding="md">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[13px] font-semibold text-ink">
-              {t('Vehicle')}
-            </p>
+            <div className="flex items-center gap-2">
+              <IconTile size="sm">
+                <Truck className="size-4" aria-hidden="true" />
+              </IconTile>
+              <p className="text-[13px] font-semibold text-ink">
+                {t('Vehicle')}
+              </p>
+            </div>
             <Badge tone="brand" size="sm">
               {vehicleLabel}
             </Badge>
@@ -171,10 +181,9 @@ export function ProfilePage() {
                 className="flex items-center justify-between gap-3 py-2"
               >
                 <span className="flex items-center gap-2 text-[12px] text-ink">
-                  <FileText
-                    className="size-4 shrink-0 text-ink-soft"
-                    aria-hidden="true"
-                  />
+                  <IconTile size="sm" tone="neutral">
+                    <FileText className="size-4" aria-hidden="true" />
+                  </IconTile>
                   {t(document.label)}
                 </span>
                 <Badge
@@ -189,9 +198,14 @@ export function ProfilePage() {
         </Card>
 
         <Card padding="md">
-          <p className="text-[13px] font-semibold text-ink">
-            {t('Application')}
-          </p>
+          <div className="flex items-center gap-2">
+            <IconTile size="sm">
+              <BadgeCheck className="size-4" aria-hidden="true" />
+            </IconTile>
+            <p className="text-[13px] font-semibold text-ink">
+              {t('Application')}
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => navigate('/application-status')}
@@ -231,7 +245,7 @@ export function ProfilePage() {
             }
           />
 
-          <div className="flex items-center justify-between gap-3 rounded-2xl bg-brand-tint px-3.5 py-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-tint px-3.5 py-3">
             <div>
               <p className="text-[12.5px] font-semibold text-ink">
                 {t('Request alerts')}

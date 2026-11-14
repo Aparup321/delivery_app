@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   Bell,
   ChevronRight,
   ClipboardList,
@@ -14,6 +15,7 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { IconButton } from '../../components/common/IconButton'
+import { IconTile } from '../../components/common/IconTile'
 import { SectionHeading } from '../../components/common/SectionHeading'
 import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
@@ -113,8 +115,8 @@ export function HomePage() {
                 aria-hidden="true"
                 className={
                   isOnline
-                    ? 'size-2.5 rounded-full bg-success'
-                    : 'size-2.5 rounded-full bg-ink-soft'
+                    ? 'size-2.5 shrink-0 rounded-full bg-success ring-4 ring-success-soft'
+                    : 'size-2.5 shrink-0 rounded-full bg-ink-soft ring-4 ring-canvas'
                 }
               />
               <div>
@@ -140,23 +142,26 @@ export function HomePage() {
 
         <Card padding="md">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2">
+              <IconTile size="sm">
+                <BadgeCheck className="size-4" aria-hidden="true" />
+              </IconTile>
               <p className="text-[13px] font-semibold text-ink">
                 {t(applicationStatus.headline)}
               </p>
-              <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">
-                {t(applicationStatus.description)}
-              </p>
-              {onboarding.submittedAt ? (
-                <p className="mt-1 text-[11px] text-ink-soft">
-                  {t('Submitted')} {formatDate(onboarding.submittedAt, locale)}
-                </p>
-              ) : null}
             </div>
             <Badge tone={applicationStatus.tone} size="sm">
               {t(applicationStatus.label)}
             </Badge>
           </div>
+          <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
+            {t(applicationStatus.description)}
+          </p>
+          {onboarding.submittedAt ? (
+            <p className="mt-1 text-[11px] text-ink-soft">
+              {t('Submitted')} {formatDate(onboarding.submittedAt, locale)}
+            </p>
+          ) : null}
           <Button
             className="-ml-2 mt-2"
             size="sm"
@@ -206,7 +211,7 @@ export function HomePage() {
           </Card>
         ) : null}
 
-        <div className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border border-line bg-surface">
+        <div className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <Link
             to="/deliveries"
             className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
@@ -249,13 +254,15 @@ export function HomePage() {
               <Link
                 key={label}
                 to={to}
-                className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
               >
-                <Icon
-                  className="size-[18px] shrink-0 text-ink-muted"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
+                <IconTile size="sm">
+                  <Icon
+                    className="size-4"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                </IconTile>
                 <span className="text-[12.5px] font-medium leading-tight text-ink">
                   {t(label)}
                 </span>
