@@ -6,20 +6,30 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // delivery_admin signs in with this dedicated Firebase Auth account.
+    // Replace the UID here if the admin account is recreated.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == 'Xa09IjoJrhPBvuJVWALOuCCHcvZ2';
+    }
+
     match /partners/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read, write: if isOwner(uid) || isAdmin();
     }
 
     match /partner_documents/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid);
     }
 
     match /vehicles/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid);
     }
 
     match /training_progress/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid);
     }
   }
 }

@@ -12,12 +12,14 @@ import { initialTickets } from '../mock/support'
 import {
   loadPartnerOnboarding,
   savePartnerOnboarding,
+  watchPartnerAccount,
 } from '../services/partnerOnboarding'
 import type { AppNotification } from '../types/notification'
 import type {
   OnboardingFiles,
   OnboardingState,
   OnboardingStatus,
+  SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
 import { AppContext } from './app-store'
@@ -102,7 +104,7 @@ function AppDataProvider({
     activeDelivery: null,
     history: initialHistory,
   })
-  const [isOnline, setOnline] = useState(false)
+  const [isOnline, setOnlineState] = useState(false)
   const [notifications, setNotifications] =
     useState<AppNotification[]>(initialNotifications)
   const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets)
@@ -113,6 +115,24 @@ function AppDataProvider({
     uid && isFirebaseConfigured && !uid.startsWith('demo:'),
   )
   const [isLoading, setIsLoading] = useState(remoteEnabled)
+  const canGoOnline =
+    onboarding.status === 'approved' && onboarding.accountStatus === 'active'
+
+  // An Administrator decision can revoke online access between renders. React's
+  // documented "adjust state when an input changes" pattern resets the switch in
+  // the same pass, so the partner is shown offline before anything can dispatch.
+  const [wasAllowedOnline, setWasAllowedOnline] = useState(canGoOnline)
+  if (wasAllowedOnline !== canGoOnline) {
+    setWasAllowedOnline(canGoOnline)
+    setOnlineState(false)
+  }
+
+  const setOnline = useCallback(
+    (online: boolean) => {
+      setOnlineState(online && canGoOnline)
+    },
+    [canGoOnline],
+  )
 
   useEffect(() => {
     if (!phone) {
@@ -153,6 +173,43 @@ function AppDataProvider({
 
     return () => {
       active = false
+    }
+  }, [remoteEnabled, uid])
+
+  useEffect(() => {
+    if (!remoteEnabled || !uid) {
+      return
+    }
+
+    let active = true
+    let unsubscribe: (() => void) | null = null
+
+    try {
+      unsubscribe = watchPartnerAccount(uid, (snapshot) => {
+        if (!active) {
+          return
+        }
+
+        setOnboarding((current) => ({
+          ...current,
+          status: snapshot.applicationStatus,
+          submittedAt: snapshot.submittedAt ?? current.submittedAt,
+          statusUpdatedAt:
+            snapshot.statusUpdatedAt ?? current.statusUpdatedAt,
+          rejectionReason: snapshot.rejectionReason,
+          accountStatus: snapshot.accountStatus,
+          suspensionReason: snapshot.suspensionReason,
+          accountStatusUpdatedAt: snapshot.accountStatusUpdatedAt,
+          adminPartnerId: snapshot.adminPartnerId,
+        }))
+      })
+    } catch {
+      // Keep the locally loaded onboarding state if Firestore is unavailable.
+    }
+
+    return () => {
+      active = false
+      unsubscribe?.()
     }
   }, [remoteEnabled, uid])
 
@@ -218,7 +275,7 @@ function AppDataProvider({
   }, [])
 
   const submitOnboarding = useCallback(
-    async (files: OnboardingFiles) => {
+    async (files: OnboardingFiles, options?: SubmitOnboardingOptions) => {
       const at = new Date().toISOString()
       const isDemoSession = !uid || uid.startsWith('demo:')
 
@@ -238,6 +295,7 @@ function AppDataProvider({
           phone: phone ?? '',
           state: onboarding,
           files,
+          skipUploads: options?.skipUploads,
         })
       }
 
@@ -246,6 +304,10 @@ function AppDataProvider({
         status: 'submitted',
         submittedAt: at,
         statusUpdatedAt: at,
+        accountStatus: 'pending',
+        accountStatusUpdatedAt: at,
+        rejectionReason: null,
+        suspensionReason: null,
         step: 0,
       }))
     },
@@ -261,6 +323,11 @@ function AppDataProvider({
         submittedAt:
           current.submittedAt ?? (status === 'draft' ? null : at),
         statusUpdatedAt: at,
+        accountStatus: status === 'approved' ? 'active' : 'pending',
+        accountStatusUpdatedAt: at,
+        rejectionReason:
+          status === 'rejected' ? current.rejectionReason : null,
+        suspensionReason: null,
       }
     })
   }, [])
@@ -273,6 +340,7 @@ function AppDataProvider({
   const value = useMemo(
     () => ({
       isOnline,
+      canGoOnline,
       setOnline,
       requests: deliveries.requests,
       activeDelivery: deliveries.activeDelivery,
@@ -296,6 +364,8 @@ function AppDataProvider({
     }),
     [
       isOnline,
+      canGoOnline,
+      setOnline,
       deliveries,
       acceptRequest,
       rejectRequest,

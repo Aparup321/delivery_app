@@ -5,11 +5,14 @@ import type {
   OnboardingFiles,
   OnboardingState,
   OnboardingStatus,
+  SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
 
 export interface AppContextValue {
   isOnline: boolean
+  /** True only for an approved application with an active account. */
+  canGoOnline: boolean
   setOnline: (online: boolean) => void
 
   requests: Delivery[]
@@ -34,7 +37,10 @@ export interface AppContextValue {
   isLoading: boolean
   onboarding: OnboardingState
   updateOnboarding: (patch: Partial<OnboardingState>) => void
-  submitOnboarding: (files: OnboardingFiles) => Promise<void>
+  submitOnboarding: (
+    files: OnboardingFiles,
+    options?: SubmitOnboardingOptions,
+  ) => Promise<void>
   /** Demo helper for moving the application through verification. */
   setApplicationStatus: (status: OnboardingStatus) => void
 }

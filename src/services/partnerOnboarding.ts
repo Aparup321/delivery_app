@@ -1,4 +1,10 @@
-import { doc, getDoc, writeBatch } from 'firebase/firestore'
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  writeBatch,
+  type Unsubscribe,
+} from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { auth, db, storage } from '../firebase'
 import { initialOnboarding } from '../mock/onboarding'
@@ -7,6 +13,7 @@ import type {
   OnboardingFiles,
   OnboardingState,
   OnboardingStatus,
+  PartnerAccountStatus,
 } from '../types/onboarding'
 import type { VehicleType } from '../types/partner'
 
@@ -31,6 +38,18 @@ const vehicleTypes: VehicleType[] = ['foot', 'bicycle', 'scooter', 'bike']
 export interface SubmittedOnboarding {
   submittedAt: string
   statusUpdatedAt: string
+}
+
+/** The subset of partners/{uid} that delivery_admin can change live. */
+export interface PartnerAccountSnapshot {
+  applicationStatus: OnboardingStatus
+  accountStatus: PartnerAccountStatus
+  rejectionReason: string | null
+  suspensionReason: string | null
+  statusUpdatedAt: string | null
+  accountStatusUpdatedAt: string | null
+  submittedAt: string | null
+  adminPartnerId: string | null
 }
 
 interface UploadedFile {
@@ -71,7 +90,7 @@ function requireStorage() {
  * responses are left to the Storage SDK so its normal rules/error handling
  * still applies.
  */
-async function assertStorageBucketExists(): Promise<void> {
+async function isStorageBucketAvailable(): Promise<boolean> {
   const storageInstance = requireStorage()
   const bucket = storageInstance.app.options.storageBucket?.replace(
     /^gs:\/\//,
@@ -80,14 +99,14 @@ async function assertStorageBucketExists(): Promise<void> {
   const currentUser = auth?.currentUser
 
   if (!bucket || !currentUser) {
-    return
+    return true
   }
 
   let token: string
   try {
     token = await currentUser.getIdToken()
   } catch {
-    return
+    return true
   }
 
   let response: Response
@@ -98,14 +117,10 @@ async function assertStorageBucketExists(): Promise<void> {
     )
   } catch {
     // CORS or a transient network failure: let the SDK produce its own error.
-    return
+    return true
   }
 
-  if (response.status === 404) {
-    const error = new Error('Firebase Storage bucket not found.')
-    Object.assign(error, { code: 'storage/bucket-not-found' })
-    throw error
-  }
+  return response.status !== 404
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -127,6 +142,53 @@ function asOnboardingStatus(value: unknown): OnboardingStatus | null {
     statuses.includes(value as OnboardingStatus)
     ? (value as OnboardingStatus)
     : null
+}
+
+function asPartnerAccountStatus(value: unknown): PartnerAccountStatus {
+  return value === 'active' || value === 'paused' || value === 'pending'
+    ? value
+    : 'pending'
+}
+
+/**
+ * Reads the delivery_admin-controlled fields from partners/{uid}. The admin
+ * writes applicationStatus, status, adminReview, and adminSuspension over REST.
+ */
+function accountSnapshotFromPartner(
+  partner: Record<string, unknown>,
+): PartnerAccountSnapshot {
+  const review = asRecord(partner.adminReview)
+  const suspension = asRecord(partner.adminSuspension)
+  const applicationStatus =
+    asOnboardingStatus(partner.applicationStatus) ??
+    (partner.status === 'active' ? 'approved' : 'submitted')
+  const reviewDecision = asString(review.decision).toLowerCase()
+  const rejectionReason =
+    applicationStatus === 'rejected' || reviewDecision === 'rejected'
+      ? (asStringOrNull(review.reason) ??
+        asStringOrNull(partner.rejectionReason))
+      : null
+  const suspensionReason =
+    suspension.active === true
+      ? (asStringOrNull(suspension.reason) ??
+        asStringOrNull(partner.suspensionReason))
+      : null
+
+  return {
+    applicationStatus,
+    accountStatus:
+      partner.status === undefined
+        ? applicationStatus === 'approved'
+          ? 'active'
+          : 'pending'
+        : asPartnerAccountStatus(partner.status),
+    rejectionReason,
+    suspensionReason,
+    statusUpdatedAt: asStringOrNull(partner.statusUpdatedAt),
+    accountStatusUpdatedAt: asStringOrNull(partner.statusUpdatedAt),
+    submittedAt: asStringOrNull(partner.submittedAt),
+    adminPartnerId: asStringOrNull(partner.adminPartnerId),
+  }
 }
 
 function asVehicleType(value: unknown): VehicleType | null {
@@ -187,6 +249,28 @@ async function uploadProfilePhoto(
   return null
 }
 
+function buildDocumentRecordsWithoutUploads(
+  state: OnboardingState,
+): Record<DocumentKey, StoredFile | null> {
+  const entries = documentKeys.map((key) => {
+    const fileName = state.documents[key]
+
+    return [
+      key,
+      fileName
+        ? {
+            fileName,
+            storagePath: null,
+            downloadUrl: null,
+            uploadedAt: null,
+          }
+        : null,
+    ] as const
+  })
+
+  return Object.fromEntries(entries) as Record<DocumentKey, StoredFile | null>
+}
+
 async function buildDocumentRecords(
   uid: string,
   state: OnboardingState,
@@ -232,21 +316,37 @@ export async function savePartnerOnboarding({
   phone,
   state,
   files,
+  skipUploads = false,
 }: {
   uid: string
   phone: string
   state: OnboardingState
   files: OnboardingFiles
+  skipUploads?: boolean
 }): Promise<SubmittedOnboarding> {
   const firestore = requireDb()
-  await assertStorageBucketExists()
+  const storageAvailable = skipUploads
+    ? false
+    : await isStorageBucketAvailable()
   const submittedAt = new Date().toISOString()
   const statusUpdatedAt = submittedAt
+  let profilePhoto: UploadedFile | null = null
+  let profilePhotoUrl = state.profilePhoto || null
+  let documents: Record<DocumentKey, StoredFile | null>
 
-  const [profilePhoto, documents] = await Promise.all([
-    uploadProfilePhoto(uid, state, files),
-    buildDocumentRecords(uid, state, files),
-  ])
+  if (storageAvailable) {
+    const [uploadedPhoto, uploadedDocuments] = await Promise.all([
+      uploadProfilePhoto(uid, state, files),
+      buildDocumentRecords(uid, state, files),
+    ])
+    profilePhoto = uploadedPhoto
+    profilePhotoUrl = uploadedPhoto?.downloadUrl ?? profilePhotoUrl
+    documents = uploadedDocuments
+  } else {
+    // KYC files are optional. Without Storage, keep the document metadata and
+    // the small profile preview (a 256px data URL) in Firestore instead.
+    documents = buildDocumentRecordsWithoutUploads(state)
+  }
 
   const batch = writeBatch(firestore)
 
@@ -261,7 +361,7 @@ export async function savePartnerOnboarding({
       city: state.city.trim(),
       addressLine: state.addressLine.trim(),
       pincode: state.pincode,
-      profilePhotoUrl: profilePhoto?.downloadUrl ?? null,
+      profilePhotoUrl,
       profilePhotoPath: profilePhoto?.storagePath ?? null,
       vehicleType: state.vehicle.type,
       status: 'pending',
@@ -372,14 +472,17 @@ export async function loadPartnerOnboarding(
   const documentFiles = asRecord(documents.documents)
   const bank = asRecord(partner.bank)
   const rawTraining = training.completed
-  const applicationStatus =
-    asOnboardingStatus(partner.applicationStatus) ??
-    (partner.status === 'active' ? 'approved' : 'submitted')
+  const account = accountSnapshotFromPartner(partner)
 
   return {
     ...initialOnboarding,
     step: 0,
-    status: applicationStatus,
+    status: account.applicationStatus,
+    rejectionReason: account.rejectionReason,
+    accountStatus: account.accountStatus,
+    suspensionReason: account.suspensionReason,
+    accountStatusUpdatedAt: account.accountStatusUpdatedAt,
+    adminPartnerId: account.adminPartnerId,
     fullName: asString(partner.fullName),
     email: asString(partner.email),
     dateOfBirth: asString(partner.dateOfBirth),
@@ -420,7 +523,33 @@ export async function loadPartnerOnboarding(
           (_, index) => rawTraining[index] === true,
         )
       : initialOnboarding.training,
-    submittedAt: asStringOrNull(partner.submittedAt),
-    statusUpdatedAt: asStringOrNull(partner.statusUpdatedAt),
+    submittedAt: account.submittedAt ?? asStringOrNull(partner.submittedAt),
+    statusUpdatedAt: account.statusUpdatedAt ?? asStringOrNull(partner.statusUpdatedAt),
   }
+}
+
+/**
+ * Subscribes to the partner document so an Administrator's approval,
+ * rejection, suspension, or reinstatement reaches the signed-in partner app
+ * without a reload.
+ */
+export function watchPartnerAccount(
+  uid: string,
+  onChange: (snapshot: PartnerAccountSnapshot) => void,
+): Unsubscribe {
+  const firestore = requireDb()
+
+  return onSnapshot(
+    doc(firestore, 'partners', uid),
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        return
+      }
+
+      onChange(accountSnapshotFromPartner(asRecord(snapshot.data())))
+    },
+    () => {
+      // Rules, auth, or network failures leave the last loaded state in place.
+    },
+  )
 }

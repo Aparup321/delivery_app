@@ -21,12 +21,14 @@ export function DeliveriesPage() {
   const { t, locale } = useLanguage()
   const {
     isOnline,
+    canGoOnline,
     setOnline,
     requests,
     activeDelivery,
     history,
     acceptRequest,
     rejectRequest,
+    onboarding,
   } = useApp()
   const [tab, setTab] = useState<DeliveryTab>('available')
 
@@ -56,7 +58,31 @@ export function DeliveriesPage() {
         />
 
         {tab === 'available' ? (
-          !isOnline ? (
+          !canGoOnline ? (
+            <EmptyState
+              icon={Package}
+              title={t(
+                onboarding.accountStatus === 'paused'
+                  ? 'Account suspended'
+                  : 'Account not active',
+              )}
+              description={
+                onboarding.accountStatus === 'paused'
+                  ? (onboarding.suspensionReason ??
+                    t(
+                      'An administrator suspended this account. Contact support for help.',
+                    ))
+                  : t(
+                      'Your application must be approved before you can go online and receive requests.',
+                    )
+              }
+              action={
+                <Button onClick={() => navigate('/application-status')}>
+                  {t('View application status')}
+                </Button>
+              }
+            />
+          ) : !isOnline ? (
             <EmptyState
               icon={Package}
               title={t('You are offline')}

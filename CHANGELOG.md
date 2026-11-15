@@ -8,6 +8,20 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ### Added
 
+- The active-delivery route preview now uses OpenStreetMap raster tiles instead
+  of the illustrative SVG. Pickup and destination coordinates position the two
+  markers, and the map carries OpenStreetMap attribution. No API key or new
+  dependency is required; routing, distance and ETA remain mock data.
+- KYC document uploads are now optional. Aadhaar and PAN numbers remain
+  validated, but the Aadhaar, PAN, licence, RC and passbook files do not block
+  submission. If Storage is unavailable, the submission stores document
+  metadata and the small profile preview inline in Firestore; uploads still run
+  when Storage is configured and files are selected. If a file upload fails, the
+  review step now offers **Submit without documents** as an explicit retry.
+- The KYC step now shows driving-licence and vehicle-RC number fields beside
+  their upload controls; both fields share state with the vehicle step. The
+  upload tile's hidden file input now has a positioning context, so opening the
+  bank-passbook picker no longer jumps the onboarding form to the top.
 - Firebase authentication and onboarding persistence. The login screens verify
   the demo OTP (`123456`) — the default path until the project's own OTP API is
   connected — and, when `VITE_FIREBASE_*` is configured, sign the verified
@@ -36,9 +50,9 @@ connected; delivery, earnings, notification and support data remain mock.
   git-ignored and was never committed. Existing screens still use mock data
   because no service layer is connected yet.
 - The KYC step collects the Aadhaar and PAN numbers beside their upload tiles
-  and provides upload-only cards for the driving licence and vehicle RC. For
-  bike and scooter partners, the licence and registration numbers are now
-  entered on the vehicle step instead of in KYC, and both are required there.
+  and provides upload cards for the driving licence and vehicle RC. For bike
+  and scooter partners, the licence and registration numbers are also required
+  on the vehicle step.
   The bank account row gains an optional passbook or cancelled-cheque upload.
   All numbers, file names and upload states persist with the draft, validation
   follows the selected language, and earlier drafts migrate their Aadhaar

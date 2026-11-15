@@ -153,7 +153,7 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 | --- | --- | --- |
 | Partner registration and onboarding (§1, §2) | In Progress | Five-step wizard matching the design (personal, KYC and bank, vehicle, training, review) with validation and saved progress; verification lifecycle, service areas and package capability are not modelled yet. |
 | Personal information and profile management (§2) | In Progress | Profile, contact, vehicle and document summary screens exist, and a profile photo is required during onboarding. Editing partner details after submission is not implemented. |
-| KYC and document verification (§2) | In Progress | Aadhaar and PAN numbers plus driving licence and RC uploads are mock data; review, expiry and restriction workflows are pending. |
+| KYC and document verification (§2) | In Progress | Aadhaar, PAN, driving-licence and RC numbers are required; their uploads are optional. Review, expiry and restriction workflows are pending. |
 | Vehicle details and verification (§2) | In Progress | Bike, scooter, bicycle and on-foot partners are supported; model, colour, licence and registration are captured where they apply (not for bicycle or walking partners). Vehicle verification is pending. |
 | Training and onboarding (§2) | In Progress | Five timed modules with completion state; the onboarding quiz is not implemented. |
 | Partner availability and service areas (§7) | Pending | Availability is a single online/offline switch; shifts, zones, leave and capacity are not modelled. |
@@ -161,6 +161,7 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 | Partner assignment and acceptance (§5) | Pending | Acceptance works for the single signed-in partner; priority, timeouts and fallback are pending. |
 | Pickup, transit and drop milestones (§10) | Completed (mock) | Accepted → at pickup → picked up → on the way → at drop → delivered, each with a timestamp. |
 | Delivery proof and confirmation (§10) | Completed (mock) | Drop OTP is checked against a demo code and stored as proof on the job; photo/signature proof is pending. |
+| Route preview and map pins (§4, §10) | Completed (mock) | OpenStreetMap tiles show pickup and destination markers from mock coordinates; live location, routing and serviceability checks are pending. |
 | Delivery history and earnings (§12) | In Progress | History reflects mock job state; earnings figures are demo constants and are not derived from jobs. |
 | Seller-related delivery management (§3) | Pending | No seller surface in this app yet. |
 | Administrative controls (§12) | Pending | No admin surface yet. |
@@ -231,4 +232,19 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   reloaded on the next sign-in. Owner-only Firestore and Storage rules and a
   Firebase CLI config were added. Delivery, earnings, notification, support and
   admin data remain mock.
+- **2026-11-15 — M17: KYC number fields and upload scroll fix.** Driving-licence
+  and vehicle-RC number fields now sit beside their KYC uploads and share state
+  with the vehicle step. The hidden file input is positioned within the upload
+  tile, so opening the bank-passbook picker no longer scrolls the form to the
+  top.
+- **2026-11-15 — M18: optional KYC files.** Aadhaar, PAN, licence, RC and
+  passbook uploads no longer block submission; the document numbers remain
+  required. Selected files upload to Storage when it is available. Without
+  Storage, the partner record stores document metadata and the 256px profile
+  preview inline in Firestore so onboarding can still complete. A failed upload
+  also exposes **Submit without documents** in the error panel.
+- **2026-11-15 — M19: OpenStreetMap route preview.** The active-delivery map now
+  loads OpenStreetMap raster tiles and positions pickup/destination markers from
+  mock coordinates. Routing, live location, distance and ETA remain mock. Tiles
+  need no API key; attribution is shown on the map.
 

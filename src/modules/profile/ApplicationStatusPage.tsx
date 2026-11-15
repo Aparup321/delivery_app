@@ -29,6 +29,7 @@ export function ApplicationStatusPage() {
   const status = applicationStatusMeta[onboarding.status]
   const currentStage = applicationStageIndex[onboarding.status]
   const isRejected = onboarding.status === 'rejected'
+  const isSuspended = onboarding.accountStatus === 'paused'
 
   const stages = [
     {
@@ -83,7 +84,11 @@ export function ApplicationStatusPage() {
           </div>
 
           <p className="mt-2 text-[12.5px] leading-relaxed text-ink-muted">
-            {t(status.description)}
+            {isSuspended
+              ? t(
+                  'Your application is approved, but the account is currently suspended by an administrator.',
+                )
+              : t(status.description)}
           </p>
 
           <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3">
@@ -179,8 +184,36 @@ export function ApplicationStatusPage() {
               {t('Application not approved')}
             </p>
             <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
+              {onboarding.rejectionReason ||
+                t(
+                  'Contact support to understand what needs to change before you apply again.',
+                )}
+            </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/support')}
+            >
+              {t('Contact support')}
+            </Button>
+          </Card>
+        ) : null}
+
+        {isSuspended ? (
+          <Card padding="md" className="border-danger/30 bg-danger-soft">
+            <p className="text-[12.5px] font-semibold text-danger">
+              {t('Account suspended')}
+            </p>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
+              {onboarding.suspensionReason ||
+                t(
+                  'An administrator suspended this account. Contact support for help.',
+                )}
+            </p>
+            <p className="mt-2 text-[11px] text-ink-soft">
               {t(
-                'Contact support to understand what needs to change before you apply again.',
+                'You cannot go online or receive delivery requests while the account is suspended.',
               )}
             </p>
             <Button

@@ -45,6 +45,7 @@ export function HomePage() {
   const navigate = useNavigate()
   const {
     isOnline,
+    canGoOnline,
     setOnline,
     requests,
     activeDelivery,
@@ -125,9 +126,13 @@ export function HomePage() {
                 </p>
                 <p className="text-[11.5px] text-ink-muted">
                   {t(
-                    isOnline
-                      ? 'Receiving delivery requests'
-                      : 'Go online to receive requests',
+                    !canGoOnline
+                      ? onboarding.accountStatus === 'paused'
+                        ? 'Account suspended'
+                        : 'Approval required'
+                      : isOnline
+                        ? 'Receiving delivery requests'
+                        : 'Go online to receive requests',
                   )}
                 </p>
               </div>
@@ -135,10 +140,50 @@ export function HomePage() {
             <Toggle
               checked={isOnline}
               onChange={setOnline}
+              disabled={!canGoOnline}
               label={t('Availability')}
             />
           </div>
         </Card>
+
+        {onboarding.accountStatus === 'paused' ? (
+          <Card padding="md" className="border-danger/30 bg-danger-soft">
+            <p className="text-[12.5px] font-semibold text-danger">
+              {t('Account suspended')}
+            </p>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
+              {onboarding.suspensionReason ||
+                t(
+                  'An administrator suspended this account. Contact support for help.',
+                )}
+            </p>
+            <p className="mt-2 text-[11px] text-ink-soft">
+              {t(
+                'You cannot go online or receive requests while the account is suspended.',
+              )}
+            </p>
+          </Card>
+        ) : onboarding.status === 'rejected' ? (
+          <Card padding="md" className="border-danger/30 bg-danger-soft">
+            <p className="text-[12.5px] font-semibold text-danger">
+              {t('Application rejected')}
+            </p>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
+              {onboarding.rejectionReason ||
+                t(
+                  'Your application was not approved. Review the reason and contact support.',
+                )}
+            </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/application-status')}
+            >
+              {t('View application status')}
+            </Button>
+          </Card>
+        ) : null}
 
         <Card padding="md">
           <div className="flex items-start justify-between gap-2">

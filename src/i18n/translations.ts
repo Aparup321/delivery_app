@@ -417,8 +417,6 @@ const hindi: Record<string, string> = {
   'Enter your city.': 'अपना शहर डालें।',
   'Enter your current address.': 'अपना वर्तमान पता डालें।',
   'Enter a 6-digit PIN code.': '6 अंकों का PIN कोड डालें।',
-  'Upload your Aadhaar card to continue.': 'जारी रखने के लिए आधार कार्ड अपलोड करें।',
-  'Upload your PAN card to continue.': 'जारी रखने के लिए PAN कार्ड अपलोड करें।',
   "Enter the account holder's name.": 'खाताधारक का नाम डालें।',
   'Enter a valid bank account number.': 'मान्य बैंक खाता संख्या डालें।',
   'Enter a valid IFSC code, for example HDFC0001234.':
@@ -442,7 +440,6 @@ const hindi: Record<string, string> = {
   '{count} items': '{count} वस्तुएं',
   '{count} min': '{count} मिनट',
   '{count} km': '{count} किमी',
-  'Demo route': 'डेमो रूट',
   'Page not found': 'पेज नहीं मिला',
   'The link may be broken or the page may have moved':
     'लिंक टूटा हो सकता है या पेज हट गया हो',
@@ -459,8 +456,9 @@ const hindi: Record<string, string> = {
   'Profile photo preview': 'प्रोफ़ाइल फोटो पूर्वावलोकन',
   'Upload profile photo': 'प्रोफ़ाइल फोटो अपलोड करें',
   'Upload {document}': '{document} अपलोड करें',
-  'Demo route preview from {pickup} to {destination}':
-    '{pickup} से {destination} तक डेमो रूट पूर्वावलोकन',
+  'Map showing {pickup} to {destination}':
+    '{pickup} से {destination} तक का नक्शा',
+  OpenStreetMap: 'OpenStreetMap',
   'Name as on the bank account': 'बैंक खाते के अनुसार नाम',
   'Week of {date}': '{date} का सप्ताह',
   'Expected {date}': '{date} अपेक्षित',
@@ -486,6 +484,14 @@ const hindi: Record<string, string> = {
   'PAN number': 'PAN नंबर',
   '10-character PAN, e.g. ABCDE1234F':
     '10 अक्षरों का PAN, जैसे ABCDE1234F',
+  'Optional · front and back, JPG or PDF · max 2 MB':
+    'वैकल्पिक · आगे और पीछे, JPG या PDF · अधिकतम 2 MB',
+  'Optional · clear photo of the card · max 2 MB':
+    'वैकल्पिक · कार्ड की स्पष्ट फोटो · अधिकतम 2 MB',
+  'Optional · needed for motorised vehicles · max 2 MB':
+    'वैकल्पिक · मोटर वाहनों के लिए आवश्यक · अधिकतम 2 MB',
+  'Optional · registration certificate · max 2 MB':
+    'वैकल्पिक · पंजीकरण प्रमाणपत्र · अधिकतम 2 MB',
   'Enter a valid 10-character PAN number.':
     'मान्य 10 अक्षरों का PAN नंबर दर्ज करें।',
   'Licence number': 'लाइसेंस नंबर',
@@ -494,6 +500,8 @@ const hindi: Record<string, string> = {
     'मान्य ड्राइविंग लाइसेंस नंबर दर्ज करें।',
   'Upload your driving licence to continue.':
     'जारी रखने के लिए ड्राइविंग लाइसेंस अपलोड करें।',
+  'Required for bike or scooter · can also be entered on the vehicle step.':
+    'बाइक या स्कूटर के लिए आवश्यक · वाहन चरण में भी दर्ज किया जा सकता है।',
   'Registration number printed on the RC': 'RC पर लिखा रजिस्ट्रेशन नंबर',
   'Upload your vehicle RC to continue.':
     'जारी रखने के लिए वाहन RC अपलोड करें।',
@@ -535,14 +543,15 @@ const hindi: Record<string, string> = {
     'Firebase उपलब्ध नहीं है। कनेक्शन जांचें और फिर कोशिश करें।',
   'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.':
     'Storage अपलोड का समय समाप्त हो गया। कनेक्शन जांचें और सुनिश्चित करें कि Firebase Storage चालू है, फिर कोशिश करें।',
+  'You can submit with document numbers only; selected files will not be uploaded.':
+    'आप केवल दस्तावेज़ संख्याओं के साथ जमा कर सकते हैं; चुनी गई फ़ाइलें अपलोड नहीं की जाएंगी।',
+  'Submit without documents': 'दस्तावेज़ों के बिना जमा करें',
   'Firebase is not connected': 'Firebase कनेक्ट नहीं है',
   'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.':
     'यह सत्र केवल इस डिवाइस पर सहेजा गया है। Firebase कंसोल में Authentication और Anonymous प्रोवाइडर चालू करें, फिर दोबारा कोशिश करें।',
   'Retry connection': 'कनेक्शन दोबारा जोड़ें',
   'Retrying…': 'दोबारा कोशिश हो रही है…',
   'Error: {code}': 'त्रुटि: {code}',
-  'Re-select your documents before submitting so they can be uploaded.':
-    'जमा करने से पहले अपने दस्तावेज फिर से चुनें ताकि उन्हें अपलोड किया जा सके।',
 }
 
 const bengali: Record<string, string> = {
@@ -945,10 +954,6 @@ const bengali: Record<string, string> = {
   'Enter your city.': 'আপনার শহর দিন।',
   'Enter your current address.': 'আপনার বর্তমান ঠিকানা দিন।',
   'Enter a 6-digit PIN code.': '৬ সংখ্যার PIN কোড দিন।',
-  'Upload your Aadhaar card to continue.':
-    'চালিয়ে যেতে আধার কার্ড আপলোড করুন।',
-  'Upload your PAN card to continue.':
-    'চালিয়ে যেতে PAN কার্ড আপলোড করুন।',
   "Enter the account holder's name.": 'অ্যাকাউন্ট হোল্ডারের নাম দিন।',
   'Enter a valid bank account number.': 'বৈধ ব্যাঙ্ক অ্যাকাউন্ট নম্বর দিন।',
   'Enter a valid IFSC code, for example HDFC0001234.':
@@ -972,7 +977,6 @@ const bengali: Record<string, string> = {
   '{count} items': '{count}টি আইটেম',
   '{count} min': '{count} মিনিট',
   '{count} km': '{count} কিমি',
-  'Demo route': 'ডেমো রুট',
   'Page not found': 'পেজ পাওয়া যায়নি',
   'The link may be broken or the page may have moved':
     'লিংক ভাঙা হতে পারে বা পেজ সরে গেছে',
@@ -989,8 +993,9 @@ const bengali: Record<string, string> = {
   'Profile photo preview': 'প্রোফাইল ছবির প্রিভিউ',
   'Upload profile photo': 'প্রোফাইল ছবি আপলোড করুন',
   'Upload {document}': '{document} আপলোড করুন',
-  'Demo route preview from {pickup} to {destination}':
-    '{pickup} থেকে {destination} পর্যন্ত ডেমো রুট প্রিভিউ',
+  'Map showing {pickup} to {destination}':
+    '{pickup} থেকে {destination} পর্যন্ত ম্যাপ',
+  OpenStreetMap: 'OpenStreetMap',
   'Name as on the bank account': 'ব্যাঙ্ক অ্যাকাউন্ট অনুযায়ী নাম',
   'Week of {date}': '{date}-এর সপ্তাহ',
   'Expected {date}': '{date} প্রত্যাশিত',
@@ -1015,6 +1020,14 @@ const bengali: Record<string, string> = {
   Change: 'পরিবর্তন করুন',
   'PAN number': 'PAN নম্বর',
   '10-character PAN, e.g. ABCDE1234F': '10 অক্ষরের PAN, যেমন ABCDE1234F',
+  'Optional · front and back, JPG or PDF · max 2 MB':
+    'ঐচ্ছিক · সামনে ও পিছন, JPG বা PDF · সর্বোচ্চ 2 MB',
+  'Optional · clear photo of the card · max 2 MB':
+    'ঐচ্ছিক · কার্ডের স্পষ্ট ছবি · সর্বোচ্চ 2 MB',
+  'Optional · needed for motorised vehicles · max 2 MB':
+    'ঐচ্ছিক · মোটরযানের জন্য প্রয়োজন · সর্বোচ্চ 2 MB',
+  'Optional · registration certificate · max 2 MB':
+    'ঐচ্ছিক · নিবন্ধন সার্টিফিকেট · সর্বোচ্চ 2 MB',
   'Enter a valid 10-character PAN number.':
     'সঠিক 10 অক্ষরের PAN নম্বর দিন।',
   'Licence number': 'লাইসেন্স নম্বর',
@@ -1023,6 +1036,8 @@ const bengali: Record<string, string> = {
     'সঠিক ড্রাইভিং লাইসেন্স নম্বর দিন।',
   'Upload your driving licence to continue.':
     'চালিয়ে যেতে ড্রাইভিং লাইসেন্স আপলোড করুন।',
+  'Required for bike or scooter · can also be entered on the vehicle step.':
+    'বাইক বা স্কুটারের জন্য প্রয়োজনীয় · ভেহিকেল ধাপেও দেওয়া যেতে পারে।',
   'Registration number printed on the RC': 'RC-তে লেখা রেজিস্ট্রেশন নম্বর',
   'Upload your vehicle RC to continue.':
     'চালিয়ে যেতে গাড়ির RC আপলোড করুন।',
@@ -1064,14 +1079,15 @@ const bengali: Record<string, string> = {
     'Firebase-এ পৌঁছানো যাচ্ছে না। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
   'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.':
     'Storage আপলোডের সময় শেষ হয়ে গেছে। সংযোগ পরীক্ষা করুন এবং Firebase Storage চালু আছে কিনা দেখে আবার চেষ্টা করুন।',
+  'You can submit with document numbers only; selected files will not be uploaded.':
+    'আপনি শুধু নথির নম্বর দিয়ে জমা দিতে পারেন; নির্বাচিত ফাইল আপলোড হবে না।',
+  'Submit without documents': 'নথি ছাড়া জমা দিন',
   'Firebase is not connected': 'Firebase কানেক্ট করা নেই',
   'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.':
     'এই সেশন শুধু এই ডিভাইসে সংরক্ষিত আছে। Firebase কনসোলে Authentication এবং Anonymous প্রোভাইডার চালু করে আবার চেষ্টা করুন।',
   'Retry connection': 'সংযোগ আবার করুন',
   'Retrying…': 'আবার চেষ্টা হচ্ছে…',
   'Error: {code}': 'ত্রুটি: {code}',
-  'Re-select your documents before submitting so they can be uploaded.':
-    'জমা দেওয়ার আগে আপনার নথিগুলো আবার বেছে নিন যাতে সেগুলো আপলোড করা যায়।',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =

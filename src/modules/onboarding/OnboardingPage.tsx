@@ -148,14 +148,8 @@ function validateStep(step: number, state: OnboardingState): string {
       if (!/^\d{12}$/.test(state.documentNumbers.aadhaar)) {
         return 'Enter a valid 12-digit Aadhaar number.'
       }
-      if (!state.documents.aadhaar) {
-        return 'Upload your Aadhaar card to continue.'
-      }
       if (!PAN_PATTERN.test(state.documentNumbers.pan)) {
         return 'Enter a valid 10-character PAN number.'
-      }
-      if (!state.documents.pan) {
-        return 'Upload your PAN card to continue.'
       }
 
       if (state.bank.accountHolder.trim().length < 3) {
@@ -214,6 +208,8 @@ export function OnboardingPage() {
   const [errorCode, setErrorCode] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [canSubmitWithoutDocuments, setCanSubmitWithoutDocuments] =
+    useState(false)
   const [documentErrors, setDocumentErrors] = useState<
     Partial<Record<DocumentKey, string>>
   >({})
@@ -297,6 +293,7 @@ export function OnboardingPage() {
 
     setError('')
     setErrorCode(null)
+    setCanSubmitWithoutDocuments(false)
 
     if (step < onboardingSteps.length - 1) {
       updateOnboarding({ step: step + 1 })
@@ -312,24 +309,31 @@ export function OnboardingPage() {
       }
     }
 
-    const missingDocumentFiles = (
-      Object.keys(onboarding.documents) as DocumentKey[]
-    ).filter(
-      (key) => onboarding.documents[key] && !uploadFiles.current.documents[key],
-    )
-
-    if (missingDocumentFiles.length > 0) {
-      setError(
-        'Re-select your documents before submitting so they can be uploaded.',
-      )
-      updateOnboarding({ step: 1 })
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
       await submitOnboarding(uploadFiles.current)
+    } catch (caught) {
+      const code = getFirebaseErrorCode(caught)
+      setErrorCode(code)
+      setError(
+        getFirebaseWriteErrorKey(code) ??
+          'Could not submit your application. Check your connection and try again.',
+      )
+      setCanSubmitWithoutDocuments(Boolean(code?.startsWith('storage/')))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleSubmitWithoutDocuments() {
+    setError('')
+    setErrorCode(null)
+    setCanSubmitWithoutDocuments(false)
+    setIsSubmitting(true)
+
+    try {
+      await submitOnboarding(uploadFiles.current, { skipUploads: true })
     } catch (caught) {
       const code = getFirebaseErrorCode(caught)
       setErrorCode(code)
@@ -620,7 +624,7 @@ export function OnboardingPage() {
                 maxLength={12}
                 required
                 fileName={onboarding.documents.aadhaar}
-                fileHint={t('Front and back, JPG or PDF · max 2 MB')}
+                fileHint={t('Optional · front and back, JPG or PDF · max 2 MB')}
                 fileError={
                   documentErrors.aadhaar
                     ? t(documentErrors.aadhaar)
@@ -647,7 +651,7 @@ export function OnboardingPage() {
                 autoCapitalize="characters"
                 required
                 fileName={onboarding.documents.pan}
-                fileHint={t('Clear photo of the card · max 2 MB')}
+                fileHint={t('Optional · clear photo of the card · max 2 MB')}
                 fileError={
                   documentErrors.pan ? t(documentErrors.pan) : undefined
                 }
@@ -667,24 +671,59 @@ export function OnboardingPage() {
 
               <KycDocumentCard
                 title={t('Driving licence')}
+                numberLabel={t('Licence number')}
+                numberValue={onboarding.documentNumbers.licence}
+                numberPlaceholder="WB-0120210012345"
+                numberHint={t(
+                  'Required for bike or scooter · can also be entered on the vehicle step.',
+                )}
+                maxLength={18}
+                autoCapitalize="characters"
                 fileName={onboarding.documents.licence}
-                fileHint={t('Needed for motorised vehicles · max 2 MB')}
+                fileHint={t('Optional · needed for motorised vehicles · max 2 MB')}
                 fileError={
                   documentErrors.licence
                     ? t(documentErrors.licence)
                     : undefined
+                }
+                onNumberChange={(value) =>
+                  updateOnboarding({
+                    documentNumbers: {
+                      ...onboarding.documentNumbers,
+                      licence: value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9- ]/g, '')
+                        .slice(0, 18),
+                    },
+                  })
                 }
                 onFileChange={(file) => handleDocumentChange('licence', file)}
               />
 
               <KycDocumentCard
                 title={t('Vehicle RC')}
+                numberLabel={t('Registration number')}
+                numberValue={onboarding.vehicle.registrationNumber}
+                numberPlaceholder="WB02AB1234"
+                numberHint={t(
+                  'Required for bike or scooter · can also be entered on the vehicle step.',
+                )}
+                maxLength={13}
+                autoCapitalize="characters"
                 fileName={onboarding.documents.registration}
-                fileHint={t('Registration certificate · max 2 MB')}
+                fileHint={t('Optional · registration certificate · max 2 MB')}
                 fileError={
                   documentErrors.registration
                     ? t(documentErrors.registration)
                     : undefined
+                }
+                onNumberChange={(value) =>
+                  updateOnboarding({
+                    vehicle: {
+                      ...onboarding.vehicle,
+                      registrationNumber: value.toUpperCase().slice(0, 13),
+                    },
+                  })
                 }
                 onFileChange={(file) =>
                   handleDocumentChange('registration', file)
@@ -1143,12 +1182,32 @@ export function OnboardingPage() {
         ) : null}
 
         {error ? (
-          <div role="alert" className="space-y-0.5">
+          <div role="alert" className="space-y-2">
             <p className="text-xs font-medium text-danger">{t(error)}</p>
             {errorCode ? (
               <p className="font-mono text-[10.5px] text-ink-soft">
                 {t('Error: {code}', { code: errorCode })}
               </p>
+            ) : null}
+
+            {canSubmitWithoutDocuments ? (
+              <div className="rounded-xl border border-warning/25 bg-warning-soft p-3">
+                <p className="text-[11.5px] leading-relaxed text-ink-muted">
+                  {t(
+                    'You can submit with document numbers only; selected files will not be uploaded.',
+                  )}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  className="mt-2"
+                  isLoading={isSubmitting}
+                  onClick={handleSubmitWithoutDocuments}
+                >
+                  {t('Submit without documents')}
+                </Button>
+              </div>
             ) : null}
           </div>
         ) : null}

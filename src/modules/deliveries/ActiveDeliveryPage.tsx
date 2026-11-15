@@ -170,8 +170,8 @@ export function ActiveDeliveryPage() {
         </Card>
 
         <MapPreview
-          pickup={activeDelivery.pickup.name}
-          destination={activeDelivery.destination.name}
+          pickup={activeDelivery.pickup}
+          destination={activeDelivery.destination}
         />
 
         <Card padding="md">

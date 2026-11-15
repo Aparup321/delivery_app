@@ -13,6 +13,8 @@ export type DeliveryStatus =
 export interface DeliveryStop {
   name: string
   address: string
+  latitude: number
+  longitude: number
 }
 
 export interface DeliveryEvent {

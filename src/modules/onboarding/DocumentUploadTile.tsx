@@ -22,7 +22,7 @@ export function DocumentUploadTile({
   return (
     <label
       className={cn(
-        'flex w-[104px] shrink-0 cursor-pointer flex-col items-center gap-1 rounded-2xl border border-dashed border-brand/35 bg-brand-soft/60 px-2 py-2.5 text-center transition-colors hover:border-brand/60 hover:bg-brand-soft focus-within:ring-4 focus-within:ring-brand/10',
+        'relative flex w-[104px] shrink-0 cursor-pointer flex-col items-center gap-1 rounded-2xl border border-dashed border-brand/35 bg-brand-soft/60 px-2 py-2.5 text-center transition-colors hover:border-brand/60 hover:bg-brand-soft focus-within:ring-4 focus-within:ring-brand/10',
         className,
       )}
     >

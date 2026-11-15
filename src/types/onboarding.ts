@@ -7,6 +7,9 @@ export type OnboardingStatus =
   | 'approved'
   | 'rejected'
 
+/** Account state written by delivery_admin and stored on partners/{uid}. */
+export type PartnerAccountStatus = 'pending' | 'active' | 'paused'
+
 export type DocumentKey =
   | 'aadhaar'
   | 'pan'
@@ -47,6 +50,11 @@ export interface OnboardingFiles {
   documents: Partial<Record<DocumentKey, File>>
 }
 
+export interface SubmitOnboardingOptions {
+  /** Write the application without attempting any file uploads. */
+  skipUploads?: boolean
+}
+
 export interface OnboardingState {
   step: number
   status: OnboardingStatus
@@ -68,4 +76,13 @@ export interface OnboardingState {
   submittedAt: string | null
   /** When the current status last changed. */
   statusUpdatedAt: string | null
+  /** Administrator's rejection note, shown on the application status screen. */
+  rejectionReason: string | null
+  /** Live account state written by delivery_admin. */
+  accountStatus: PartnerAccountStatus
+  /** Suspension note written by delivery_admin. */
+  suspensionReason: string | null
+  accountStatusUpdatedAt: string | null
+  /** Admin partner directory ID, when delivery_admin linked this account. */
+  adminPartnerId: string | null
 }

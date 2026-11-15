@@ -11,9 +11,12 @@ stays a centered app column instead of stretching into a desktop dashboard.
 > interactive prototype. Firebase Phone Authentication and onboarding
 > persistence (Firestore + Storage) are connected when `VITE_FIREBASE_*` is
 > configured; without configuration the app falls back to the demo OTP.
-> Deliveries, earnings, notifications, support, map and payment data remain
-> mock. A real map provider and the existing-platform integration (Phases
-> 12–13) are not connected yet.
+> Administrator approvals, rejections, suspensions, and reinstatements are
+> received from `delivery_admin` through a live Firestore listener.
+> Deliveries, earnings, notifications, support and payment data remain mock.
+> The route preview uses OpenStreetMap tiles, while routing, distance and ETA
+> are still demo data. The existing-platform integration (Phases 12–13) is not
+> connected yet.
 >
 > The product direction is now **PicDrop + HopNgo**, and this repository is its
 > **delivery-partner module**. The PicDrop delivery requirements have been
@@ -69,10 +72,10 @@ material for the project and are not part of the deployed application.
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), anonymous Firebase session when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
 | Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (Firebase) |
-| KYC & documents | Aadhaar and PAN numbers with upload controls, plus licence, RC and bank passbook uploads; files go to Storage and metadata to Firestore | Built (Firebase) |
+| KYC & documents | Aadhaar, PAN, licence and RC numbers with optional upload controls, plus a bank passbook upload; files go to Storage and metadata to Firestore | Built (Firebase) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
-| Application status | Pending, submitted, under review, approved or rejected with a progress timeline; submitted state comes from Firestore, review outcomes are demo | Built (Firebase + demo review) |
+| Application status | Pending, submitted, under review, approved or rejected with a progress timeline and rejection/suspension reasons; decisions arrive live from `delivery_admin` | Built (Firebase + admin) |
 | Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (mock) |
 | Delivery requests | Request cards with countdown, accept or reject | Built (mock) |
 | Active delivery | Timeline, status actions, drop OTP proof, contact and issue reporting | Built (mock) |
@@ -112,6 +115,7 @@ The Firebase phone-SMS code path (`sendPhoneOtp` / `confirmPhoneOtp`) stays in
 | [React Router](https://reactrouter.com/) | 7 | Routing, guards and navigation |
 | [Firebase](https://firebase.google.com/docs/web/setup) | 13 | Auth, Firestore and Storage SDK foundation |
 | [Lucide React](https://lucide.dev/) | latest | Icons |
+| [OpenStreetMap](https://www.openstreetmap.org/) | — | Route-preview map tiles (no key) |
 | [Oxlint](https://oxc.rs/) | latest | Code linting |
 
 Firebase provides the demo-OTP auth bridge plus Firestore and Storage
@@ -144,18 +148,25 @@ shared mock state layer:
 - A profile photo is mandatory on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
   Profile, and is uploaded to Firebase Storage on submission.
-- KYC collects the Aadhaar and PAN numbers beside their upload controls and
-  provides upload-only cards for the driving licence and vehicle RC, with
-  JPG/PDF and 2 MB guidance. For bike and scooter partners, the licence and
-  registration numbers are entered on the vehicle step; bicycle and on-foot
-  partners are not asked for either. The bank account row also offers an optional
-  bank passbook or cancelled-cheque upload. All files accept JPG or PDF up to
-  2 MB; larger files are rejected inline and are not recorded as uploaded.
+- KYC collects the Aadhaar, PAN, driving-licence and vehicle-RC numbers beside
+  optional upload controls, with JPG/PDF and 2 MB guidance. The document numbers
+  remain required; the files are optional. The licence and registration fields
+  share state with the vehicle step, so either screen can be used; bicycle and
+  on-foot partners are not required to provide either. The bank account row also
+  offers an optional bank passbook or cancelled-cheque upload. All files accept
+  JPG or PDF up to 2 MB; larger files are rejected inline and are not recorded
+  as uploaded. If Storage is unavailable, submission stores document metadata
+  and the small profile preview inline in Firestore instead of blocking. If an
+  upload fails during submission, the error panel also offers **Submit without
+  documents**, which retries the Firestore write with metadata only.
 - Application status is available from Profile → Application status. It shows
   pending, submitted, under review, approved or rejected with submitted and
   updated dates plus a four-step tracker. The submitted state is read from
-  Firestore; the labelled demo control is shown only when Firebase is not
-  configured because no verification service is connected.
+  Firestore, and the Administrator's decision arrives through a live listener.
+  A rejected application shows the Administrator's reason; a suspended account
+  shows a suspension notice instead of the availability switch. The labelled
+  demo control is shown only when Firebase is not configured because no
+  verification service is connected.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
   completed or cancelled jobs are added to history.
@@ -216,7 +227,7 @@ delivery_app/
 ├── AGENTS.md                 # Rules for AI coding agents
 ├── README.md
 ├── firebase.json             # Firestore and Storage rules deployment config
-├── firestore.rules           # Owner-only partner records
+├── firestore.rules           # Owner + delivery_admin access rules
 ├── storage.rules             # Owner-only uploads, 2 MB and image/PDF limits
 ├── index.html
 ├── package.json
@@ -343,20 +354,56 @@ the service layer with the remaining backend integration.
   documents to Storage, then writes `partners/{uid}`, `partner_documents/{uid}`,
   `vehicles/{uid}` and `training_progress/{uid}`. Signing in again rebuilds the
   onboarding state from those records.
+- `watchPartnerAccount()` in the same service subscribes to `partners/{uid}` and
+  applies Administrator decisions without a reload: `applicationStatus`,
+  `status`, `adminReview.reason`, and `adminSuspension.reason`. `AppProvider`
+  forces the partner offline and disables the availability switch unless the
+  application is approved and the account is active.
 - `firestore.rules` and `storage.rules` restrict each partner to their own UID.
-  `firebase.json` points the Firebase CLI at both rule files and `.firebaserc`
-  sets `delivery-231a0` as the default project.
+  The rules also allow the `delivery_admin` administrator UID to read/write
+  `partners/{uid}` and read `partner_documents`, `vehicles`, and
+  `training_progress`. `firebase.json` points the Firebase CLI at both rule
+  files and `.firebaserc` sets `delivery-231a0` as the default project.
 - If configuration is absent, the app uses the local demo OTP and keeps data in
   `localStorage`, so UI work does not depend on live credentials.
+
+### Administrator actions from delivery_admin
+
+The admin console writes these fields on `partners/{uid}` through the Firestore
+REST API:
+
+| Field | Meaning |
+| --- | --- |
+| `applicationStatus` | `draft`, `submitted`, `under_review`, `approved`, `rejected` |
+| `status` | `pending`, `active`, `paused` |
+| `adminReview` | decision, reason, application ID, reviewer, review time, admin partner ID |
+| `adminSuspension` | active flag, reason, updater, update time, admin partner ID |
+| `adminPartnerId` | admin directory record linked to this account |
+| `statusUpdatedAt`, `updatedAt` | ISO timestamps |
+
+- **Approve:** `applicationStatus: approved` and `status: active`. The partner can
+  go online.
+- **Reject:** `applicationStatus: rejected`, `status: pending`, and the reason in
+  `adminReview.reason`. The app shows that reason on Home and Application
+  status.
+- **Suspend:** `status: paused`, `adminSuspension.active: true`, and a reason.
+  The partner is forced offline and receives no requests.
+- **Reinstate:** `status: active` and `adminSuspension.active: false`. The
+  availability switch works again when the application is approved.
+
+The admin UID is allow-listed in `firestore.rules`. Replace it if the Firebase
+administrator account is recreated, then redeploy the rules.
 
 ### Required Firebase Console setup
 
 1. Open **Authentication** and click **Get started** if the project has never
    used it; on the Spark plan the public API cannot initialize Authentication,
    so the console button is required. Then enable **Sign-in method →
-   Anonymous** so the demo-OTP bridge can create a Firebase session. Add
-   `localhost` under Authentication → Settings → Authorized domains. When the
-   SMS flow returns, also enable **Phone** and add test phone numbers under
+   Anonymous** so the demo-OTP bridge can create a Firebase session. Enable
+   **Email/Password** and create the `admin@picdrop.demo` account used by
+   `delivery_admin`; its UID must match the allow-list in `firestore.rules`.
+   Add `localhost` under Authentication → Settings → Authorized domains. When
+   the SMS flow returns, also enable **Phone** and add test phone numbers under
    Phone → Phone numbers for testing.
 2. Create a **Firestore Database** and initialize **Storage** in the same project
    as the Web App configuration. Firebase Storage requires the pay-as-you-go
@@ -398,15 +445,17 @@ the service layer with the remaining backend integration.
    `training_progress/{uid}`, and **Storage** should contain
    `partners/{uid}/…`. A submission error shows `permission-denied` when the
    rules are not deployed. A missing bucket is detected by a short preflight
-   before the upload and reports `storage/bucket-not-found` immediately, instead
-   of waiting for the upload retry limit.
+   before the upload. In that case submission still succeeds: document metadata
+   and the small profile preview are written to Firestore, while any selected
+   files are uploaded only when Storage is configured.
 
 ### Still mock
 
 Deliveries, delivery requests, earnings, payouts, notifications, support tickets,
-partner ratings, the map preview and the delivery OTP are still demo data. They
-need the remaining Phase 12 service layer; no delivery or payment collection is
-written by this change.
+partner ratings, routing/distance/ETA and the delivery OTP are still demo data.
+The active-delivery map uses OpenStreetMap tiles and mock coordinates. The
+remaining Phase 12 service layer is still required; no delivery or payment
+collection is written by this change.
 
 > **Security:** Vite embeds every `VITE_*` value in the browser bundle.
 > `.env.local` keeps the values out of Git, not out of the browser. Firebase Web
@@ -437,7 +486,7 @@ written by this change.
 | 6 | Home dashboard with online/offline control | ✅ Work dashboard |
 | 7 | Delivery requests with countdown | ✅ Accept or reject |
 | 8 | Active delivery timeline and completion | ✅ End-to-end flow |
-| 9 | Maps, location permission and routes | Demo route preview 🟡 |
+| 9 | Maps, location permission and routes | OpenStreetMap preview 🟡 |
 | 10 | History, earnings and payments | ✅ Mock records |
 | 11 | Notifications, support and profile settings | ✅ Complete feature set |
 | 12 | Admin and existing-platform integration | 🟡 Firebase auth bridge + onboarding connected; deliveries, earnings, notifications, support and admin pending |
@@ -448,7 +497,7 @@ written by this change.
 - The existing platform's technology and how delivery jobs will be exchanged.
 - Whether both systems share one Firebase project or talk through APIs.
 - How delivery jobs are assigned (automatic, manual, or by the existing platform).
-- Which map provider supplies routes, distance and ETA.
+- Which routing provider supplies distance, ETA and turn-by-turn directions.
 - Which documents are mandatory for verification and who approves them.
 - How earnings are calculated and when payouts are created.
 - Whether an admin panel is part of this project.

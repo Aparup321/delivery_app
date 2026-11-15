@@ -45,6 +45,7 @@ export function ProfilePage() {
   ]
 
   const applicationStatus = applicationStatusMeta[onboarding.status]
+  const isSuspended = onboarding.accountStatus === 'paused'
   const vehicleLabel =
     onboarding.vehicle.type === 'foot'
       ? t('On foot')
@@ -81,8 +82,8 @@ export function ProfilePage() {
                 {t('Partner ID · {id}', { id: partner.id })}
               </p>
             </div>
-            <Badge tone={applicationStatus.tone} size="sm">
-              {t(applicationStatus.label)}
+            <Badge tone={isSuspended ? 'danger' : applicationStatus.tone} size="sm">
+              {t(isSuspended ? 'Suspended' : applicationStatus.label)}
             </Badge>
           </div>
 

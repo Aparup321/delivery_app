@@ -67,8 +67,9 @@ What exists today:
 
 **Remaining: the rest of Phase 12 (delivery, earnings, notification, support and
 admin integration) and Phase 13 (release QA).** Both need the open decisions in
-README to be answered. There is no real map provider or delivery backend yet,
-and earnings and request timers are demo data.
+README to be answered. The route preview uses OpenStreetMap tiles, but there is
+no routing/geocoding provider or delivery backend yet, and earnings and request
+timers are demo data.
 
 ---
 
@@ -343,7 +344,7 @@ Not allowed without explicit instruction:
 - Connecting deliveries, earnings, notifications, support or profile fixtures to
   live Firebase data (the next part of Phase 12).
 - Real delivery/payment APIs, backend logic or new network services.
-- Replacing the demo map with a paid provider.
+- Replacing OpenStreetMap tiles with a paid map or routing provider.
 - Changing the colour palette or design language.
 - Removing or rewriting working screens.
 - Adding dependencies, test runners or CI.
@@ -439,17 +440,22 @@ added:
   message. Delivery, earnings, notification and support data remain mock.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, number-plus-upload cards for
-  Aadhaar and PAN, upload-only cards for the driving licence and vehicle RC, an
-  optional bank passbook upload beside the account number, vehicle tiles (bike,
-  scooter, bicycle, on foot), licence and registration fields for motorised
-  vehicles, a required profile photo and a submitted/under-review state.
+  Aadhaar, PAN, driving licence and vehicle RC, an optional bank passbook upload
+  beside the account number, vehicle tiles (bike, scooter, bicycle, on foot),
+  licence and registration fields shared with the vehicle step, a required
+  profile photo and a submitted/under-review state.
   Draft progress is stored under `fafo.partner.onboarding.<phone>`, one draft
   per verified number. Submission uploads the profile photo and selected
   documents to Storage and writes `partners`, `partner_documents`, `vehicles`
-  and `training_progress` documents in Firestore. Draft partners are redirected
-  back to the wizard until they submit; the wizard header offers Sign out. The
-  wizard hides the bottom navigation while a draft is being completed; the
-  submitted confirmation renders inside the shell.
+  and `training_progress` documents in Firestore. KYC files are optional; uploads
+  run when files are selected and Storage is available. Without Storage, the
+  submission stores document metadata and the 256px profile preview inline in
+  Firestore, so onboarding is not blocked. If a files upload still fails, the
+  error panel offers **Submit without documents**, which retries the Firestore
+  write with metadata only. Draft partners are redirected back to the wizard
+  until they submit; the wizard header offers Sign out. The wizard hides the
+  bottom navigation while a draft is being completed; the submitted confirmation
+  renders inside the shell.
 - **Application status** — Profile → Application status shows pending,
   submitted, under review, approved or rejected, with submitted and updated
   dates and a four-step tracker. The submitted state comes from Firestore; the
@@ -460,8 +466,9 @@ added:
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
   behind availability and the empty state offers a "Go online" action.
 - **Active delivery** — accepted → pickup arrived → picked up → on the way → drop
-  arrived → delivered, with a live timer, route preview, issue reporting and a
-  demo drop OTP (`4821`). Completed and cancelled jobs move to history.
+  arrived → delivered, with a live timer, OpenStreetMap route preview, issue
+  reporting and a demo drop OTP (`4821`). Completed and cancelled jobs move to
+  history.
 - **History, earnings, notifications, support, profile** — searchable history,
   demo earnings, read/unread notifications, FAQ + ticket creation, and profile
   with documents, language, alerts and sign-out. Every section header has a back
@@ -476,7 +483,8 @@ added:
 ### Intentionally missing (do not fake these)
 
 - No live delivery, earnings, notification, support or payment data. Firebase
-  is connected for auth and onboarding only. No real map provider, push
+  is connected for auth and onboarding only. The active-delivery preview loads
+  OpenStreetMap tiles, but there is no routing/geocoding provider, push
   notifications or payments.
 - No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
   other PicDrop + HopNgo modules and are out of scope here.

@@ -37,6 +37,13 @@ export const initialOnboarding: OnboardingState = {
   training: [false, false, false, false, false],
   submittedAt: null,
   statusUpdatedAt: null,
+  rejectionReason: null,
+  // Demo sessions keep the existing local behaviour. A Firestore record
+  // overrides this with the Administrator-controlled account state.
+  accountStatus: 'active',
+  suspensionReason: null,
+  accountStatusUpdatedAt: null,
+  adminPartnerId: null,
 }
 
 export const trainingTopics = [
