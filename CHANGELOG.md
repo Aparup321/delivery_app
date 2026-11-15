@@ -22,9 +22,10 @@ connected; delivery, earnings, notification and support data remain mock.
   every signed-in screen shows the Firebase error code with a **Retry
   connection** action, and onboarding submission is blocked instead of storing
   a local-only "submitted" state. Submission failures also show the Firebase
-  error code (for example `permission-denied` or a `storage/…` code). Storage
-  retries are capped at about 15 seconds so a missing bucket fails visibly
-  instead of leaving the submit spinner running.
+  error code (for example `permission-denied` or a `storage/…` code). A Storage
+  bucket preflight now reports `storage/bucket-not-found` immediately when the
+  project has no default bucket, instead of leaving the submit spinner running
+  through the upload retry window.
 - A successful demo-OTP sign-in now leaves a visible trace in Firebase: the
   anonymous Auth user's display name is the verified mobile number, and
   `partners/{uid}` is written immediately with `phone`, `authProvider` and

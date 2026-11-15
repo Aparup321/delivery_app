@@ -358,9 +358,13 @@ the service layer with the remaining backend integration.
    `localhost` under Authentication → Settings → Authorized domains. When the
    SMS flow returns, also enable **Phone** and add test phone numbers under
    Phone → Phone numbers for testing.
-2. Create a **Firestore Database** and a **Storage** bucket in the same project
-   as the Web App configuration. The bucket name must match
-   `VITE_FIREBASE_STORAGE_BUCKET`.
+2. Create a **Firestore Database** and initialize **Storage** in the same project
+   as the Web App configuration. Firebase Storage requires the pay-as-you-go
+   **Blaze** plan for a new default bucket: open **Databases & Storage →
+   Storage**, click **Get started**, choose a location and finish the setup. The
+   bucket name must match `VITE_FIREBASE_STORAGE_BUCKET`
+   (`<project-id>.firebasestorage.app` for buckets created after September
+   2024).
 3. Deploy the rules with the Firebase CLI:
 
    ```bash
@@ -393,10 +397,9 @@ the service layer with the remaining backend integration.
    `partners/{uid}`, `partner_documents/{uid}`, `vehicles/{uid}` and
    `training_progress/{uid}`, and **Storage** should contain
    `partners/{uid}/…`. A submission error shows `permission-denied` when the
-   rules are not deployed and a `storage/…` code when the bucket or its rules
-   are missing. Uploads stop retrying after about 15 seconds, so a missing
-   bucket or a blocked network surfaces instead of leaving the submit spinner
-   running.
+   rules are not deployed. A missing bucket is detected by a short preflight
+   before the upload and reports `storage/bucket-not-found` immediately, instead
+   of waiting for the upload retry limit.
 
 ### Still mock
 

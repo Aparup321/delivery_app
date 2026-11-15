@@ -529,8 +529,8 @@ const hindi: Record<string, string> = {
     'Firestore ने आवेदन रोक दिया। Firestore नियम डिप्लॉय करें, फिर कोशिश करें।',
   'Storage blocked the upload. Deploy the Storage rules, then try again.':
     'Storage ने अपलोड रोक दिया। Storage नियम डिप्लॉय करें, फिर कोशिश करें।',
-  'The Storage bucket is missing or unreachable. Create Firebase Storage in the console, then try again.':
-    'Storage बकेट मौजूद नहीं है या उपलब्ध नहीं है। Firebase कंसोल में Firebase Storage बनाएं, फिर कोशिश करें।',
+  'Firebase Storage is not set up. Create the default Storage bucket (Firebase requires the Blaze plan), then try again.':
+    'Firebase Storage सेट नहीं है। डिफ़ॉल्ट Storage बकेट बनाएं (Firebase के लिए Blaze प्लान आवश्यक है), फिर कोशिश करें।',
   'Firebase is unreachable. Check your connection and try again.':
     'Firebase उपलब्ध नहीं है। कनेक्शन जांचें और फिर कोशिश करें।',
   'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.':
@@ -1058,8 +1058,8 @@ const bengali: Record<string, string> = {
     'Firestore আবেদন আটকে দিয়েছে। Firestore নিয়ম ডিপ্লয় করে আবার চেষ্টা করুন।',
   'Storage blocked the upload. Deploy the Storage rules, then try again.':
     'Storage আপলোড আটকে দিয়েছে। Storage নিয়ম ডিপ্লয় করে আবার চেষ্টা করুন।',
-  'The Storage bucket is missing or unreachable. Create Firebase Storage in the console, then try again.':
-    'Storage বাকেট নেই বা পৌঁছানো যাচ্ছে না। Firebase কনসোলে Firebase Storage তৈরি করে আবার চেষ্টা করুন।',
+  'Firebase Storage is not set up. Create the default Storage bucket (Firebase requires the Blaze plan), then try again.':
+    'Firebase Storage সেট করা নেই। ডিফল্ট Storage বাকেট তৈরি করুন (Firebase-এর জন্য Blaze প্ল্যান প্রয়োজন), তারপর আবার চেষ্টা করুন।',
   'Firebase is unreachable. Check your connection and try again.':
     'Firebase-এ পৌঁছানো যাচ্ছে না। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
   'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.':

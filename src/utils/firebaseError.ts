@@ -30,7 +30,7 @@ export function getFirebaseWriteErrorKey(code: string | null): string | null {
     case 'storage/unknown':
     case 'storage/bucket-not-found':
     case 'storage/project-not-found':
-      return 'The Storage bucket is missing or unreachable. Create Firebase Storage in the console, then try again.'
+      return 'Firebase Storage is not set up. Create the default Storage bucket (Firebase requires the Blaze plan), then try again.'
     case 'storage/retry-limit-exceeded':
       return 'The Storage upload timed out. Check your connection and that Firebase Storage is enabled, then try again.'
     case 'unavailable':

@@ -1,6 +1,6 @@
 import { doc, getDoc, writeBatch } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
-import { db, storage } from '../firebase'
+import { auth, db, storage } from '../firebase'
 import { initialOnboarding } from '../mock/onboarding'
 import type {
   DocumentKey,
@@ -61,6 +61,51 @@ function requireStorage() {
   }
 
   return storage
+}
+
+/**
+ * Fails before the upload retry window when the configured Storage bucket does
+ * not exist. `uploadBytes` treats a missing bucket as a retryable network error
+ * and ends with `storage/retry-limit-exceeded`, which hides the real setup
+ * problem. A 404 from the bucket endpoint is the reliable signal; other
+ * responses are left to the Storage SDK so its normal rules/error handling
+ * still applies.
+ */
+async function assertStorageBucketExists(): Promise<void> {
+  const storageInstance = requireStorage()
+  const bucket = storageInstance.app.options.storageBucket?.replace(
+    /^gs:\/\//,
+    '',
+  )
+  const currentUser = auth?.currentUser
+
+  if (!bucket || !currentUser) {
+    return
+  }
+
+  let token: string
+  try {
+    token = await currentUser.getIdToken()
+  } catch {
+    return
+  }
+
+  let response: Response
+  try {
+    response = await fetch(
+      `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o?maxResults=1`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+  } catch {
+    // CORS or a transient network failure: let the SDK produce its own error.
+    return
+  }
+
+  if (response.status === 404) {
+    const error = new Error('Firebase Storage bucket not found.')
+    Object.assign(error, { code: 'storage/bucket-not-found' })
+    throw error
+  }
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -194,6 +239,7 @@ export async function savePartnerOnboarding({
   files: OnboardingFiles
 }): Promise<SubmittedOnboarding> {
   const firestore = requireDb()
+  await assertStorageBucketExists()
   const submittedAt = new Date().toISOString()
   const statusUpdatedAt = submittedAt
 
