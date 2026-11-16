@@ -99,9 +99,6 @@ function createPhotoPreview(file: File): Promise<string> {
 function validateStep(step: number, state: OnboardingState): string {
   switch (step) {
     case 0:
-      if (!state.profilePhoto) {
-        return 'Upload a profile photo to continue.'
-      }
       if (state.fullName.trim().length < 3) {
         return 'Enter your full name as it appears on your documents.'
       }
@@ -517,7 +514,10 @@ export function OnboardingPage() {
               </label>
 
               <p className="text-[12.5px] font-semibold text-ink">
-                {t('Profile photo')} <span className="text-danger">*</span>
+                {t('Profile photo')}{' '}
+                <span className="font-normal text-ink-soft">
+                  {t('(optional)')}
+                </span>
               </p>
               <p className="text-center text-[11px] text-ink-muted">
                 {t(
@@ -1069,7 +1069,7 @@ export function OnboardingPage() {
                   {t(
                     onboarding.profilePhoto
                       ? 'Profile photo added'
-                      : 'Profile photo missing',
+                      : 'Profile photo not added (optional)',
                   )}
                 </p>
                 <p className="text-[11.5px] text-ink-muted">

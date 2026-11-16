@@ -145,7 +145,7 @@ shared mock state layer:
 - Draft applications are held inside the onboarding wizard; Home, Orders,
   Earnings and Profile only open once the application is submitted. The bottom
   navigation is hidden while the draft form is open.
-- A profile photo is mandatory on the personal step; it must be JPG or PNG and
+- A profile photo is **optional** on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
   Profile, and is uploaded to Firebase Storage on submission.
 - KYC collects the Aadhaar, PAN, driving-licence and vehicle-RC numbers beside
