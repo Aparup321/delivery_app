@@ -13,7 +13,9 @@ stays a centered app column instead of stretching into a desktop dashboard.
 > configured; without configuration the app falls back to the demo OTP.
 > Administrator approvals, rejections, suspensions, and reinstatements are
 > received from `delivery_admin` through a live Firestore listener.
-> Deliveries, earnings, notifications, support and payment data remain mock.
+> Accepted and in-progress deliveries are mirrored to Firestore for the
+> Administrator console, along with the partner's best-effort GPS position.
+> Earnings, notifications, support and payment data remain mock.
 > The route preview uses OpenStreetMap tiles, while routing, distance and ETA
 > are still demo data. The existing-platform integration (Phases 12–13) is not
 > connected yet.
@@ -394,6 +396,43 @@ REST API:
 The admin UID is allow-listed in `firestore.rules`. Replace it if the Firebase
 administrator account is recreated, then redeploy the rules.
 
+### Live delivery and location sharing
+
+`src/services/deliverySync.ts` mirrors every accepted or in-progress job into
+`deliveries/{id}` with `setDoc(..., { merge: true })`, so retries update the same
+record instead of creating duplicates. The document carries:
+
+- identifiers and the partner's name, vehicle type, and Firebase UID;
+- the partner-side `status` plus the title-case `adminStatus` used by
+  `delivery_admin`;
+- pickup and destination names, addresses, and coordinates;
+- distance, ETA, earnings, item count, payment mode, and a masked customer
+  phone number;
+- the milestone `events`, timestamps, cancellation reason, and delivery proof;
+- `currentLocation` when the partner has shared a GPS position.
+
+The lifecycle is mirrored on every transition: `accepted`,
+`pickup_arrived`, `picked_up`, `in_transit`, `drop_arrived`, then `delivered`
+or `cancelled`. Firestore rules allow the partner to create and update only
+their own delivery, and only along that forward path. The administrator can
+read every delivery and may correct or remove one.
+
+While the partner is online, the app reads the browser's geolocation once a
+minute and writes `lastLocation`, `lastLocationUpdatedAt`, and `isOnline` on
+`partners/{uid}`. Permission denial or a missing GPS sensor never blocks a
+delivery. Going offline clears the shared position. Location sharing is
+best-effort; the next status change retries the delivery document.
+
+`delivery_admin` polls the `deliveries` collection every 30 seconds because its
+REST connection has no live subscription. The Overview map prefers an active
+live delivery, adds a marker for the partner's last position, and falls back to
+demo coordinates when no live job exists. A sync failure shows a retry banner
+in the partner app and a notice on the admin map.
+
+A live partner session starts with no requests or history. Demo requests remain
+available only when Firebase is not configured so the prototype can still be
+explored offline.
+
 ### Required Firebase Console setup
 
 1. Open **Authentication** and click **Get started** if the project has never
@@ -451,11 +490,12 @@ administrator account is recreated, then redeploy the rules.
 
 ### Still mock
 
-Deliveries, delivery requests, earnings, payouts, notifications, support tickets,
-partner ratings, routing/distance/ETA and the delivery OTP are still demo data.
-The active-delivery map uses OpenStreetMap tiles and mock coordinates. The
-remaining Phase 12 service layer is still required; no delivery or payment
-collection is written by this change.
+Delivery requests, earnings, payouts, notifications, support tickets, partner
+ratings, routing/distance/ETA and the delivery OTP are still demo data. The
+active-delivery map uses OpenStreetMap tiles and mock coordinates. Accepted and
+in-progress jobs are now mirrored to `deliveries/{id}` for the Administrator
+console, but the remaining Phase 12 service layer is still required; no
+earnings, payout, or payment collection is written by this integration.
 
 > **Security:** Vite embeds every `VITE_*` value in the browser bundle.
 > `.env.local` keeps the values out of Git, not out of the browser. Firebase Web
@@ -489,7 +529,7 @@ collection is written by this change.
 | 9 | Maps, location permission and routes | OpenStreetMap preview 🟡 |
 | 10 | History, earnings and payments | ✅ Mock records |
 | 11 | Notifications, support and profile settings | ✅ Complete feature set |
-| 12 | Admin and existing-platform integration | 🟡 Firebase auth bridge + onboarding connected; deliveries, earnings, notifications, support and admin pending |
+| 12 | Admin and existing-platform integration | 🟡 Admin decisions + live delivery/location sync connected; earnings, notifications, support and platform jobs pending |
 | 13 | Quality checks and release preparation | ⏳ Pending |
 
 ## Decisions still open
