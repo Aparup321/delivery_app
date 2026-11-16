@@ -159,9 +159,18 @@ function accountSnapshotFromPartner(
 ): PartnerAccountSnapshot {
   const review = asRecord(partner.adminReview)
   const suspension = asRecord(partner.adminSuspension)
+  // A partner document created at sign-in carries only phone/session fields.
+  // Defaulting it to "submitted" would skip the mandatory onboarding wizard.
+  const hasApplication =
+    typeof partner.fullName === 'string' ||
+    typeof partner.submittedAt === 'string'
   const applicationStatus =
     asOnboardingStatus(partner.applicationStatus) ??
-    (partner.status === 'active' ? 'approved' : 'submitted')
+    (hasApplication
+      ? partner.status === 'active'
+        ? 'approved'
+        : 'submitted'
+      : 'draft')
   const reviewDecision = asString(review.decision).toLowerCase()
   const rejectionReason =
     applicationStatus === 'rejected' || reviewDecision === 'rejected'
