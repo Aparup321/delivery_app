@@ -554,6 +554,16 @@ const hindi: Record<string, string> = {
   'Retry connection': 'कनेक्शन दोबारा जोड़ें',
   'Retrying…': 'दोबारा कोशिश हो रही है…',
   'Error: {code}': 'त्रुटि: {code}',
+  'Live updates unavailable': 'लाइव अपडेट उपलब्ध नहीं हैं',
+  'Retry sync': 'सिंक दोबारा करें',
+  'Live Administrator updates are unavailable. Check your connection and retry.':
+    'एडमिनिस्ट्रेटर के लाइव अपडेट उपलब्ध नहीं हैं। कनेक्शन जांचें और फिर कोशिश करें।',
+  'This delivery could not be synced to the Administrator console. Retry when you are back online.':
+    'यह डिलीवरी एडमिनिस्ट्रेटर कंसोल से सिंक नहीं हो सकी। ऑनलाइन होने पर फिर कोशिश करें।',
+  'This application has already been reviewed. Contact support to change it.':
+    'इस आवेदन की समीक्षा हो चुकी है। बदलाव के लिए सहायता से संपर्क करें।',
+  'Reviewed by {name}': '{name} द्वारा समीक्षित',
+  Administrator: 'एडमिनिस्ट्रेटर',
 }
 
 const bengali: Record<string, string> = {
@@ -1092,6 +1102,16 @@ const bengali: Record<string, string> = {
   'Retry connection': 'সংযোগ আবার করুন',
   'Retrying…': 'আবার চেষ্টা হচ্ছে…',
   'Error: {code}': 'ত্রুটি: {code}',
+  'Live updates unavailable': 'লাইভ আপডেট পাওয়া যাচ্ছে না',
+  'Retry sync': 'সিঙ্ক আবার করুন',
+  'Live Administrator updates are unavailable. Check your connection and retry.':
+    'অ্যাডমিনিস্ট্রেটরের লাইভ আপডেট পাওয়া যাচ্ছে না। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  'This delivery could not be synced to the Administrator console. Retry when you are back online.':
+    'এই ডেলিভারিটি অ্যাডমিনিস্ট্রেটর কনসোলে সিঙ্ক করা যায়নি। অনলাইনে ফিরে আবার চেষ্টা করুন।',
+  'This application has already been reviewed. Contact support to change it.':
+    'এই আবেদন ইতিমধ্যে পর্যালোচনা করা হয়েছে। পরিবর্তনের জন্য সহায়তার সাথে যোগাযোগ করুন।',
+  'Reviewed by {name}': '{name} দ্বারা পর্যালোচিত',
+  Administrator: 'অ্যাডমিনিস্ট্রেটর',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =

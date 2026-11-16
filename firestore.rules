@@ -13,23 +13,137 @@ service cloud.firestore {
         && request.auth.uid == 'Xa09IjoJrhPBvuJVWALOuCCHcvZ2';
     }
 
+    // Fields the partner app owns. Administrator decisions are deliberately
+    // absent: status, applicationStatus, statusUpdatedAt, adminPartnerId,
+    // adminReview and adminSuspension can only be written by delivery_admin.
+    function partnerAppFields() {
+      return [
+        'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
+        'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
+        'city', 'addressLine', 'pincode', 'vehicleType', 'rating', 'joinedOn',
+        'submittedAt', 'updatedAt', 'bank', 'lastLocation',
+        'lastLocationUpdatedAt', 'isOnline'
+      ];
+    }
+
+    // A partner may add the lifecycle fields once: first submission, or a
+    // re-application after a rejection. Nothing else may change them.
+    function submissionFields() {
+      return [
+        'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
+        'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
+        'city', 'addressLine', 'pincode', 'vehicleType', 'rating', 'joinedOn',
+        'submittedAt', 'updatedAt', 'bank', 'lastLocation',
+        'lastLocationUpdatedAt', 'isOnline', 'status', 'applicationStatus',
+        'statusUpdatedAt'
+      ];
+    }
+
+    function isOwnerCreate(uid) {
+      return request.resource.data.partnerId == uid
+        && request.resource.data.keys().hasOnly(submissionFields())
+        && (!request.resource.data.keys().hasAny(['status'])
+          || request.resource.data.status == 'pending')
+        && (!request.resource.data.keys().hasAny(['applicationStatus'])
+          || request.resource.data.applicationStatus == 'submitted')
+        && !request.resource.data.keys().hasAny(
+          ['adminReview', 'adminSuspension', 'adminPartnerId']);
+    }
+
+    function isProfileUpdate(uid) {
+      return request.resource.data.partnerId == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(partnerAppFields());
+    }
+
+    function isSubmissionTransition(uid) {
+      let hasNoPreviousApplication =
+        !resource.data.keys().hasAny(['applicationStatus']);
+      let wasDraft = resource.data.get('applicationStatus', '') == 'draft';
+      let wasRejected = resource.data.get('applicationStatus', '') == 'rejected';
+      let isNotSuspended = !resource.data.keys().hasAny(['adminSuspension'])
+        || resource.data.adminSuspension.active != true;
+
+      return request.resource.data.partnerId == uid
+        && (hasNoPreviousApplication || wasDraft || wasRejected)
+        && isNotSuspended
+        && request.resource.data.applicationStatus == 'submitted'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.statusUpdatedAt is string
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(submissionFields());
+    }
+
+    // KYC files can be corrected while an application is open, but not after
+    // approval or while an Administrator has suspended the account.
+    function applicationOpen(uid) {
+      let partnerPath =
+        /databases/$(database)/documents/partners/$(uid);
+
+      return !exists(partnerPath)
+        || (get(partnerPath).data.get('applicationStatus', '') != 'approved'
+          && get(partnerPath).data.get('status', '') != 'paused');
+    }
+
     match /partners/{uid} {
-      allow read, write: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isAdmin() || isOwnerCreate(uid);
+      allow update: if isAdmin()
+        || (isOwner(uid)
+          && (isProfileUpdate(uid) || isSubmissionTransition(uid)));
+      allow delete: if isAdmin();
     }
 
     match /partner_documents/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid);
+      allow write: if isOwner(uid) && applicationOpen(uid);
     }
 
     match /vehicles/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid);
+      allow write: if isOwner(uid) && applicationOpen(uid);
     }
 
     match /training_progress/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid);
+      allow write: if isOwner(uid) && applicationOpen(uid);
+    }
+
+    function validDeliveryTransition(previous, next) {
+      return next == previous
+        || (previous == 'accepted'
+          && next in ['pickup_arrived', 'cancelled'])
+        || (previous == 'pickup_arrived'
+          && next in ['picked_up', 'cancelled'])
+        || (previous == 'picked_up'
+          && next in ['in_transit', 'cancelled'])
+        || (previous == 'in_transit'
+          && next in ['drop_arrived', 'cancelled'])
+        || (previous == 'drop_arrived'
+          && next in ['delivered', 'cancelled']);
+    }
+
+    // The partner app publishes accepted and in-progress deliveries. The
+    // Administrator console reads every delivery and may assign or correct one.
+    match /deliveries/{deliveryId} {
+      allow read: if isAdmin()
+        || (request.auth != null
+          && resource.data.partnerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.partnerUid == request.auth.uid
+        && request.resource.data.status
+          in ['accepted', 'pickup_arrived', 'picked_up', 'in_transit', 'drop_arrived']
+        && request.resource.data.deliveryId is string
+        && request.resource.data.pickup is map
+        && request.resource.data.destination is map;
+      allow update: if isAdmin()
+        || (request.auth != null
+          && resource.data.partnerUid == request.auth.uid
+          && request.resource.data.partnerUid == request.auth.uid
+          && validDeliveryTransition(
+            resource.data.status,
+            request.resource.data.status));
+      allow delete: if isAdmin();
     }
   }
 }

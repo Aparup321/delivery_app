@@ -109,6 +109,18 @@ export function ApplicationStatusPage() {
               </dd>
             </div>
           </dl>
+
+          {['approved', 'rejected'].includes(onboarding.status) &&
+          (onboarding.reviewedBy || onboarding.reviewedAt) ? (
+            <p className="mt-3 border-t border-line pt-3 text-[11.5px] text-ink-muted">
+              {t('Reviewed by {name}', {
+                name: onboarding.reviewedBy ?? t('Administrator'),
+              })}
+              {onboarding.reviewedAt
+                ? ` · ${formatDate(onboarding.reviewedAt, locale)}`
+                : ''}
+            </p>
+          ) : null}
         </Card>
 
         <Card padding="lg">

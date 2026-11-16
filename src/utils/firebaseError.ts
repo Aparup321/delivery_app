@@ -22,6 +22,8 @@ export function getFirebaseWriteErrorKey(code: string | null): string | null {
   switch (code) {
     case 'firebase/not-connected':
       return 'Firebase is not connected. Reconnect from the banner, then submit again.'
+    case 'application/already-reviewed':
+      return 'This application has already been reviewed. Contact support to change it.'
     case 'permission-denied':
     case 'firestore/permission-denied':
       return 'Firestore blocked the submission. Deploy the Firestore rules, then try again.'

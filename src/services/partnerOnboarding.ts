@@ -2,7 +2,7 @@ import {
   doc,
   getDoc,
   onSnapshot,
-  writeBatch,
+  runTransaction,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
@@ -40,6 +40,37 @@ export interface SubmittedOnboarding {
   statusUpdatedAt: string
 }
 
+/**
+ * Raised when a partner tries to submit after an Administrator has already
+ * reviewed the account. The app must not silently reset that decision.
+ */
+export class PartnerSubmissionBlockedError extends Error {
+  readonly code = 'application/already-reviewed'
+
+  constructor() {
+    super(
+      'This application has already been reviewed. Contact support to change it.',
+    )
+    this.name = 'PartnerSubmissionBlockedError'
+  }
+}
+
+/** A submission is only allowed for a draft, a fresh record, or a rejection. */
+function canOpenNewApplication(partner: Record<string, unknown>) {
+  const applicationStatus =
+    typeof partner.applicationStatus === 'string'
+      ? partner.applicationStatus
+      : null
+  const status = typeof partner.status === 'string' ? partner.status : null
+
+  return (
+    (applicationStatus === null ||
+      applicationStatus === 'draft' ||
+      applicationStatus === 'rejected') &&
+    (status === null || status === 'pending')
+  )
+}
+
 /** The subset of partners/{uid} that delivery_admin can change live. */
 export interface PartnerAccountSnapshot {
   applicationStatus: OnboardingStatus
@@ -50,6 +81,8 @@ export interface PartnerAccountSnapshot {
   accountStatusUpdatedAt: string | null
   submittedAt: string | null
   adminPartnerId: string | null
+  reviewedBy: string | null
+  reviewedAt: string | null
 }
 
 interface UploadedFile {
@@ -171,9 +204,8 @@ function accountSnapshotFromPartner(
         ? 'approved'
         : 'submitted'
       : 'draft')
-  const reviewDecision = asString(review.decision).toLowerCase()
   const rejectionReason =
-    applicationStatus === 'rejected' || reviewDecision === 'rejected'
+    applicationStatus === 'rejected'
       ? (asStringOrNull(review.reason) ??
         asStringOrNull(partner.rejectionReason))
       : null
@@ -197,6 +229,8 @@ function accountSnapshotFromPartner(
     accountStatusUpdatedAt: asStringOrNull(partner.statusUpdatedAt),
     submittedAt: asStringOrNull(partner.submittedAt),
     adminPartnerId: asStringOrNull(partner.adminPartnerId),
+    reviewedBy: asStringOrNull(review.reviewedBy),
+    reviewedAt: asStringOrNull(review.reviewedAt),
   }
 }
 
@@ -334,6 +368,18 @@ export async function savePartnerOnboarding({
   skipUploads?: boolean
 }): Promise<SubmittedOnboarding> {
   const firestore = requireDb()
+  const partnerRef = doc(firestore, 'partners', uid)
+
+  // Check before uploading anything so a reviewed account does not leave
+  // orphaned files in Storage when its submission is refused.
+  const existingPartner = await getDoc(partnerRef)
+  if (
+    existingPartner.exists() &&
+    !canOpenNewApplication(existingPartner.data())
+  ) {
+    throw new PartnerSubmissionBlockedError()
+  }
+
   const storageAvailable = skipUploads
     ? false
     : await isStorageBucketAvailable()
@@ -357,79 +403,87 @@ export async function savePartnerOnboarding({
     documents = buildDocumentRecordsWithoutUploads(state)
   }
 
-  const batch = writeBatch(firestore)
+  await runTransaction(firestore, async (transaction) => {
+    // Re-check inside the transaction so two submits, or a decision arriving
+    // while files upload, cannot overwrite an Administrator's work.
+    const latestPartner = await transaction.get(partnerRef)
+    if (
+      latestPartner.exists() &&
+      !canOpenNewApplication(latestPartner.data())
+    ) {
+      throw new PartnerSubmissionBlockedError()
+    }
 
-  batch.set(
-    doc(firestore, 'partners', uid),
-    {
-      partnerId: uid,
-      fullName: state.fullName.trim(),
-      phone: `+91${phone}`,
-      email: state.email.trim(),
-      dateOfBirth: state.dateOfBirth,
-      city: state.city.trim(),
-      addressLine: state.addressLine.trim(),
-      pincode: state.pincode,
-      profilePhotoUrl,
-      profilePhotoPath: profilePhoto?.storagePath ?? null,
-      vehicleType: state.vehicle.type,
-      status: 'pending',
-      applicationStatus: 'submitted',
-      rating: 0,
-      joinedOn: state.submittedAt?.slice(0, 10) ?? submittedAt.slice(0, 10),
-      submittedAt,
-      statusUpdatedAt,
-      updatedAt: submittedAt,
-      bank: {
-        accountHolder: state.bank.accountHolder.trim(),
-        accountNumber: state.bank.accountNumber,
-        ifsc: state.bank.ifsc.trim().toUpperCase(),
+    transaction.set(
+      partnerRef,
+      {
+        partnerId: uid,
+        fullName: state.fullName.trim(),
+        phone: `+91${phone}`,
+        email: state.email.trim(),
+        dateOfBirth: state.dateOfBirth,
+        city: state.city.trim(),
+        addressLine: state.addressLine.trim(),
+        pincode: state.pincode,
+        profilePhotoUrl,
+        profilePhotoPath: profilePhoto?.storagePath ?? null,
+        vehicleType: state.vehicle.type,
+        status: 'pending',
+        applicationStatus: 'submitted',
+        rating: 0,
+        joinedOn: state.submittedAt?.slice(0, 10) ?? submittedAt.slice(0, 10),
+        submittedAt,
+        statusUpdatedAt,
+        updatedAt: submittedAt,
+        bank: {
+          accountHolder: state.bank.accountHolder.trim(),
+          accountNumber: state.bank.accountNumber,
+          ifsc: state.bank.ifsc.trim().toUpperCase(),
+        },
       },
-    },
-    { merge: true },
-  )
+      { merge: true },
+    )
 
-  batch.set(
-    doc(firestore, 'partner_documents', uid),
-    {
-      partnerId: uid,
-      documentNumbers: {
-        aadhaar: state.documentNumbers.aadhaar,
-        pan: state.documentNumbers.pan,
-        licence: state.documentNumbers.licence,
+    transaction.set(
+      doc(firestore, 'partner_documents', uid),
+      {
+        partnerId: uid,
+        documentNumbers: {
+          aadhaar: state.documentNumbers.aadhaar,
+          pan: state.documentNumbers.pan,
+          licence: state.documentNumbers.licence,
+        },
+        documents,
+        updatedAt: submittedAt,
       },
-      documents,
-      updatedAt: submittedAt,
-    },
-    { merge: true },
-  )
+      { merge: true },
+    )
 
-  batch.set(
-    doc(firestore, 'vehicles', uid),
-    {
-      partnerId: uid,
-      type: state.vehicle.type,
-      model: state.vehicle.model.trim(),
-      colour: state.vehicle.colour.trim(),
-      registrationNumber: state.vehicle.registrationNumber.trim(),
-      licenceNumber: state.documentNumbers.licence,
-      updatedAt: submittedAt,
-    },
-    { merge: true },
-  )
+    transaction.set(
+      doc(firestore, 'vehicles', uid),
+      {
+        partnerId: uid,
+        type: state.vehicle.type,
+        model: state.vehicle.model.trim(),
+        colour: state.vehicle.colour.trim(),
+        registrationNumber: state.vehicle.registrationNumber.trim(),
+        licenceNumber: state.documentNumbers.licence,
+        updatedAt: submittedAt,
+      },
+      { merge: true },
+    )
 
-  batch.set(
-    doc(firestore, 'training_progress', uid),
-    {
-      partnerId: uid,
-      completed: state.training,
-      completedCount: state.training.filter(Boolean).length,
-      updatedAt: submittedAt,
-    },
-    { merge: true },
-  )
-
-  await batch.commit()
+    transaction.set(
+      doc(firestore, 'training_progress', uid),
+      {
+        partnerId: uid,
+        completed: state.training,
+        completedCount: state.training.filter(Boolean).length,
+        updatedAt: submittedAt,
+      },
+      { merge: true },
+    )
+  })
 
   return { submittedAt, statusUpdatedAt }
 }
@@ -492,6 +546,8 @@ export async function loadPartnerOnboarding(
     suspensionReason: account.suspensionReason,
     accountStatusUpdatedAt: account.accountStatusUpdatedAt,
     adminPartnerId: account.adminPartnerId,
+    reviewedBy: account.reviewedBy,
+    reviewedAt: account.reviewedAt,
     fullName: asString(partner.fullName),
     email: asString(partner.email),
     dateOfBirth: asString(partner.dateOfBirth),
@@ -545,6 +601,7 @@ export async function loadPartnerOnboarding(
 export function watchPartnerAccount(
   uid: string,
   onChange: (snapshot: PartnerAccountSnapshot) => void,
+  onError?: (error: Error) => void,
 ): Unsubscribe {
   const firestore = requireDb()
 
@@ -557,8 +614,10 @@ export function watchPartnerAccount(
 
       onChange(accountSnapshotFromPartner(asRecord(snapshot.data())))
     },
-    () => {
-      // Rules, auth, or network failures leave the last loaded state in place.
+    (error) => {
+      // Rules, auth, or network failures leave the last loaded state in place,
+      // but the shell should tell the partner that live decisions are stale.
+      onError?.(error)
     },
   )
 }

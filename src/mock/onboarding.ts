@@ -44,6 +44,8 @@ export const initialOnboarding: OnboardingState = {
   suspensionReason: null,
   accountStatusUpdatedAt: null,
   adminPartnerId: null,
+  reviewedBy: null,
+  reviewedAt: null,
 }
 
 export const trainingTopics = [

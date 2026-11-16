@@ -85,4 +85,8 @@ export interface OnboardingState {
   accountStatusUpdatedAt: string | null
   /** Admin partner directory ID, when delivery_admin linked this account. */
   adminPartnerId: string | null
+  /** Administrator who recorded the latest decision, when available. */
+  reviewedBy: string | null
+  /** When the latest Administrator decision was recorded. */
+  reviewedAt: string | null
 }
