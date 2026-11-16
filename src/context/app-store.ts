@@ -43,6 +43,14 @@ export interface AppContextValue {
   ) => Promise<void>
   /** Demo helper for moving the application through verification. */
   setApplicationStatus: (status: OnboardingStatus) => void
+  /** Set when the live partner-document listener cannot reach Firestore. */
+  liveSyncError: string | null
+  /** Re-subscribes to the live Administrator-controlled partner document. */
+  retryLiveSync: () => void
+  /** Set when a delivery lifecycle update could not reach Firestore. */
+  deliverySyncError: string | null
+  /** Retries the latest delivery lifecycle write. */
+  retryDeliverySync: () => void
 }
 
 export const AppContext = createContext<AppContextValue | null>(null)

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 import type { ReactNode } from 'react'
 import {
   DEMO_PROOF_OTP,
@@ -14,6 +21,11 @@ import {
   savePartnerOnboarding,
   watchPartnerAccount,
 } from '../services/partnerOnboarding'
+import {
+  publishDelivery,
+  publishPartnerLocation,
+  type PartnerLocation,
+} from '../services/deliverySync'
 import type { AppNotification } from '../types/notification'
 import type {
   OnboardingFiles,
@@ -99,22 +111,51 @@ function AppDataProvider({
   phone: string | null
   uid: string | null
 }) {
-  const [deliveries, dispatch] = useReducer(deliveryReducer, {
-    requests: initialRequests,
-    activeDelivery: null,
-    history: initialHistory,
-  })
+  const remoteEnabled = Boolean(
+    uid && isFirebaseConfigured && !uid.startsWith('demo:'),
+  )
+  const [deliveries, dispatch] = useReducer(deliveryReducer, remoteEnabled
+    ? { requests: [], activeDelivery: null, history: [] }
+    : {
+        requests: initialRequests,
+        activeDelivery: null,
+        history: initialHistory,
+      })
   const [isOnline, setOnlineState] = useState(false)
   const [notifications, setNotifications] =
     useState<AppNotification[]>(initialNotifications)
   const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets)
-  const [onboarding, setOnboarding] = useState<OnboardingState>(() =>
-    readOnboarding(phone),
-  )
-  const remoteEnabled = Boolean(
-    uid && isFirebaseConfigured && !uid.startsWith('demo:'),
-  )
+  const [onboarding, setOnboarding] = useState<OnboardingState>(() => {
+    const local = readOnboarding(phone)
+
+    if (!remoteEnabled) {
+      return local
+    }
+
+    // A live account's status comes from Firestore. Never carry a locally
+    // approved or active demo state into a real Firebase session while the
+    // Administrator record is still loading.
+    return {
+      ...local,
+      status: 'draft',
+      accountStatus: 'pending',
+      rejectionReason: null,
+      suspensionReason: null,
+      accountStatusUpdatedAt: null,
+      reviewedBy: null,
+      reviewedAt: null,
+    }
+  })
   const [isLoading, setIsLoading] = useState(remoteEnabled)
+  const [liveSyncError, setLiveSyncError] = useState<string | null>(null)
+  const [liveRetryToken, setLiveRetryToken] = useState(0)
+  const [deliverySyncError, setDeliverySyncError] = useState<string | null>(
+    null,
+  )
+  const [deliveryRetryToken, setDeliveryRetryToken] = useState(0)
+  const [locationTick, setLocationTick] = useState(0)
+  const locationRef = useRef<PartnerLocation | null>(null)
+  const publishedDeliveriesRef = useRef<Map<string, string>>(new Map())
   const canGoOnline =
     onboarding.status === 'approved' && onboarding.accountStatus === 'active'
 
@@ -183,35 +224,184 @@ function AppDataProvider({
 
     let active = true
     let unsubscribe: (() => void) | null = null
+    let reportTimer: number | undefined
 
     try {
-      unsubscribe = watchPartnerAccount(uid, (snapshot) => {
-        if (!active) {
-          return
-        }
+      unsubscribe = watchPartnerAccount(
+        uid,
+        (snapshot) => {
+          if (!active) {
+            return
+          }
 
-        setOnboarding((current) => ({
-          ...current,
-          status: snapshot.applicationStatus,
-          submittedAt: snapshot.submittedAt ?? current.submittedAt,
-          statusUpdatedAt:
-            snapshot.statusUpdatedAt ?? current.statusUpdatedAt,
-          rejectionReason: snapshot.rejectionReason,
-          accountStatus: snapshot.accountStatus,
-          suspensionReason: snapshot.suspensionReason,
-          accountStatusUpdatedAt: snapshot.accountStatusUpdatedAt,
-          adminPartnerId: snapshot.adminPartnerId,
-        }))
-      })
+          setLiveSyncError(null)
+          setOnboarding((current) => ({
+            ...current,
+            status: snapshot.applicationStatus,
+            submittedAt: snapshot.submittedAt ?? current.submittedAt,
+            statusUpdatedAt:
+              snapshot.statusUpdatedAt ?? current.statusUpdatedAt,
+            rejectionReason: snapshot.rejectionReason,
+            accountStatus: snapshot.accountStatus,
+            suspensionReason: snapshot.suspensionReason,
+            accountStatusUpdatedAt: snapshot.accountStatusUpdatedAt,
+            adminPartnerId: snapshot.adminPartnerId,
+            reviewedBy: snapshot.reviewedBy,
+            reviewedAt: snapshot.reviewedAt,
+          }))
+        },
+        () => {
+          if (active) {
+            setLiveSyncError(
+              'Live Administrator updates are unavailable. Check your connection and retry.',
+            )
+          }
+        },
+      )
     } catch {
-      // Keep the locally loaded onboarding state if Firestore is unavailable.
+      // Defer the fallback so mounting does not trigger a second render.
+      reportTimer = window.setTimeout(() => {
+        if (active) {
+          setLiveSyncError(
+            'Live Administrator updates are unavailable. Check your connection and retry.',
+          )
+        }
+      }, 0)
     }
 
     return () => {
       active = false
+      window.clearTimeout(reportTimer)
       unsubscribe?.()
     }
-  }, [remoteEnabled, uid])
+  }, [remoteEnabled, uid, liveRetryToken])
+
+  const retryLiveSync = useCallback(() => {
+    setLiveSyncError(null)
+    setLiveRetryToken((value) => value + 1)
+  }, [])
+
+  // Mirror each accepted or progressed job into Firestore. The signature keeps
+  // retries idempotent and avoids writing on every unrelated render.
+  useEffect(() => {
+    if (!remoteEnabled || !uid) {
+      return
+    }
+
+    const delivery = deliveries.activeDelivery ?? deliveries.history[0]
+    if (!delivery) {
+      return
+    }
+
+    const signature = [
+      delivery.status,
+      delivery.events.length,
+      delivery.completedAt ?? '',
+      delivery.proof?.verifiedAt ?? '',
+      locationRef.current?.updatedAt ?? '',
+    ].join('|')
+
+    if (publishedDeliveriesRef.current.get(delivery.id) === signature) {
+      return
+    }
+
+    publishedDeliveriesRef.current.set(delivery.id, signature)
+
+    void publishDelivery(delivery, {
+      partnerUid: uid,
+      partnerName:
+        onboarding.fullName.trim() || phone || 'Delivery partner',
+      vehicleType: onboarding.vehicle.type,
+      source: 'live',
+      currentLocation: locationRef.current,
+    })
+      .then(() => {
+        setDeliverySyncError(null)
+      })
+      .catch(() => {
+        publishedDeliveriesRef.current.delete(delivery.id)
+        setDeliverySyncError(
+          'This delivery could not be synced to the Administrator console. Retry when you are back online.',
+        )
+      })
+  }, [
+    deliveries,
+    remoteEnabled,
+    uid,
+    onboarding.fullName,
+    onboarding.vehicle.type,
+    phone,
+    deliveryRetryToken,
+    locationTick,
+  ])
+
+  // Share the partner's last known position while they are online. This is
+  // best-effort: a denied permission never blocks deliveries.
+  useEffect(() => {
+    if (!remoteEnabled || !uid) {
+      return
+    }
+
+    if (!isOnline) {
+      locationRef.current = null
+      void publishPartnerLocation(uid, null, false).catch(() => {
+        // Offline state is also best-effort.
+      })
+      return
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      return
+    }
+
+    const control = { cancelled: false }
+
+    const update = () => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (control.cancelled) {
+            return
+          }
+
+          const location: PartnerLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: Number.isFinite(position.coords.accuracy)
+              ? position.coords.accuracy
+              : null,
+            updatedAt: new Date().toISOString(),
+          }
+          locationRef.current = location
+          setLocationTick((value) => value + 1)
+
+          void publishPartnerLocation(uid, location, true).catch(() => {
+            // The next status change retries the delivery document.
+          })
+        },
+        () => {
+          // Permission denied or unavailable: online work still continues.
+        },
+        { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
+      )
+    }
+
+    update()
+    const timer = window.setInterval(update, 60_000)
+
+    return () => {
+      control.cancelled = true
+      window.clearInterval(timer)
+      locationRef.current = null
+      void publishPartnerLocation(uid, null, false).catch(() => {
+        // The next sign-in can correct a stale online flag.
+      })
+    }
+  }, [remoteEnabled, uid, isOnline])
+
+  const retryDeliverySync = useCallback(() => {
+    setDeliverySyncError(null)
+    setDeliveryRetryToken((value) => value + 1)
+  }, [])
 
   const acceptRequest = useCallback((id: string) => {
     dispatch({ type: 'accept', id, at: new Date().toISOString() })
@@ -314,23 +504,32 @@ function AppDataProvider({
     [uid, phone, onboarding],
   )
 
-  const setApplicationStatus = useCallback((status: OnboardingStatus) => {
-    setOnboarding((current) => {
-      const at = new Date().toISOString()
-      return {
-        ...current,
-        status,
-        submittedAt:
-          current.submittedAt ?? (status === 'draft' ? null : at),
-        statusUpdatedAt: at,
-        accountStatus: status === 'approved' ? 'active' : 'pending',
-        accountStatusUpdatedAt: at,
-        rejectionReason:
-          status === 'rejected' ? current.rejectionReason : null,
-        suspensionReason: null,
+  const setApplicationStatus = useCallback(
+    (status: OnboardingStatus) => {
+      // Live accounts are controlled by delivery_admin. This helper exists only
+      // for the offline prototype.
+      if (remoteEnabled) {
+        return
       }
-    })
-  }, [])
+
+      setOnboarding((current) => {
+        const at = new Date().toISOString()
+        return {
+          ...current,
+          status,
+          submittedAt:
+            current.submittedAt ?? (status === 'draft' ? null : at),
+          statusUpdatedAt: at,
+          accountStatus: status === 'approved' ? 'active' : 'pending',
+          accountStatusUpdatedAt: at,
+          rejectionReason:
+            status === 'rejected' ? current.rejectionReason : null,
+          suspensionReason: null,
+        }
+      })
+    },
+    [remoteEnabled],
+  )
 
   const unreadNotifications = useMemo(
     () => notifications.filter((item) => !item.isRead).length,
@@ -361,6 +560,10 @@ function AppDataProvider({
       updateOnboarding,
       submitOnboarding,
       setApplicationStatus,
+      liveSyncError,
+      retryLiveSync,
+      deliverySyncError,
+      retryDeliverySync,
     }),
     [
       isOnline,
@@ -383,6 +586,10 @@ function AppDataProvider({
       updateOnboarding,
       submitOnboarding,
       setApplicationStatus,
+      liveSyncError,
+      retryLiveSync,
+      deliverySyncError,
+      retryDeliverySync,
     ],
   )
 
