@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { isFirebaseConfigured } from '../firebase/config'
 import {
+  PHONE_STORAGE_PREFIX,
   signInDemoPartner,
-  signOutFirebase,
   subscribeToAuth,
 } from '../services/auth'
 import type { FirebaseAuthUser } from '../services/auth'
@@ -14,13 +14,17 @@ import { AuthContext } from './auth'
 import type { Session } from './auth'
 
 const STORAGE_KEY = 'fafo.partner.session'
-/** Remembers the number typed for a Firebase session across reloads. */
-const PHONE_KEY_PREFIX = 'fafo.partner.phone'
 /**
  * Marks the current tab as already running. A reload keeps this marker (and
  * the signed-in session), while a fresh tab or browser launch starts at login.
  */
 const SESSION_MARKER_KEY = 'fafo.partner.session-active'
+/**
+ * The demo keeps the device's anonymous Firebase account after app sign-out so
+ * the same number can resume its partner record. This flag prevents that
+ * account from silently restoring the app without the OTP step.
+ */
+const SIGNED_OUT_KEY = 'fafo.partner.signed-out'
 
 function hasSessionMarker(): boolean {
   try {
@@ -46,6 +50,30 @@ function clearSessionMarker() {
   }
 }
 
+function hasSignedOutFlag(): boolean {
+  try {
+    return window.localStorage.getItem(SIGNED_OUT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function markSignedOut() {
+  try {
+    window.localStorage.setItem(SIGNED_OUT_KEY, '1')
+  } catch {
+    // Storage can be blocked; the in-memory session still signs out.
+  }
+}
+
+function clearSignedOutFlag() {
+  try {
+    window.localStorage.removeItem(SIGNED_OUT_KEY)
+  } catch {
+    // Nothing to clear when storage is blocked.
+  }
+}
+
 function normalizePhone(phone: string | null): string {
   const digits = phone?.replace(/\D/g, '') ?? ''
   return digits.length > 10 ? digits.slice(-10) : digits
@@ -61,14 +89,14 @@ function createSessionFromFirebaseUser(user: FirebaseAuthUser): Session {
   // the login screen so each UID keeps its own draft.
   if (phone) {
     try {
-      window.localStorage.setItem(`${PHONE_KEY_PREFIX}.${user.uid}`, phone)
+      window.localStorage.setItem(`${PHONE_STORAGE_PREFIX}.${user.uid}`, phone)
     } catch {
       // Storage can be blocked; the session still works in memory.
     }
   } else {
     try {
       phone =
-        window.localStorage.getItem(`${PHONE_KEY_PREFIX}.${user.uid}`) ?? ''
+        window.localStorage.getItem(`${PHONE_STORAGE_PREFIX}.${user.uid}`) ?? ''
     } catch {
       phone = ''
     }
@@ -114,6 +142,10 @@ function hasSubmittedLocalApplication(phone: string): boolean {
 }
 
 function readStoredSession(): Session | null {
+  if (hasSignedOutFlag()) {
+    return null
+  }
+
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) {
@@ -185,6 +217,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession((current) =>
           current && current.uid.startsWith('demo:') ? current : null,
         )
+        setIsReady(true)
+        return
+      }
+
+      if (hasSignedOutFlag() && !restoreAllowed.current) {
+        // Keep the anonymous Firebase account for a later same-number login,
+        // but do not skip the OTP gate after the partner signed out.
+        setSession(null)
         setIsReady(true)
         return
       }
@@ -276,6 +316,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // restored on the next reload.
     restoreAllowed.current = true
     markSessionActive()
+    clearSignedOutFlag()
     setFirebaseErrorCode(null)
 
     try {
@@ -289,7 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Firebase users do not carry a phone number of their own.
       try {
         window.localStorage.setItem(
-          `${PHONE_KEY_PREFIX}.${firebaseSession.uid}`,
+          `${PHONE_STORAGE_PREFIX}.${firebaseSession.uid}`,
           firebaseSession.phone,
         )
       } catch {
@@ -323,6 +364,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // A new sign-in makes this tab an active session, so reloads keep it.
     restoreAllowed.current = true
     markSessionActive()
+    clearSignedOutFlag()
 
     // Try the Firebase bridge first so Firestore and Storage receive a real
     // UID. The auth listener sets the session when it succeeds.
@@ -351,20 +393,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false
     }
 
+    clearSignedOutFlag()
     return connectToFirebase(phone)
   }, [session?.phone, connectToFirebase])
 
   const signOut = useCallback(async () => {
     restoreAllowed.current = false
     clearSessionMarker()
-    try {
-      if (isFirebaseConfigured) {
-        await signOutFirebase()
-      }
-    } finally {
-      setFirebaseErrorCode(null)
-      setSession(null)
-    }
+    markSignedOut()
+    // Keep the anonymous Firebase account on this device. The demo OTP has no
+    // real security boundary, and releasing it would make the same registered
+    // number look new on its next login. A different number still signs the
+    // previous account out inside signInDemoPartner().
+    setFirebaseErrorCode(null)
+    setSession(null)
   }, [])
 
   const firebase = useMemo(
