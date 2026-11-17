@@ -415,7 +415,7 @@ added:
 
 ## 16. Current implementation state and handoff
 
-> Last updated: 8 November 2026. Read this section before starting work; it
+> Last updated: 17 November 2026. Read this section before starting work; it
 > records what is built, what is intentionally missing, and what an agent
 > picking up the project should do next.
 
@@ -430,25 +430,36 @@ added:
   cannot be created, the app falls back to the local demo session, shows a
   **Firebase is not connected** banner with the Firebase error code and a retry
   action on every signed-in screen, and refuses to record a local-only
-  onboarding submission. Protected routes return to the requested screen.
+  onboarding submission. A demo fallback while Firebase is configured is treated
+  as unverified and starts in the wizard, so a stale locally approved state
+  cannot reach the dashboard. A fresh tab or app launch restores a remembered
+  Firebase session only when Firestore confirms a submitted or reviewed
+  application; a sign-in-only or draft account starts at the login screen.
+  Reloading the running tab keeps the session, and a submitted device-only demo
+  session also restores on a fresh launch. Protected routes return to the
+  requested screen.
 - **Firebase integration** — `src/firebase/` reads `VITE_FIREBASE_*` and exports
   `auth`, `db` and `storage`. `src/services/auth.ts` verifies the demo OTP and
   owns the retained phone-SMS functions; `src/services/partner.ts` records the
   sign-in number in Firestore, and `src/services/partnerOnboarding.ts` handles
   Storage uploads and the Firestore partner, document, vehicle and training
   records. Submission failures surface the Firebase error code next to the error
-  message. Delivery, earnings, notification and support data remain mock.
+  message. delivery_admin lists a sign-in-only `partners/{uid}` as **KYC
+  pending** with approval disabled until onboarding is submitted, and refreshes
+  synced partner records every 60 seconds and on window focus. Delivery,
+  earnings, notification and support data remain mock.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, number-plus-upload cards for
   Aadhaar, PAN, driving licence and vehicle RC, an optional bank passbook upload
   beside the account number, vehicle tiles (bike, scooter, bicycle, on foot),
-  licence and registration fields shared with the vehicle step, a required
+  licence and registration fields shared with the vehicle step, an optional
   profile photo and a submitted/under-review state.
   Draft progress is stored under `fafo.partner.onboarding.<phone>`, one draft
-  per verified number. Submission uploads the profile photo and selected
-  documents to Storage and writes `partners`, `partner_documents`, `vehicles`
-  and `training_progress` documents in Firestore. KYC files are optional; uploads
-  run when files are selected and Storage is available. Without Storage, the
+  per verified number. All required text fields are validated; every file
+  upload, including the profile photo and KYC documents, is optional. Submission
+  uploads selected files to Storage and writes `partners`, `partner_documents`,
+  `vehicles` and `training_progress` documents in Firestore. Uploads run when
+  files are selected and Storage is available. Without Storage, the
   submission stores document metadata and the 256px profile preview inline in
   Firestore, so onboarding is not blocked. If a files upload still fails, the
   error panel offers **Submit without documents**, which retries the Firestore

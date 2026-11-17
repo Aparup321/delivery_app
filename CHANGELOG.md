@@ -8,6 +8,15 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ### Added
 
+- An already-onboarded partner now returns straight to the dashboard on a fresh
+  app launch or new tab. A remembered Firebase session is restored only when
+  Firestore confirms a submitted or reviewed application; sign-in-only and draft
+  accounts start at login. Reloading the running tab keeps the session, and a
+  submitted device-only demo session also restores.
+- delivery_admin now shows a partner who has only signed in as **KYC pending** in
+  the KYC Review queue, with approval disabled until onboarding is submitted.
+  Synced partner records refresh automatically every 60 seconds and when the
+  window regains focus.
 - The active-delivery route preview now uses OpenStreetMap raster tiles instead
   of the illustrative SVG. Pickup and destination coordinates position the two
   markers, and the map carries OpenStreetMap attribution. No API key or new
@@ -18,6 +27,10 @@ connected; delivery, earnings, notification and support data remain mock.
   metadata and the small profile preview inline in Firestore; uploads still run
   when Storage is configured and files are selected. If a file upload fails, the
   review step now offers **Submit without documents** as an explicit retry.
+- The profile photo is now optional during onboarding, matching the KYC and bank
+  uploads. All required text fields, document numbers and applicable vehicle
+  details remain validated, but no upload blocks progress or submission; a
+  selected photo still uploads and appears on Home and Profile.
 - The KYC step now shows driving-licence and vehicle-RC number fields beside
   their upload controls; both fields share state with the vehicle step. The
   upload tile's hidden file input now has a positioning context, so opening the
@@ -133,6 +146,23 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ### Fixed
 
+- Reloading a restored, submitted session no longer lands in the onboarding
+  wizard. The offline location publish now waits for the initial Firestore
+  onboarding read, so a merge write cannot make the partner document look like a
+  location-only sign-in record.
+- A fresh app launch or new tab now starts at the login screen unless Firestore
+  confirms a submitted or reviewed application, so a sign-in-only account no
+  longer restores the previous Firebase session straight into the dashboard.
+  Reloading the running tab still keeps the session. Starting a new sign-in while
+  already signed in no longer redirects back to the old session, so a different
+  mobile number reaches the OTP screen.
+- A late Firebase sign-out callback no longer clears a local demo fallback
+  session, so an offline sign-in stays in the onboarding wizard with the
+  connection banner instead of dropping back to the login screen.
+- Onboarding is now enforced when Firebase is configured but the session falls
+  back to the device-only demo account. That session starts as a draft in the
+  wizard and no longer reuses a stale locally approved application to reach the
+  dashboard.
 - Orders no longer lists or allows accepting requests while the partner is
   offline; the Available tab shows an offline state with a "Go online" action,
   matching the dashboard and the availability rule.

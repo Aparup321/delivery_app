@@ -114,6 +114,12 @@ function AppDataProvider({
   const remoteEnabled = Boolean(
     uid && isFirebaseConfigured && !uid.startsWith('demo:'),
   )
+  // Firebase is configured but Authentication failed, so the app fell back to
+  // the device-only demo session. It has no verified application and must not
+  // inherit an old locally approved state from an earlier session.
+  const unverifiedDemoSession = Boolean(
+    uid && isFirebaseConfigured && uid.startsWith('demo:'),
+  )
   const [deliveries, dispatch] = useReducer(deliveryReducer, remoteEnabled
     ? { requests: [], activeDelivery: null, history: [] }
     : {
@@ -128,20 +134,27 @@ function AppDataProvider({
   const [onboarding, setOnboarding] = useState<OnboardingState>(() => {
     const local = readOnboarding(phone)
 
-    if (!remoteEnabled) {
+    if (!remoteEnabled && !unverifiedDemoSession) {
       return local
     }
 
-    // A live account's status comes from Firestore. Never carry a locally
-    // approved or active demo state into a real Firebase session while the
-    // Administrator record is still loading.
+    // A live account's status comes from Firestore. A demo fallback while
+    // Firebase is configured has no verified application either, so both must
+    // start the wizard until a real submission exists. Preserve draft progress,
+    // but reset a locally submitted application back to the first step.
+    const wasSubmitted = local.status !== 'draft' || Boolean(local.submittedAt)
+
     return {
       ...local,
+      step: wasSubmitted ? 0 : local.step,
       status: 'draft',
+      submittedAt: null,
+      statusUpdatedAt: null,
       accountStatus: 'pending',
       rejectionReason: null,
       suspensionReason: null,
       accountStatusUpdatedAt: null,
+      adminPartnerId: null,
       reviewedBy: null,
       reviewedAt: null,
     }
@@ -199,14 +212,20 @@ function AppDataProvider({
 
     void loadPartnerOnboarding(uid)
       .then((remote) => {
-        if (active && remote) {
+        if (!active) {
+          return
+        }
+
+        if (remote) {
           setOnboarding(remote)
         }
+        // Apply the status and clear the gate in one batch. Clearing it in a
+        // separate finally callback can render the draft state once and send a
+        // submitted partner to the wizard before the remote state lands.
+        setIsLoading(false)
       })
       .catch(() => {
         // Keep the local draft if Firestore is unavailable or rules deny read.
-      })
-      .finally(() => {
         if (active) {
           setIsLoading(false)
         }
@@ -336,9 +355,12 @@ function AppDataProvider({
   ])
 
   // Share the partner's last known position while they are online. This is
-  // best-effort: a denied permission never blocks deliveries.
+  // best-effort: a denied permission never blocks deliveries. Wait until the
+  // first Firestore read has settled: a merge write started before that read
+  // can surface as a location-only document locally and make a submitted
+  // partner look like a brand-new sign-in, which sends them to the wizard.
   useEffect(() => {
-    if (!remoteEnabled || !uid) {
+    if (!remoteEnabled || !uid || isLoading) {
       return
     }
 
@@ -396,7 +418,7 @@ function AppDataProvider({
         // The next sign-in can correct a stale online flag.
       })
     }
-  }, [remoteEnabled, uid, isOnline])
+  }, [remoteEnabled, uid, isOnline, isLoading])
 
   const retryDeliverySync = useCallback(() => {
     setDeliverySyncError(null)

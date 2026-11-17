@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ArrowRight, ShieldCheck } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
@@ -26,7 +26,7 @@ interface VerifyLocationState {
 export function VerifyOtpPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn, isAuthenticated } = useAuth()
+  const { signIn } = useAuth()
   const { t } = useLanguage()
   const state = (location.state ?? null) as VerifyLocationState | null
   const phone = state?.phone
@@ -36,12 +36,6 @@ export function VerifyOtpPage() {
   const [issuedAt, setIssuedAt] = useState(() => Date.now())
   const [isVerifying, setIsVerifying] = useState(false)
   const { secondsLeft, restart } = useCountdown(RESEND_COOLDOWN_SECONDS)
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate(state?.from ?? '/', { replace: true })
-    }
-  }, [isAuthenticated, navigate, state?.from])
 
   if (!phone) {
     return <Navigate to="/login" replace />

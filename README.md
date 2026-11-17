@@ -73,7 +73,7 @@ material for the project and are not part of the deployed application.
 | Module | What it does | Status |
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), anonymous Firebase session when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
-| Onboarding | Five steps matching the design: personal (with required profile photo), KYC and bank, vehicle, training, review | Built (Firebase) |
+| Onboarding | Five steps matching the design: personal (text fields required, all file uploads optional), KYC and bank, vehicle, training, review | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence and RC numbers with optional upload controls, plus a bank passbook upload; files go to Storage and metadata to Firestore | Built (Firebase) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
@@ -138,15 +138,27 @@ shared mock state layer:
 - Every section header carries a back control (Orders, History, Earnings,
   Profile, Notifications, Support, Active delivery, Onboarding and 404). Home is
   the app root, so it has no back button.
-- Firebase restores the session across reloads; signing out returns to the
-  login screen.
+- A fresh app launch or new tab skips the login screen only when Firestore
+  confirms the remembered account already has a submitted or reviewed
+  application. A sign-in-only or draft account starts at the login screen.
+  Reloading the running tab keeps the signed-in session; signing out returns to
+  the login screen.
 - Onboarding drafts are saved per verified mobile number under
-  `fafo.partner.onboarding.<phone>`. Submitting uploads selected files to
-  Storage and saves partner, document, vehicle and training records to
-  Firestore; signing in again reloads the submitted application from Firestore.
-- Draft applications are held inside the onboarding wizard; Home, Orders,
-  Earnings and Profile only open once the application is submitted. The bottom
-  navigation is hidden while the draft form is open.
+  `fafo.partner.onboarding.<phone>`. All required text and number fields are
+  validated; every file upload, including the profile photo and KYC documents,
+  is optional.
+  Submitting uploads selected files to Storage when it is available and saves
+  partner, document, vehicle and training records to Firestore; signing in again
+  reloads the submitted application from Firestore.
+- Signing in records the verified mobile number in `partners/{uid}` immediately.
+  Until onboarding is submitted, `delivery_admin` lists that partner as **KYC
+  pending** and keeps approval disabled.
+- Onboarding is mandatory: draft applications are held inside the wizard, and
+  Home, Orders, Earnings and Profile only open once the application is
+  submitted. A Firebase-configured session that falls back to the device-only
+  demo account is treated as unverified and starts in the wizard, so it cannot
+  inherit an old locally approved state. The bottom navigation is hidden while
+  the draft form is open.
 - A profile photo is **optional** on the personal step; it must be JPG or PNG and
   within 2 MB, is downscaled locally to a 256px preview, is shown on Home and
   Profile, and is uploaded to Firebase Storage on submission.
@@ -320,8 +332,10 @@ online availability, requests, the active delivery, history, notifications,
 support tickets and onboarding progress. `src/context/AuthProvider.tsx` owns the
 Firebase session, with a local demo fallback when configuration is absent.
 
-- Firebase persists the authenticated session; submitted onboarding data is
-  stored in Firestore and Storage and reloaded on the next sign-in.
+- Firebase persists the authenticated session. A fresh launch restores it only
+  when Firestore confirms a submitted or reviewed application; a sign-in-only or
+  draft account returns to `/login`. Reloading the running tab keeps the session,
+  and submitted onboarding data is stored in Firestore and Storage.
 - Draft onboarding progress and the language choice use `localStorage`.
 - Delivery and notification changes live in memory and reset on reload.
 - Every figure shown on the earnings screen is demo data and labelled as such.
@@ -372,7 +386,9 @@ the service layer with the remaining backend integration.
 ### Administrator actions from delivery_admin
 
 The admin console writes these fields on `partners/{uid}` through the Firestore
-REST API:
+REST API. It syncs partner records after a real Firebase sign-in and refreshes
+them every 60 seconds and when the window regains focus; demo access uses the
+seeded partners instead.
 
 | Field | Meaning |
 | --- | --- |
@@ -392,6 +408,10 @@ REST API:
   The partner is forced offline and receives no requests.
 - **Reinstate:** `status: active` and `adminSuspension.active: false`. The
   availability switch works again when the application is approved.
+- **New sign-ins:** `partners/{uid}` created at sign-in carries the verified
+  phone and no application fields. The admin KYC queue shows it as **KYC
+  pending**; approval is refused until onboarding writes
+  `applicationStatus: submitted`.
 
 The admin UID is allow-listed in `firestore.rules`. Replace it if the Firebase
 administrator account is recreated, then redeploy the rules.

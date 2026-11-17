@@ -489,6 +489,34 @@ export async function savePartnerOnboarding({
 }
 
 /**
+ * Reads only the application status used when restoring a remembered Firebase
+ * session. Returns null for a sign-in-only partner document, so the app can
+ * send that partner back to the login screen on a fresh launch.
+ */
+export async function loadPartnerApplicationStatus(
+  uid: string,
+): Promise<OnboardingStatus | null> {
+  const firestore = requireDb()
+  const snapshot = await getDoc(doc(firestore, 'partners', uid))
+
+  if (!snapshot.exists()) {
+    return null
+  }
+
+  const partner = asRecord(snapshot.data())
+  const hasApplication =
+    typeof partner.applicationStatus === 'string' ||
+    typeof partner.fullName === 'string' ||
+    typeof partner.submittedAt === 'string'
+
+  if (!hasApplication) {
+    return null
+  }
+
+  return accountSnapshotFromPartner(partner).applicationStatus
+}
+
+/**
  * Rebuilds the onboarding state from Firestore. Returns null when the partner
  * has no remote record so a local draft can still be used.
  */

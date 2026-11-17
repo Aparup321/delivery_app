@@ -152,7 +152,7 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
 | Feature (source section) | Status | Notes |
 | --- | --- | --- |
 | Partner registration and onboarding (§1, §2) | In Progress | Five-step wizard matching the design (personal, KYC and bank, vehicle, training, review) with validation and saved progress; verification lifecycle, service areas and package capability are not modelled yet. |
-| Personal information and profile management (§2) | In Progress | Profile, contact, vehicle and document summary screens exist, and a profile photo is required during onboarding. Editing partner details after submission is not implemented. |
+| Personal information and profile management (§2) | In Progress | Profile, contact, vehicle and document summary screens exist, and the profile photo upload is optional during onboarding. Editing partner details after submission is not implemented. |
 | KYC and document verification (§2) | In Progress | Aadhaar, PAN, driving-licence and RC numbers are required; their uploads are optional. Review, expiry and restriction workflows are pending. |
 | Vehicle details and verification (§2) | In Progress | Bike, scooter, bicycle and on-foot partners are supported; model, colour, licence and registration are captured where they apply (not for bicycle or walking partners). Vehicle verification is pending. |
 | Training and onboarding (§2) | In Progress | Five timed modules with completion state; the onboarding quiz is not implemented. |
@@ -247,4 +247,26 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   loads OpenStreetMap raster tiles and positions pickup/destination markers from
   mock coordinates. Routing, live location, distance and ETA remain mock. Tiles
   need no API key; attribution is shown on the map.
+- **2026-11-17 — M20: optional profile photo and enforced onboarding.** The
+  profile photo no longer blocks the personal step, so every upload is optional
+  while all required text fields, document numbers and applicable vehicle
+  details remain validated. A Firebase-configured session that falls back to the
+  device-only demo account is treated as unverified, starts in the wizard at the
+  personal step, and cannot reuse a stale locally approved state to reach the
+  dashboard.
+- **2026-11-17 — M21: fresh-launch sign-in and number switching.** A new tab or
+  browser launch no longer reuses the running tab's session marker: sign-in-only
+  and draft accounts open the sign-in screen (submitted accounts restore under
+  M22), while reloading the running tab keeps the session. Starting a new sign-in
+  while signed in no longer redirects back to the old session, so a different
+  mobile number reaches the OTP screen.
+- **2026-11-17 — M22: onboarded-session restore and KYC-pending queue.** A
+  remembered Firebase session now restores straight to the dashboard on a fresh
+  launch once Firestore confirms a submitted or reviewed application; a
+  sign-in-only or draft account still starts at login, and a submitted
+  device-only demo session restores too. Reloading a restored session no longer
+  falls into the onboarding wizard because the offline location publish waits for
+  the initial Firestore onboarding read. delivery_admin lists a sign-in-only
+  partner record as **KYC pending** with approval disabled until onboarding is
+  submitted, and refreshes synced records every 60 seconds and on window focus.
 
