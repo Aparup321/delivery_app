@@ -131,7 +131,9 @@ shared mock state layer:
 
 - `/login` and `/verify-otp` — mobile number entry, demo OTP verification with a
   resend timer and clear error messages. When Firebase is configured, the
-  verified number signs in with an anonymous Firebase session.
+  verified number signs in with an anonymous Firebase session. Re-entering the
+  same number on this device reuses its Firebase UID and resumes that partner's
+  application; a different number gets a new account and starts onboarding.
 - Protected app shell with Home, Orders, History, Earnings, Profile and a
   404 screen, plus Notifications, Active Delivery, Support and Onboarding, all
   inside the same shell with the bottom navigation.
@@ -142,7 +144,10 @@ shared mock state layer:
   confirms the remembered account already has a submitted or reviewed
   application. A sign-in-only or draft account starts at the login screen.
   Reloading the running tab keeps the signed-in session; signing out returns to
-  the login screen.
+  the login screen. App sign-out keeps the device's anonymous Firebase account
+  so the same number can resume after OTP; use a different number to switch
+  accounts. Cross-device login or a cleared browser still requires real phone
+  authentication.
 - Onboarding drafts are saved per verified mobile number under
   `fafo.partner.onboarding.<phone>`. All required text and number fields are
   validated; every file upload, including the profile photo and KYC documents,

@@ -436,8 +436,12 @@ added:
   Firebase session only when Firestore confirms a submitted or reviewed
   application; a sign-in-only or draft account starts at the login screen.
   Reloading the running tab keeps the session, and a submitted device-only demo
-  session also restores on a fresh launch. Protected routes return to the
-  requested screen.
+  session also restores on a fresh launch. Re-entering the same number on the
+  same device reuses the existing anonymous UID, so its submitted application
+  resumes; a different number switches to a new account. App sign-out clears the
+  UI session but keeps the device's anonymous Firebase account for demo
+  continuity. Cross-device login or a cleared browser still requires real phone
+  authentication. Protected routes return to the requested screen.
 - **Firebase integration** — `src/firebase/` reads `VITE_FIREBASE_*` and exports
   `auth`, `db` and `storage`. `src/services/auth.ts` verifies the demo OTP and
   owns the retained phone-SMS functions; `src/services/partner.ts` records the

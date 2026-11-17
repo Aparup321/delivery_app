@@ -6,13 +6,22 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ## [Unreleased]
 
+### Fixed
+
+- Re-entering an already registered mobile number on the same device reuses its
+  anonymous Firebase UID, so the partner resumes the submitted application
+  instead of starting onboarding from the first step. A different number still
+  creates a new account. App sign-out keeps the device's anonymous account for
+  this demo flow; cross-device login still requires real phone authentication.
+
 ### Added
 
 - An already-onboarded partner now returns straight to the dashboard on a fresh
   app launch or new tab. A remembered Firebase session is restored only when
-  Firestore confirms a submitted or reviewed application; sign-in-only and draft
-  accounts start at login. Reloading the running tab keeps the session, and a
-  submitted device-only demo session also restores.
+  Firestore confirms a submitted or reviewed application and the partner has not
+  signed out; sign-in-only and draft accounts start at login. Reloading the
+  running tab keeps the session, and a submitted device-only demo session also
+  restores.
 - delivery_admin now shows a partner who has only signed in as **KYC pending** in
   the KYC Review queue, with approval disabled until onboarding is submitted.
   Synced partner records refresh automatically every 60 seconds and when the
