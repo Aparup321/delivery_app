@@ -11,6 +11,34 @@ import { auth } from '../firebase'
 import { getFirebaseErrorCode } from '../utils/firebaseError'
 
 const RECAPTCHA_CONTAINER_ID = 'recaptcha-container'
+/** Anonymous users have no phone number; remember which number owns the UID. */
+export const PHONE_STORAGE_PREFIX = 'fafo.partner.phone'
+
+function normalizePhone(phone: string | null): string {
+  const digits = phone?.replace(/\D/g, '') ?? ''
+  return digits.length > 10 ? digits.slice(-10) : digits
+}
+
+function storedPhoneForUid(uid: string): string {
+  try {
+    return normalizePhone(
+      window.localStorage.getItem(`${PHONE_STORAGE_PREFIX}.${uid}`),
+    )
+  } catch {
+    return ''
+  }
+}
+
+function rememberPhone(uid: string, phone: string): void {
+  try {
+    window.localStorage.setItem(
+      `${PHONE_STORAGE_PREFIX}.${uid}`,
+      normalizePhone(phone),
+    )
+  } catch {
+    // Storage can be blocked; the in-memory session still works.
+  }
+}
 
 export interface FirebaseAuthUser {
   uid: string
@@ -105,6 +133,10 @@ export interface DemoPartnerSession {
  * proves that Auth, Firestore and Storage are reachable. Resolves to null when
  * Firebase is not configured; throws when the anonymous provider is
  * unavailable so callers can fall back to the local demo session.
+ *
+ * Reusing the current anonymous UID is essential: creating a new anonymous
+ * user for the same phone would orphan that partner's submitted application.
+ * A different phone still switches to a new anonymous account.
  */
 export async function signInDemoPartner(
   phone: string,
@@ -114,9 +146,29 @@ export async function signInDemoPartner(
   }
 
   const firebaseAuth = requireAuth()
+  const normalizedPhone = normalizePhone(phone)
+  const currentUser = firebaseAuth.currentUser
 
-  // A stale session would make the anonymous sign-in replace it mid-flight.
-  if (firebaseAuth.currentUser) {
+  if (currentUser) {
+    const currentPhone =
+      storedPhoneForUid(currentUser.uid) ||
+      normalizePhone(currentUser.phoneNumber)
+
+    if (currentPhone === normalizedPhone) {
+      // The same number is signing back in. Keep the existing Firebase UID so
+      // its partner document, onboarding data and Administrator decisions stay
+      // attached to this account.
+      pendingPhone = phone
+      rememberPhone(currentUser.uid, phone)
+      return {
+        uid: currentUser.uid,
+        phone,
+        signedInAt: new Date().toISOString(),
+      }
+    }
+
+    // A different number is signing in. Release the previous demo account so
+    // the new number gets its own onboarding record.
     await signOut(firebaseAuth)
   }
 
@@ -124,6 +176,7 @@ export async function signInDemoPartner(
 
   try {
     const credential = await signInAnonymously(firebaseAuth)
+    rememberPhone(credential.user.uid, phone)
 
     // Anonymous users have no phone number field, so put the verified demo
     // number in the display name. It is visible in Authentication → Users as
