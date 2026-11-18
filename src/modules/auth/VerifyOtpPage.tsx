@@ -72,9 +72,9 @@ export function VerifyOtpPage() {
     setIsVerifying(true)
 
     // The demo OTP is the default verification path while the project's own
-    // OTP API is pending. AuthProvider bridges the accepted code to an
-    // anonymous Firebase session when it can and records the error code for
-    // the connection banner when it cannot.
+    // OTP API is pending. AuthProvider bridges the accepted code to a stable
+    // Firebase demo account when it can and records the error code for the
+    // connection banner when it cannot.
     try {
       await signIn(phone)
       navigate(state?.from ?? '/', { replace: true })

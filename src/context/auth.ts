@@ -21,9 +21,10 @@ export interface AuthContextValue {
   /** False until Firebase has restored the persisted session. */
   isReady: boolean
   /**
-   * Verifies the demo OTP. When Firebase is configured it also creates an
-   * anonymous Firebase session so Firestore and Storage use a real UID; when
-   * that fails, it falls back to a local demo session and records the error.
+   * Verifies the demo OTP. When Firebase is configured it also signs in to the
+   * stable per-number demo account so Firestore and Storage use a real UID;
+   * when that fails, it falls back to a local demo session and records the
+   * error.
    */
   signIn: (phone: string) => Promise<void>
   /** Retries the Firebase session for the signed-in number. */

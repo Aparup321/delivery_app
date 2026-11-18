@@ -8,13 +8,25 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ### Fixed
 
-- Re-entering an already registered mobile number on the same device reuses its
-  anonymous Firebase UID, so the partner resumes the submitted application
-  instead of starting onboarding from the first step. The sign-in record is not
-  rewritten for a reused device account, so the merge write cannot hide the
-  submitted document from the first Firestore read. A different number still
-  creates a new account. App sign-out keeps the device's anonymous account for
-  this demo flow; cross-device login still requires real phone authentication.
+- Re-entering an already registered mobile number now resumes its submitted
+  application instead of reopening the onboarding wizard. The demo bridge uses a
+  stable Email/Password Firebase account derived from the number, so the same
+  number keeps one UID across sign-outs, number switches, browser restarts,
+  cleared browser data and devices. An existing anonymous device account is
+  linked to the stable credential on its next sign-in, preserving its Firestore
+  records. If a newly created stable UID has no Firestore application, a
+  submitted or fully completed local application for the same number is restored
+  to it. Firestore is read from the server before an application is treated as
+  missing, sign-in-only snapshots can no longer downgrade a submitted state, and
+  a failed restore shows a retry banner instead of reopening the wizard. The
+  sign-in record is not rewritten for a reused account, so the merge write cannot
+  briefly hide the submitted document. App sign-out still keeps the device's
+  Firebase session for demo continuity. This identity bridge is demo-only; real
+  phone verification remains the production path.
+- Explicit sign-out no longer saves the protected page as the next sign-in
+  destination. Signing out from Profile or the onboarding wizard and entering the
+  OTP returns an approved partner to the dashboard instead of reopening the page
+  they left.
 
 ### Added
 

@@ -6,8 +6,8 @@ import { Button } from '../common/Button'
 
 /**
  * Explains the local demo fallback instead of silently pretending the app is
- * connected. Visible on every signed-in screen until the anonymous Firebase
- * session succeeds, with the Firebase error code and a retry action.
+ * connected. Visible on every signed-in screen until a Firebase session
+ * succeeds, with the Firebase error code and a retry action.
  */
 export function FirebaseStatusBanner() {
   const { firebase, isAuthenticated, retryFirebaseConnection } = useAuth()
@@ -56,7 +56,7 @@ export function FirebaseStatusBanner() {
 
           <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
             {t(
-              'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.',
+              'This session is stored only on this device. Enable Authentication and the Email/Password provider in the Firebase console, then retry.',
             )}
           </p>
 

@@ -60,8 +60,9 @@ function createSessionFromFirebaseUser(user: FirebaseAuthUser): Session {
     : new Date()
   let phone = normalizePhone(user.phoneNumber)
 
-  // Anonymous demo sessions have no phone number; restore the one typed on
-  // the login screen so each UID keeps its own draft.
+  // Demo sessions have no phone number field; restore the one typed on the
+  // login screen or encoded in the stable demo email so each UID keeps its own
+  // draft.
   if (phone) {
     try {
       window.localStorage.setItem(`${PHONE_STORAGE_PREFIX}.${user.uid}`, phone)
@@ -201,8 +202,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (hasSignedOutFlag() && !restoreAllowed.current) {
-        // Keep the anonymous Firebase account for a later same-number login,
-        // but do not skip the OTP gate after the partner signed out.
+        // Keep the Firebase account for a later same-number login, but do not
+        // skip the OTP gate after the partner signed out.
         setSession(null)
         setIsReady(true)
         return
@@ -283,7 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session])
 
   /**
-   * Creates the anonymous Firebase session used by the demo OTP flow. Records
+   * Creates the stable demo Firebase session used by the demo OTP flow. Records
    * the Firebase error code so the connection banner can show why it failed.
    */
   const connectToFirebase = useCallback(async (phone: string) => {
@@ -305,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      // Remember the number for this UID so a reload can restore it. Anonymous
+      // Remember the number for this UID so a reload can restore it. Demo
       // Firebase users do not carry a phone number of their own.
       try {
         window.localStorage.setItem(
@@ -361,9 +362,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Fallback for the demo OTP flow: no Firebase configuration, or the
-    // anonymous provider is unavailable. The error code stays visible in the
-    // connection banner so the setup problem is not silent.
+    // Fallback for the demo OTP flow: no Firebase configuration, or no
+    // Firebase provider could create a session. The error code stays visible
+    // in the connection banner so the setup problem is not silent.
     setSession({
       uid: `demo:${phone}`,
       phone,
@@ -386,7 +387,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restoreAllowed.current = false
     clearSessionMarker()
     markSignedOut()
-    // Keep the anonymous Firebase account on this device. The demo OTP has no
+    // Keep the Firebase demo account on this device. The demo OTP has no
     // real security boundary, and releasing it would make the same registered
     // number look new on its next login. A different number still signs the
     // previous account out inside signInDemoPartner().

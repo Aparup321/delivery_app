@@ -549,8 +549,8 @@ const hindi: Record<string, string> = {
     'आप केवल दस्तावेज़ संख्याओं के साथ जमा कर सकते हैं; चुनी गई फ़ाइलें अपलोड नहीं की जाएंगी।',
   'Submit without documents': 'दस्तावेज़ों के बिना जमा करें',
   'Firebase is not connected': 'Firebase कनेक्ट नहीं है',
-  'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.':
-    'यह सत्र केवल इस डिवाइस पर सहेजा गया है। Firebase कंसोल में Authentication और Anonymous प्रोवाइडर चालू करें, फिर दोबारा कोशिश करें।',
+  'This session is stored only on this device. Enable Authentication and the Email/Password provider in the Firebase console, then retry.':
+    'यह सत्र केवल इस डिवाइस पर सहेजा गया है। Firebase कंसोल में Authentication और Email/Password प्रोवाइडर चालू करें, फिर दोबारा कोशिश करें।',
   'Retry connection': 'कनेक्शन दोबारा जोड़ें',
   'Retrying…': 'दोबारा कोशिश हो रही है…',
   'Error: {code}': 'त्रुटि: {code}',
@@ -1097,8 +1097,8 @@ const bengali: Record<string, string> = {
     'আপনি শুধু নথির নম্বর দিয়ে জমা দিতে পারেন; নির্বাচিত ফাইল আপলোড হবে না।',
   'Submit without documents': 'নথি ছাড়া জমা দিন',
   'Firebase is not connected': 'Firebase কানেক্ট করা নেই',
-  'This session is stored only on this device. Enable Authentication and the Anonymous provider in the Firebase console, then retry.':
-    'এই সেশন শুধু এই ডিভাইসে সংরক্ষিত আছে। Firebase কনসোলে Authentication এবং Anonymous প্রোভাইডার চালু করে আবার চেষ্টা করুন।',
+  'This session is stored only on this device. Enable Authentication and the Email/Password provider in the Firebase console, then retry.':
+    'এই সেশন শুধু এই ডিভাইসে সংরক্ষিত আছে। Firebase কনসোলে Authentication এবং Email/Password প্রোভাইডার চালু করে আবার চেষ্টা করুন।',
   'Retry connection': 'সংযোগ আবার করুন',
   'Retrying…': 'আবার চেষ্টা হচ্ছে…',
   'Error: {code}': 'ত্রুটি: {code}',

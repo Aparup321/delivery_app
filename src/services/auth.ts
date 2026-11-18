@@ -55,9 +55,9 @@ export interface FirebaseAuthUser {
 let confirmationResult: ConfirmationResult | null = null
 let recaptchaVerifier: RecaptchaVerifier | null = null
 /**
- * Mobile number typed on the login screen while the demo OTP flow runs. The
- * anonymous Firebase user carries no phone number, so it is reported back to
- * AuthProvider through this value.
+ * Mobile number typed on the login screen while the demo OTP flow runs. Demo
+ * Firebase accounts carry no phone number, so it is reported back to
+ * AuthProvider through this value until the local UID key is written.
  */
 let pendingPhone: string | null = null
 
