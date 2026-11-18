@@ -72,7 +72,7 @@ material for the project and are not part of the deployed application.
 
 | Module | What it does | Status |
 | --- | --- | --- |
-| Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), anonymous Firebase session when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
+| Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
 | Onboarding | Five steps matching the design: personal (text fields required, all file uploads optional), KYC and bank, vehicle, training, review | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence and RC numbers with optional upload controls, plus a bank passbook upload; files go to Storage and metadata to Firestore | Built (Firebase) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
@@ -95,13 +95,22 @@ Indian mobile number (for example `9832979005`) and use the code **`123456`**.
 No SMS is sent; the project's own OTP API will replace this step later.
 
 When `VITE_FIREBASE_*` is configured, accepting the demo code also signs the
-partner in with an **anonymous Firebase session**, so the app talks to Firebase
-under the UID-based Security Rules instead of staying fully local. If that
-session cannot be created, the app falls back to a local demo session and shows
-a **Firebase is not connected** banner on every signed-in screen with the
-Firebase error code and a **Retry connection** action. Onboarding submission is
-blocked in that state, so a local draft is never presented as a Firebase
-submission.
+partner in with a **stable per-number Firebase demo account** (Email/Password,
+derived from the verified number), so the app talks to Firebase under the
+UID-based Security Rules instead of staying fully local. The fixed demo password
+lives in `src/services/auth.ts` and is not a real credential; it exists only
+until the project's OTP API replaces the demo OTP. One number resolves to one
+UID across sign-outs, number switches, browser restarts and devices. An existing
+anonymous device account is linked to the number's stable credential on its next
+sign-in, so its Firestore records are preserved.
+
+If the Email/Password provider is disabled, the bridge falls back to the previous
+anonymous session. If no Firebase session can be created, the app falls back to a
+local demo session and shows a **Firebase is not connected** banner on every
+signed-in screen with the Firebase error code and a **Retry connection** action.
+Onboarding submission is blocked in that state, so a local draft is never
+presented as a Firebase submission. This identity bridge is demo-only and must
+not be treated as production authentication.
 
 The Firebase phone-SMS code path (`sendPhoneOtp` / `confirmPhoneOtp`) stays in
 `src/services/auth.ts` for when the OTP API integration begins.
@@ -131,9 +140,11 @@ shared mock state layer:
 
 - `/login` and `/verify-otp` — mobile number entry, demo OTP verification with a
   resend timer and clear error messages. When Firebase is configured, the
-  verified number signs in with an anonymous Firebase session. Re-entering the
-  same number on this device reuses its Firebase UID and resumes that partner's
-  application; a different number gets a new account and starts onboarding.
+  verified number signs in to its stable demo account. Re-entering that number
+  resumes the same Firebase UID and submitted application after a sign-out,
+  number switch, browser restart or on another device; a new number gets its own
+  account and starts onboarding. An existing anonymous account is linked to the
+  stable credential instead of being replaced.
 - Protected app shell with Home, Orders, History, Earnings, Profile and a
   404 screen, plus Notifications, Active Delivery, Support and Onboarding, all
   inside the same shell with the bottom navigation.
@@ -144,17 +155,22 @@ shared mock state layer:
   confirms the remembered account already has a submitted or reviewed
   application. A sign-in-only or draft account starts at the login screen.
   Reloading the running tab keeps the signed-in session; signing out returns to
-  the login screen. App sign-out keeps the device's anonymous Firebase account
-  so the same number can resume after OTP; use a different number to switch
-  accounts. Cross-device login or a cleared browser still requires real phone
-  authentication.
+  the login screen. App sign-out keeps the device's Firebase session so the same
+  number can resume after OTP; use a different number to switch accounts. The
+  stable demo account also makes the same number resolve to the same partner
+  record on another device or after browser data is cleared, but this remains a
+  demo identity, not real phone verification.
 - Onboarding drafts are saved per verified mobile number under
   `fafo.partner.onboarding.<phone>`. All required text and number fields are
   validated; every file upload, including the profile photo and KYC documents,
   is optional.
   Submitting uploads selected files to Storage when it is available and saves
   partner, document, vehicle and training records to Firestore; signing in again
-  reloads the submitted application from Firestore.
+  reloads the submitted application from Firestore. If a newly created stable
+  account has no Firestore application but this device still holds a submitted
+  (or fully completed) local application for the same number, the app restores
+  that application instead of reopening the wizard. A failed restore shows a
+  retry banner and never silently downgrades the submitted state to a draft.
 - Signing in records the verified mobile number in `partners/{uid}` immediately.
   Until onboarding is submitted, `delivery_admin` lists that partner as **KYC
   pending** and keeps approval disabled.
@@ -358,23 +374,35 @@ the service layer with the remaining backend integration.
 - `src/firebase/config.ts` reads the six `VITE_FIREBASE_*` values and exports a
   configuration check. `src/firebase/index.ts` initializes one Firebase app and
   exports `auth`, `db` and `storage`.
-- `src/services/auth.ts` verifies the demo OTP and signs the partner in with an
-  anonymous Firebase session when configured; the Firebase phone-SMS functions
-  stay there for the upcoming OTP API. `AuthProvider` restores the Firebase
-  session, exposes the signed-in UID to the app and records the Firebase error
-  code when the bridge fails.
+- `src/services/auth.ts` verifies the demo OTP and signs the partner in to a
+  stable per-number Email/Password demo account when configured. A returning
+  number signs back into the same UID; an existing anonymous account is linked
+  to that credential before the UID can be replaced. If the provider is
+  disabled, the bridge falls back to an anonymous session. The Firebase
+  phone-SMS functions stay there for the upcoming OTP API. `AuthProvider`
+  restores the Firebase session, recovers the number from the demo account when
+  local storage cleared, exposes the signed-in UID to the app and records the
+  Firebase error code when the bridge fails.
 - `src/components/layout/FirebaseStatusBanner.tsx` shows that error code across
   the signed-in app with a retry action. The onboarding submit path refuses to
   write a local-only "submitted" state while the app is on the demo session, and
   shows the Firebase error code when a write fails.
 - `src/services/partner.ts` records the signed-in mobile number under
   `partners/{uid}` immediately, so the Firebase console reflects a login before
-  onboarding is submitted. The anonymous Auth user's display name is set to the
-  same number.
+  onboarding is submitted. The demo Auth user's display name is set to the same
+  number, and an existing device account's number can be recovered from this
+  document before linking it to a stable credential. The merge write is skipped
+  for an already-reused document, so it cannot briefly hide a submitted
+  application from the first read.
 - `src/services/partnerOnboarding.ts` uploads the profile photo and selected
   documents to Storage, then writes `partners/{uid}`, `partner_documents/{uid}`,
   `vehicles/{uid}` and `training_progress/{uid}`. Signing in again rebuilds the
-  onboarding state from those records.
+  onboarding state from those records; the partner document is read from the
+  server so a cached sign-in copy cannot be mistaken for a missing application.
+  If no remote application exists, a submitted or fully completed local
+  application for the same number is written to the new stable UID. The account
+  watcher ignores sign-in-only snapshots so they cannot move a submitted
+  partner back into the wizard.
 - `watchPartnerAccount()` in the same service subscribes to `partners/{uid}` and
   applies Administrator decisions without a reload: `applicationStatus`,
   `status`, `adminReview.reason`, and `adminSuspension.reason`. `AppProvider`
@@ -462,13 +490,14 @@ explored offline.
 
 1. Open **Authentication** and click **Get started** if the project has never
    used it; on the Spark plan the public API cannot initialize Authentication,
-   so the console button is required. Then enable **Sign-in method →
-   Anonymous** so the demo-OTP bridge can create a Firebase session. Enable
-   **Email/Password** and create the `admin@picdrop.demo` account used by
-   `delivery_admin`; its UID must match the allow-list in `firestore.rules`.
-   Add `localhost` under Authentication → Settings → Authorized domains. When
-   the SMS flow returns, also enable **Phone** and add test phone numbers under
-   Phone → Phone numbers for testing.
+   so the console button is required. Enable **Sign-in method → Email/Password**
+   for the stable per-number demo accounts, and create the
+   `admin@picdrop.demo` account used by `delivery_admin`; its UID must match the
+   allow-list in `firestore.rules`. Optionally enable **Anonymous** as the
+   fallback for projects where Email/Password cannot be enabled. Add `localhost`
+   under Authentication → Settings → Authorized domains. When the SMS flow
+   returns, also enable **Phone** and add test phone numbers under Phone → Phone
+   numbers for testing.
 2. Create a **Firestore Database** and initialize **Storage** in the same project
    as the Web App configuration. Firebase Storage requires the pay-as-you-go
    **Blaze** plan for a new default bucket: open **Databases & Storage →
@@ -489,21 +518,24 @@ explored offline.
 ### Verifying the connection
 
 1. Sign in with the demo OTP. **Authentication → Users** should list an
-   anonymous user whose display name is the mobile number, and
-   **Firestore → Data → partners** should contain a document with `phone`
-   (`+91…`), `authProvider` and `lastSignInAt`.
+   Email/Password user `p<10-digit-number>@fafo-demo.app` whose display name is
+   the mobile number, and **Firestore → Data → partners** should contain a
+   document with `phone` (`+91…`), `authProvider: demo-otp` and
+   `lastSignInAt`. Signing out and entering the same number again should return
+   the same UID. An older anonymous user is linked to this account on its next
+   sign-in.
 2. If the app shows the **Firebase is not connected** banner, read its error
    code:
 
    | Code | Meaning |
    | --- | --- |
    | `auth/configuration-not-found` | Authentication has not been initialized in the project |
-   | `auth/operation-not-allowed` | The Anonymous provider is not enabled |
+   | `auth/operation-not-allowed` | The Email/Password (and fallback Anonymous) provider is not enabled |
    | `auth/unauthorized-domain` | `localhost` (or the deployed host) is not an authorized domain |
    | `auth/network-request-failed` | The browser cannot reach Firebase |
 
 3. Fix the console setting and press **Retry connection** in the banner. The
-   banner disappears once the anonymous session exists.
+   banner disappears once a Firebase session exists.
 4. Complete onboarding and submit. **Firestore** should then contain
    `partners/{uid}`, `partner_documents/{uid}`, `vehicles/{uid}` and
    `training_progress/{uid}`, and **Storage** should contain

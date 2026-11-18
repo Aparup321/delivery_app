@@ -44,12 +44,13 @@ What exists today:
 - Vite + React 19 + TypeScript project with the Tailwind CSS v4 design system.
 - Mobile-number + demo OTP (`123456`) sign-in, the default verification path
   until the project's own OTP API is connected. When Firebase is configured the
-  verified number also signs in with an anonymous Firebase session so Firestore
-  and Storage enforce the UID rules; the Firebase phone-SMS code path stays in
-  `src/services/auth.ts` for the OTP API integration. Protected routes redirect
-  back to the requested screen. A signed-in banner shows the Firebase error code
-  and a retry action when that session cannot be created, and onboarding
-  submission stays blocked until it succeeds.
+  verified number signs in to a stable per-number Email/Password demo account so
+  Firestore and Storage enforce the UID rules; an existing anonymous account is
+  linked to that credential instead of being replaced. The Firebase phone-SMS
+  code path stays in `src/services/auth.ts` for the OTP API integration.
+  Protected routes redirect back to the requested screen. A signed-in banner
+  shows the Firebase error code and a retry action when that session cannot be
+  created, and onboarding submission stays blocked until it succeeds.
 - Five-step onboarding wizard (personal, KYC + bank, vehicle, training, review).
   Draft progress is saved to `localStorage`; submission uploads files to Storage
   and writes partner records to Firestore.
@@ -415,7 +416,7 @@ added:
 
 ## 16. Current implementation state and handoff
 
-> Last updated: 17 November 2026. Read this section before starting work; it
+> Last updated: 18 November 2026. Read this section before starting work; it
 > records what is built, what is intentionally missing, and what an agent
 > picking up the project should do next.
 
@@ -423,35 +424,45 @@ added:
 
 - **Auth** — mobile number + demo OTP (`123456`), the default verification path
   until the project's own OTP API is connected. When Firebase is configured the
-  verified number signs in with an anonymous Firebase session, so Firestore and
-  Storage enforce the UID rules. The anonymous user's display name is set to the
-  verified number and `partners/{uid}` is written at sign-in, so the number is
-  visible in the Firebase console before onboarding is submitted. If the session
-  cannot be created, the app falls back to the local demo session, shows a
-  **Firebase is not connected** banner with the Firebase error code and a retry
-  action on every signed-in screen, and refuses to record a local-only
-  onboarding submission. A demo fallback while Firebase is configured is treated
-  as unverified and starts in the wizard, so a stale locally approved state
-  cannot reach the dashboard. A fresh tab or app launch restores a remembered
-  Firebase session only when Firestore confirms a submitted or reviewed
-  application; a sign-in-only or draft account starts at the login screen.
-  Reloading the running tab keeps the session, and a submitted device-only demo
-  session also restores on a fresh launch. Re-entering the same number on the
-  same device reuses the existing anonymous UID, so its submitted application
-  resumes; a different number switches to a new account. App sign-out clears the
-  UI session but keeps the device's anonymous Firebase account for demo
-  continuity. Cross-device login or a cleared browser still requires real phone
-  authentication. Protected routes return to the requested screen.
+  verified number signs in to a stable per-number Email/Password demo account, so
+  Firestore and Storage enforce the UID rules. The demo user's display name is
+  set to the verified number and `partners/{uid}` is written at sign-in, so the
+  number is visible in the Firebase console before onboarding is submitted. An
+  older anonymous device account is linked to the stable credential on its next
+  sign-in, preserving its UID and records. Re-entering a number resumes the same
+  UID and submitted application after sign-out, a number switch, a browser
+  restart, cleared browser data or on another device; a new number creates its
+  own account. If the Email/Password provider is disabled, the bridge falls back
+  to an anonymous session. If no Firebase session can be created, the app falls
+  back to the local demo session, shows a **Firebase is not connected** banner
+  with the Firebase error code and a retry action on every signed-in screen, and
+  refuses to record a local-only onboarding submission. A demo fallback while
+  Firebase is configured is treated as unverified and starts in the wizard, so a
+  stale locally approved state cannot reach the dashboard. A fresh tab or app
+  launch restores a remembered Firebase session only when Firestore confirms a
+  submitted or reviewed application; a sign-in-only or draft account starts at
+  the login screen. Reloading the running tab keeps the session, and a submitted
+  device-only demo session also restores on a fresh launch. App sign-out clears
+  the UI session but keeps the device's Firebase account for demo continuity.
+  Protected routes return to the requested screen. This demo identity is not
+  production authentication; the retained phone-SMS path replaces it when the
+  OTP API is connected.
 - **Firebase integration** — `src/firebase/` reads `VITE_FIREBASE_*` and exports
-  `auth`, `db` and `storage`. `src/services/auth.ts` verifies the demo OTP and
-  owns the retained phone-SMS functions; `src/services/partner.ts` records the
-  sign-in number in Firestore, and `src/services/partnerOnboarding.ts` handles
-  Storage uploads and the Firestore partner, document, vehicle and training
-  records. Submission failures surface the Firebase error code next to the error
-  message. delivery_admin lists a sign-in-only `partners/{uid}` as **KYC
-  pending** with approval disabled until onboarding is submitted, and refreshes
-  synced partner records every 60 seconds and on window focus. Delivery,
-  earnings, notification and support data remain mock.
+  `auth`, `db` and `storage`. `src/services/auth.ts` verifies the demo OTP,
+  maintains the stable per-number demo account, links an existing anonymous
+  account and owns the retained phone-SMS functions; `src/services/partner.ts`
+  records the sign-in number in Firestore and can recover it from the account
+  document, and `src/services/partnerOnboarding.ts` handles Storage uploads and
+  the Firestore partner, document, vehicle and training records. The partner
+  document is fetched from the server before an application is treated as
+  missing, and sign-in-only snapshots cannot downgrade a submitted state. If
+  Firestore has no application for a new stable UID, a submitted or fully
+  completed local application for the same number is restored. Submission
+  failures surface the Firebase error code next to the error message.
+  delivery_admin lists a sign-in-only `partners/{uid}` as **KYC pending** with
+  approval disabled until onboarding is submitted, and refreshes synced partner
+  records every 60 seconds and on window focus. Delivery, earnings, notification
+  and support data remain mock.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
   Training, Review) with a purple stepper header, number-plus-upload cards for
   Aadhaar, PAN, driving licence and vehicle RC, an optional bank passbook upload

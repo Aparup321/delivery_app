@@ -54,8 +54,10 @@ export function ProfilePage() {
         )
 
   function handleSignOut() {
-    signOut()
+    // Leave the protected route before the session clears. Otherwise the route
+    // guard records /profile as the page to return to after the next sign-in.
     navigate('/login', { replace: true })
+    void signOut()
   }
 
   return (

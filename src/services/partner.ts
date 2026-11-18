@@ -1,4 +1,4 @@
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 
 /**
@@ -25,10 +25,35 @@ export async function recordPartnerSignIn({
     {
       partnerId: uid,
       phone: `+91${phone}`,
-      authProvider: 'anonymous',
+      authProvider: 'demo-otp',
       lastSignInAt: now,
       updatedAt: now,
     },
     { merge: true },
   )
+}
+
+/**
+ * Returns the demo mobile number recorded on `partners/{uid}`. Recovery uses
+ * it when this browser lost the local phone-to-UID key: the Firebase account is
+ * still the same partner, so the number signs in without creating a new UID.
+ * Returns null when the read itself failed, so the caller never mistakes an
+ * unavailable record for a new account and orphans a submitted application.
+ */
+export async function loadPartnerPhone(uid: string): Promise<string | null> {
+  if (!db) {
+    return ''
+  }
+
+  try {
+    const snapshot = await getDoc(doc(db, 'partners', uid))
+    if (!snapshot.exists()) {
+      return ''
+    }
+
+    const phone = snapshot.data().phone
+    return typeof phone === 'string' ? phone : ''
+  } catch {
+    return null
+  }
 }

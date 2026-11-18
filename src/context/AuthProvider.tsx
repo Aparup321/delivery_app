@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { isFirebaseConfigured } from '../firebase/config'
 import {
   PHONE_STORAGE_PREFIX,
+  demoPhoneFromEmail,
   signInDemoPartner,
   subscribeToAuth,
 } from '../services/auth'
@@ -10,6 +11,11 @@ import type { FirebaseAuthUser } from '../services/auth'
 import { recordPartnerSignIn } from '../services/partner'
 import { loadPartnerApplicationStatus } from '../services/partnerOnboarding'
 import { getFirebaseErrorCode } from '../utils/firebaseError'
+import {
+  clearSignedOutFlag,
+  hasSignedOutFlag,
+  markSignedOut,
+} from '../utils/sessionFlag'
 import { AuthContext } from './auth'
 import type { Session } from './auth'
 
@@ -19,13 +25,6 @@ const STORAGE_KEY = 'fafo.partner.session'
  * the signed-in session), while a fresh tab or browser launch starts at login.
  */
 const SESSION_MARKER_KEY = 'fafo.partner.session-active'
-/**
- * The demo keeps the device's anonymous Firebase account after app sign-out so
- * the same number can resume its partner record. This flag prevents that
- * account from silently restoring the app without the OTP step.
- */
-const SIGNED_OUT_KEY = 'fafo.partner.signed-out'
-
 function hasSessionMarker(): boolean {
   try {
     return window.sessionStorage.getItem(SESSION_MARKER_KEY) === '1'
@@ -47,30 +46,6 @@ function clearSessionMarker() {
     window.sessionStorage.removeItem(SESSION_MARKER_KEY)
   } catch {
     // Nothing to clear when session storage is blocked.
-  }
-}
-
-function hasSignedOutFlag(): boolean {
-  try {
-    return window.localStorage.getItem(SIGNED_OUT_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-function markSignedOut() {
-  try {
-    window.localStorage.setItem(SIGNED_OUT_KEY, '1')
-  } catch {
-    // Storage can be blocked; the in-memory session still signs out.
-  }
-}
-
-function clearSignedOutFlag() {
-  try {
-    window.localStorage.removeItem(SIGNED_OUT_KEY)
-  } catch {
-    // Nothing to clear when storage is blocked.
   }
 }
 
@@ -99,6 +74,10 @@ function createSessionFromFirebaseUser(user: FirebaseAuthUser): Session {
         window.localStorage.getItem(`${PHONE_STORAGE_PREFIX}.${user.uid}`) ?? ''
     } catch {
       phone = ''
+    }
+
+    if (!phone) {
+      phone = demoPhoneFromEmail(user.email) ?? ''
     }
   }
 
@@ -341,12 +320,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Leave a visible record in Firestore immediately, not only after the
       // onboarding form is submitted. A failure here must not block sign-in.
-      void recordPartnerSignIn(firebaseSession).catch((error) => {
-        console.warn(
-          '[auth] Could not record the sign-in in Firestore.',
-          error,
-        )
-      })
+      // Skip the write for a reused device account: its document already
+      // exists, and a merge write on a fresh page can briefly leave the local
+      // snapshot sign-in-only before the server copy loads, which would send a
+      // submitted partner back to the onboarding wizard.
+      if (!firebaseSession.reused) {
+        void recordPartnerSignIn(firebaseSession).catch((error) => {
+          console.warn(
+            '[auth] Could not record the sign-in in Firestore.',
+            error,
+          )
+        })
+      }
 
       return true
     } catch (error) {

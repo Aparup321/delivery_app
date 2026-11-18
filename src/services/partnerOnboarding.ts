@@ -1,6 +1,7 @@
 import {
   doc,
   getDoc,
+  getDocFromServer,
   onSnapshot,
   runTransaction,
   type Unsubscribe,
@@ -73,6 +74,8 @@ function canOpenNewApplication(partner: Record<string, unknown>) {
 
 /** The subset of partners/{uid} that delivery_admin can change live. */
 export interface PartnerAccountSnapshot {
+  /** False for the phone/session document written at sign-in. */
+  hasApplication: boolean
   applicationStatus: OnboardingStatus
   accountStatus: PartnerAccountStatus
   rejectionReason: string | null
@@ -195,6 +198,7 @@ function accountSnapshotFromPartner(
   // A partner document created at sign-in carries only phone/session fields.
   // Defaulting it to "submitted" would skip the mandatory onboarding wizard.
   const hasApplication =
+    typeof partner.applicationStatus === 'string' ||
     typeof partner.fullName === 'string' ||
     typeof partner.submittedAt === 'string'
   const applicationStatus =
@@ -216,6 +220,7 @@ function accountSnapshotFromPartner(
       : null
 
   return {
+    hasApplication,
     applicationStatus,
     accountStatus:
       partner.status === undefined
@@ -527,7 +532,9 @@ export async function loadPartnerOnboarding(
 
   const [partnerSnap, documentsSnap, vehicleSnap, trainingSnap] =
     await Promise.all([
-      getDoc(doc(firestore, 'partners', uid)),
+      // A cached sign-in document must not be mistaken for the current
+      // application state after a number switch or a restored account.
+      getDocFromServer(doc(firestore, 'partners', uid)),
       getDoc(doc(firestore, 'partner_documents', uid)),
       getDoc(doc(firestore, 'vehicles', uid)),
       getDoc(doc(firestore, 'training_progress', uid)),
@@ -640,7 +647,15 @@ export function watchPartnerAccount(
         return
       }
 
-      onChange(accountSnapshotFromPartner(asRecord(snapshot.data())))
+      const account = accountSnapshotFromPartner(asRecord(snapshot.data()))
+
+      // The sign-in document has no application yet. It must not overwrite a
+      // submitted state restored from Firestore or from this device.
+      if (!account.hasApplication) {
+        return
+      }
+
+      onChange(account)
     },
     (error) => {
       // Rules, auth, or network failures leave the last loaded state in place,

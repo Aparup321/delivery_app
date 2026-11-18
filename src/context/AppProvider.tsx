@@ -34,6 +34,7 @@ import type {
   SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
+import { isCompleteApplication } from '../utils/onboardingValidation'
 import { AppContext } from './app-store'
 import { deliveryReducer } from './deliveryReducer'
 import { useAuth } from './auth'
@@ -88,6 +89,40 @@ function readOnboarding(phone: string | null): OnboardingState {
   }
 }
 
+/**
+ * A local record qualifies for restoration when it was actually submitted, or
+ * when an earlier draft reset stripped the submitted flag but left every
+ * mandatory field valid. The reset also forced the wizard to step 0, while an
+ * unfinished application keeps the step the partner was editing.
+ */
+function hasSubmittedLocalApplication(state: OnboardingState): boolean {
+  if (state.status !== 'draft' && Boolean(state.submittedAt)) {
+    return true
+  }
+
+  return state.step === 0 && isCompleteApplication(state)
+}
+
+/** Resets a live account with no remote application to a fresh wizard. */
+function draftOnboarding(state: OnboardingState): OnboardingState {
+  const wasSubmitted = state.status !== 'draft' || Boolean(state.submittedAt)
+
+  return {
+    ...state,
+    step: wasSubmitted ? 0 : state.step,
+    status: 'draft',
+    submittedAt: null,
+    statusUpdatedAt: null,
+    accountStatus: 'pending',
+    rejectionReason: null,
+    suspensionReason: null,
+    accountStatusUpdatedAt: null,
+    adminPartnerId: null,
+    reviewedBy: null,
+    reviewedAt: null,
+  }
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
 
@@ -134,14 +169,17 @@ function AppDataProvider({
   const [onboarding, setOnboarding] = useState<OnboardingState>(() => {
     const local = readOnboarding(phone)
 
-    if (!remoteEnabled && !unverifiedDemoSession) {
+    if (!unverifiedDemoSession) {
+      // A live account is reconciled with Firestore while the gate shows its
+      // loading state; keeping the local copy first lets a submitted
+      // application be restored into a newly created stable account.
       return local
     }
 
-    // A live account's status comes from Firestore. A demo fallback while
-    // Firebase is configured has no verified application either, so both must
-    // start the wizard until a real submission exists. Preserve draft progress,
-    // but reset a locally submitted application back to the first step.
+    // A demo fallback while Firebase is configured has no verified
+    // application, so it must start the wizard until a real submission exists.
+    // Preserve draft progress, but reset a locally submitted application back
+    // to the first step.
     const wasSubmitted = local.status !== 'draft' || Boolean(local.submittedAt)
 
     return {
@@ -189,7 +227,7 @@ function AppDataProvider({
   )
 
   useEffect(() => {
-    if (!phone) {
+    if (!phone || isLoading) {
       return
     }
 
@@ -201,40 +239,124 @@ function AppDataProvider({
     } catch {
       // Progress stays in memory when storage is blocked.
     }
-  }, [onboarding, phone])
+  }, [onboarding, phone, isLoading])
 
   useEffect(() => {
     if (!remoteEnabled || !uid) {
       return
     }
 
+    const accountUid = uid
+    const accountPhone = phone
     let active = true
+    const local = readOnboarding(accountPhone)
 
-    void loadPartnerOnboarding(uid)
-      .then((remote) => {
-        if (!active) {
+    async function loadOrRestore() {
+      const remote = await loadPartnerOnboarding(accountUid)
+
+      if (!active) {
+        return
+      }
+
+      if (remote) {
+        // Firestore is authoritative for a live account. Set the complete
+        // application together with the loading flag so the gate cannot see
+        // the temporary draft state and redirect an already-registered
+        // partner to the data-entry wizard.
+        setOnboarding(remote)
+        setLiveSyncError(null)
+        setIsLoading(false)
+        return
+      }
+
+      // The account has no remote application, but this device holds a
+      // submitted one for the same number. This happens after the old demo
+      // bridge orphaned an anonymous account by switching numbers, or when a
+      // stable account was created after clearing the browser's Firebase
+      // session. Restore the submission instead of reopening the wizard with
+      // the same data.
+      if (accountPhone && hasSubmittedLocalApplication(local)) {
+        try {
+          await savePartnerOnboarding({
+            uid: accountUid,
+            phone: accountPhone,
+            state: local,
+            files: { documents: {} },
+            skipUploads: true,
+          })
+
+          const restored = await loadPartnerOnboarding(accountUid)
+
+          if (!active) {
+            return
+          }
+
+          setOnboarding(
+            restored ?? {
+              ...local,
+              status: 'submitted',
+              submittedAt: local.submittedAt ?? new Date().toISOString(),
+              accountStatus: 'pending',
+            },
+          )
+          setLiveSyncError(null)
+          setIsLoading(false)
+          return
+        } catch {
+          if (!active) {
+            return
+          }
+
+          // Keep the partner out of the wizard, but show an unverified state
+          // until the submission reaches Firestore. Retry re-runs this effect.
+          setOnboarding({
+            ...local,
+            status: 'submitted',
+            accountStatus: 'pending',
+          })
+          setLiveSyncError(
+            'Your application is saved on this device but could not be restored to Firebase. Check your connection and retry.',
+          )
+          setIsLoading(false)
           return
         }
+      }
 
-        if (remote) {
-          setOnboarding(remote)
-        }
-        // Apply the status and clear the gate in one batch. Clearing it in a
-        // separate finally callback can render the draft state once and send a
-        // submitted partner to the wizard before the remote state lands.
-        setIsLoading(false)
-      })
-      .catch(() => {
-        // Keep the local draft if Firestore is unavailable or rules deny read.
-        if (active) {
-          setIsLoading(false)
-        }
-      })
+      // A genuinely new account starts the mandatory wizard.
+      setOnboarding(draftOnboarding(local))
+      setIsLoading(false)
+    }
+
+    void loadOrRestore().catch(() => {
+      if (!active) {
+        return
+      }
+
+      // An unavailable read must not reopen the wizard with submitted data.
+      // Keep the local state and surface the failure with a retry action.
+      if (hasSubmittedLocalApplication(local)) {
+        setOnboarding({
+          ...local,
+          status: 'submitted',
+          accountStatus: 'pending',
+        })
+        setLiveSyncError(
+          'Could not verify your application with Firebase. Check your connection and retry.',
+        )
+      } else {
+        setOnboarding(draftOnboarding(local))
+        setLiveSyncError(
+          'Could not load your application from Firebase. Check your connection and retry.',
+        )
+      }
+
+      setIsLoading(false)
+    })
 
     return () => {
       active = false
     }
-  }, [remoteEnabled, uid])
+  }, [remoteEnabled, uid, phone, liveRetryToken])
 
   useEffect(() => {
     if (!remoteEnabled || !uid) {
@@ -254,20 +376,33 @@ function AppDataProvider({
           }
 
           setLiveSyncError(null)
-          setOnboarding((current) => ({
-            ...current,
-            status: snapshot.applicationStatus,
-            submittedAt: snapshot.submittedAt ?? current.submittedAt,
-            statusUpdatedAt:
-              snapshot.statusUpdatedAt ?? current.statusUpdatedAt,
-            rejectionReason: snapshot.rejectionReason,
-            accountStatus: snapshot.accountStatus,
-            suspensionReason: snapshot.suspensionReason,
-            accountStatusUpdatedAt: snapshot.accountStatusUpdatedAt,
-            adminPartnerId: snapshot.adminPartnerId,
-            reviewedBy: snapshot.reviewedBy,
-            reviewedAt: snapshot.reviewedAt,
-          }))
+          setOnboarding((current) => {
+            const hasSubmittedApplication =
+              snapshot.applicationStatus !== 'draft' ||
+              Boolean(snapshot.submittedAt)
+
+            // A stale sign-in snapshot must not move a submitted partner back
+            // into the data-entry wizard.
+            if (!hasSubmittedApplication && current.status !== 'draft') {
+              return current
+            }
+
+            return {
+              ...current,
+              status: snapshot.applicationStatus,
+              submittedAt: snapshot.submittedAt ?? current.submittedAt,
+              statusUpdatedAt:
+                snapshot.statusUpdatedAt ?? current.statusUpdatedAt,
+              rejectionReason: snapshot.rejectionReason,
+              accountStatus: snapshot.accountStatus,
+              suspensionReason: snapshot.suspensionReason,
+              accountStatusUpdatedAt: snapshot.accountStatusUpdatedAt,
+              adminPartnerId: snapshot.adminPartnerId,
+              reviewedBy: snapshot.reviewedBy,
+              reviewedAt: snapshot.reviewedAt,
+              step: hasSubmittedApplication ? 0 : current.step,
+            }
+          })
         },
         () => {
           if (active) {

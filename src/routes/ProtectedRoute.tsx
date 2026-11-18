@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/auth'
+import { hasSignedOutFlag } from '../utils/sessionFlag'
 
 export function ProtectedRoute() {
   const { isAuthenticated, isReady } = useAuth()
@@ -18,11 +19,18 @@ export function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
+    // An explicit sign-out happens on a protected page. Saving that page would
+    // send the partner back into it after the next OTP instead of the
+    // dashboard. Session-expiry redirects still keep their destination.
     return (
       <Navigate
         to="/login"
         replace
-        state={{ from: `${location.pathname}${location.search}` }}
+        state={
+          hasSignedOutFlag()
+            ? undefined
+            : { from: `${location.pathname}${location.search}` }
+        }
       />
     )
   }

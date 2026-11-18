@@ -10,7 +10,9 @@ connected; delivery, earnings, notification and support data remain mock.
 
 - Re-entering an already registered mobile number on the same device reuses its
   anonymous Firebase UID, so the partner resumes the submitted application
-  instead of starting onboarding from the first step. A different number still
+  instead of starting onboarding from the first step. The sign-in record is not
+  rewritten for a reused device account, so the merge write cannot hide the
+  submitted document from the first Firestore read. A different number still
   creates a new account. App sign-out keeps the device's anonymous account for
   this demo flow; cross-device login still requires real phone authentication.
 
