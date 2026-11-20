@@ -40,7 +40,8 @@ does not already exist. **Do not invent backend endpoints.**
 onboarding persistence are connected, and the admin-to-partner delivery loop is
 live: assigned offers arrive via `onSnapshot`, acceptance runs in a Firestore
 transaction, and the lifecycle plus GPS position update the shared `deliveries`
-document. Earnings, notifications and support stay mock-driven.**
+document. Notifications are real events; earnings and support stay
+mock-driven.**
 
 What exists today:
 
@@ -77,8 +78,9 @@ What exists today:
 
 **Remaining: earnings, notification and support integration (Phase 12) and
 Phase 13 (release QA).** Both need the open decisions in README to be answered.
-Distance and ETA still come from the console's service-area estimates, and the
-drop OTP falls back to the demo code `4821` when no console code exists.
+Distance and ETA still come from the console's service-area estimates, and
+closed-app push notifications still need Firebase Cloud Messaging plus a
+Cloud Function.
 
 ---
 
@@ -533,16 +535,26 @@ their service layer is added:
   arrived → delivered, with per-stage primary actions, an interactive
   Leaflet/OpenStreetMap map (pickup, drop and live partner markers, OSRM route
   line, recentre control), external turn-by-turn navigation per leg, customer
-  contact, issue reporting, a live location-sharing status chip, and OTP
-  completion (`dropOtp` from the console; demo fallback `4821`). Completed and
-  cancelled jobs move to history.
+  contact, issue reporting, a live location-sharing status chip (with the last
+  successful GPS update time), and OTP completion against the `dropOtp` the
+  console issued — live sessions have no fallback code, and offers without one
+  cannot be completed. The demo code `4821` exists only in the offline
+  prototype. Completed and cancelled jobs move to history.
 - **GPS tracking** — `usePartnerTracking` wraps `watchPosition` while a
   delivery is active and publishes throttled fixes (≥25 m movement or one
   minute, accuracy ≤150 m) to `currentLocation` on the delivery document.
   Permission denial, GPS loss, background tabs and unsupported devices are
   shown honestly; the watcher is cleared on completion, cancellation and
-  unmount. While online, `partners/{uid}` also keeps `lastLocation` and
-  `isOnline` updated once a minute.
+  unmount. While online, `partners/{uid}` also keeps `lastLocation`, `isOnline`
+  and `availability` (`Available` / `On Delivery` / `Offline`) updated once a
+  minute, and availability flips immediately when a delivery starts or ends.
+- **Notifications** — live listeners turn real events into in-app
+  notifications: new assigned offers, deliveries the Administrator cancels,
+  offers that expire or get reassigned, and account decisions (approved or
+  suspended). The first snapshot after load is a baseline, so reloads never
+  replay events. When the tab is backgrounded and permission is granted, a
+  system notification is shown; closed-app push needs FCM plus a Cloud
+  Function and is not built.
 - **History, earnings, notifications, support, profile** — searchable history,
   read/unread notifications, FAQ + ticket creation, and profile with documents,
   language, alerts and sign-out. The Earnings screen shows the labelled demo
@@ -572,10 +584,14 @@ their service layer is added:
   from the console, not routing-engine figures. The public OpenStreetMap tile
   servers and the OSRM demo server are defaults, not SLA-backed services;
   `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE` exist for production services.
-- The drop OTP falls back to the demo code `4821` when the console issued none;
-  real verification needs the backend-issued code.
+- Offers created before the console started issuing `dropOtp` cannot be
+  completed — the partner is told to contact operations. There is no demo OTP
+  in a live session; the demo code `4821` exists only in the offline prototype.
 - Partner location updates stop when the browser tab is backgrounded; there is
   no background tracking. Continuous tracking needs a native/PWA layer.
+- Closed-app push notifications need Firebase Cloud Messaging plus a Cloud
+  Function that fans out assignment events; only in-app notifications and
+  background-tab system alerts exist.
 - Onboarding quiz, working shifts, service zones and post-submission editing are
   not built.
 

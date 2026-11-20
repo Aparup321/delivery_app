@@ -85,7 +85,7 @@ material for the project and are not part of the deployed application.
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
 | Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (labelled demo; offline prototype only — live accounts see an empty state) |
-| Notifications | Request, account, delivery and payment alerts with read state | Built (empty for live accounts; demo fixtures offline only) |
+| Notifications | Real-event in-app notifications (new assignment, cancellation, offer expiry/reassignment, approval, suspension) with read state; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission and ticket status | Built (empty tickets for live accounts; FAQs are static help content) |
 | Profile & settings | Partner details, documents, English/Hindi/Bengali language switching, alerts, application status and sign-out | Built (live partner record) |
 
@@ -491,8 +491,21 @@ then leaves the Available list and opens the active delivery.
 a transaction with a timestamped `events` entry, so retries are idempotent and
 the console sees progress within seconds. Rejecting an offer records
 `partnerResponse` without changing the status; cancelling records a reason.
-Delivery completes only when the customer's OTP matches `dropOtp` (the demo
-code `4821` is the fallback for sessions without a console-issued code).
+Delivery completes only when the customer's OTP matches the `dropOtp` the
+console issued with the assignment — there is no fallback code. If an offer
+has no code (created before the console started issuing them), the app refuses
+to close the job and tells the partner to contact operations.
+
+**Notifications.** The live listeners turn events the partner did not create
+themselves into in-app notifications: a new assigned offer, a delivery the
+Administrator cancelled, an offer that expired or was reassigned, and account
+decisions (approved or suspended) from the partner-document watcher. The first
+snapshot after load is a baseline, so reloads never replay old events. When
+the tab is in the background and the partner has granted browser-notification
+permission, a system alert is shown. Browser notifications only work while the
+app is open — notifying a closed app needs Firebase Cloud Messaging plus a
+Cloud Function that fans out assignment events, which this project does not
+run yet.
 
 **Location sharing.** While a delivery is active, `usePartnerTracking` wraps
 `navigator.geolocation.watchPosition` and publishes fixes that moved ≥25 m (or
@@ -503,8 +516,11 @@ background tabs are reported honestly on the active-delivery screen ("Location
 permission denied — your position is not shared"); tracking stops and the
 watcher is cleared when the delivery completes, is cancelled or the screen
 unmounts. Separately, while online the app keeps writing `lastLocation`,
-`lastLocationUpdatedAt` and `isOnline` on `partners/{uid}` once a minute as a
-best-effort presence signal.
+`lastLocationUpdatedAt`, `isOnline` and `availability`
+(`Available` / `On Delivery` / `Offline`) on `partners/{uid}` once a minute as
+a best-effort presence signal. Availability flips to `On Delivery` the moment a
+delivery starts and back to `Available` when it ends, so the console can
+distinguish an online partner from a busy one.
 
 **Map.** The active-delivery screen uses an interactive Leaflet map
 (`src/components/deliveries/DeliveryMap.tsx`) with distinct pickup, drop and
@@ -585,16 +601,18 @@ explored offline; live accounts never receive mock deliveries.
 
 ### Still mock
 
-Earnings, payouts, ratings, notifications and support tickets remain demo data
-for the offline prototype only — a signed-in Firebase account starts with empty
-lists and no demo figures anywhere (the old `src/mock/partner.ts` fixture was
-removed; Profile renders the onboarding record and the session).
+Earnings, payouts and ratings remain demo data for the offline prototype only —
+a signed-in Firebase account starts with empty lists and no demo figures
+anywhere (the old `src/mock/partner.ts` fixture was removed; Profile renders
+the onboarding record and the session). Notifications for live accounts are
+real events; the labelled mock notification/support fixtures exist only for the
+prototype.
 Distance and ETA for console-assigned deliveries are the estimates the console
 computes from service-area coordinates (approximate, not routing-engine
-figures). The delivery drop code is whatever the console issued; sessions
-without one fall back to the demo code `4821`, which must be replaced before
-production use. No earnings, payout or payment collection is written by this
-integration.
+figures). The delivery drop code is whatever the console issued — there is no
+demo fallback in a live session, and offers without a code cannot be completed
+until operations verifies the drop. No earnings, payout or payment collection
+is written by this integration.
 
 > **Security:** Vite embeds every `VITE_*` value in the browser bundle.
 > `.env.local` keeps the values out of Git, not out of the browser. Firebase Web

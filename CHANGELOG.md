@@ -9,6 +9,33 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Real-event notifications.** Live listeners now turn events the partner did
+  not create themselves into in-app notifications: a new assigned offer, a
+  delivery the Administrator cancelled, an offer that expired or was
+  reassigned, and account decisions (approved or suspended) from the
+  partner-document watcher. Notifications store translation templates and
+  values, so they render in the selected language. When the tab is in the
+  background and the partner has granted browser-notification permission, a
+  system alert is shown; closed-app push still needs Firebase Cloud Messaging
+  plus a Cloud Function.
+- **Availability sync.** `partners/{uid}` now carries an `availability` field
+  (`Available` / `On Delivery` / `Offline`) alongside `isOnline` and
+  `lastLocation`. It flips to `On Delivery` the moment a delivery starts and
+  back when it ends, so the console can tell an online partner from a busy
+  one. Home shows the busy state, and the Available list explains that an
+  active delivery blocks accepting another offer.
+
+### Changed
+
+- **The demo OTP is gone from live sessions.** Delivery completion verifies the
+  customer's code against the `dropOtp` the console issued with the assignment.
+  Offers without a code cannot be completed — the screen explains that
+  operations must verify the drop — and the "Demo build: use 4821" hint only
+  exists in the offline prototype. The tracking chip on the active-delivery
+  screen also shows when the partner's position was last updated.
+
+### Added
+
 - **Assigned deliveries arrive live from the Administrator console.** When
   `delivery_admin` assigns a linked partner, the console publishes an offer to
   `deliveries/{id}` (category, pickup/drop coordinates, distance, ETA, payout,

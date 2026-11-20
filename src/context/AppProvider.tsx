@@ -443,12 +443,16 @@ function AppDataProvider({
     })
   }, [])
 
+  // A ref keeps the stale-snapshot guard without a mutable closure variable.
+  const accountWatcherActiveRef = useRef(true)
+  const deliveriesWatcherActiveRef = useRef(true)
+
   useEffect(() => {
     if (!remoteEnabled || !uid) {
       return
     }
 
-    let active = true
+    accountWatcherActiveRef.current = true
     let unsubscribe: (() => void) | null = null
     let reportTimer: number | undefined
 
@@ -456,7 +460,7 @@ function AppDataProvider({
       unsubscribe = watchPartnerAccount(
         uid,
         (snapshot) => {
-          if (!active) {
+          if (!accountWatcherActiveRef.current) {
             return
           }
 
@@ -523,7 +527,7 @@ function AppDataProvider({
           })
         },
         () => {
-          if (active) {
+          if (accountWatcherActiveRef.current) {
             setLiveSyncError(
               'Live Administrator updates are unavailable. Check your connection and retry.',
             )
@@ -533,7 +537,7 @@ function AppDataProvider({
     } catch {
       // Defer the fallback so mounting does not trigger a second render.
       reportTimer = window.setTimeout(() => {
-        if (active) {
+        if (accountWatcherActiveRef.current) {
           setLiveSyncError(
             'Live Administrator updates are unavailable. Check your connection and retry.',
           )
@@ -542,7 +546,7 @@ function AppDataProvider({
     }
 
     return () => {
-      active = false
+      accountWatcherActiveRef.current = false
       window.clearTimeout(reportTimer)
       unsubscribe?.()
     }
@@ -562,12 +566,12 @@ function AppDataProvider({
       return
     }
 
-    let active = true
+    deliveriesWatcherActiveRef.current = true
 
     const unsubscribe = subscribePartnerDeliveries(
       uid,
       (snapshot) => {
-        if (!active) {
+        if (!deliveriesWatcherActiveRef.current) {
           return
         }
 
@@ -659,7 +663,7 @@ function AppDataProvider({
         addLiveNotifications(fresh)
       },
       (error) => {
-        if (!active) {
+        if (!deliveriesWatcherActiveRef.current) {
           return
         }
 
@@ -669,7 +673,7 @@ function AppDataProvider({
     )
 
     return () => {
-      active = false
+      deliveriesWatcherActiveRef.current = false
       unsubscribe()
     }
   }, [remoteEnabled, uid, deliveryRetryToken, addLiveNotifications])
