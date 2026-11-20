@@ -564,6 +564,41 @@ const hindi: Record<string, string> = {
     'इस आवेदन की समीक्षा हो चुकी है। बदलाव के लिए सहायता से संपर्क करें।',
   'Reviewed by {name}': '{name} द्वारा समीक्षित',
   Administrator: 'एडमिनिस्ट्रेटर',
+  'Checking for new requests…': 'नए अनुरोधों के लिए जांच हो रही है…',
+  'Navigate to pickup': 'पिकअप तक नेविगेट करें',
+  'Navigate to drop': 'ड्रॉप तक नेविगेट करें',
+  'Centre on my location': 'मेरी जगह पर सेंटर करें',
+  You: 'आप',
+  'Your current location': 'आपकी मौजूदा जगह',
+  'Pickup: {name}': 'पिकअप: {name}',
+  'Drop: {name}': 'ड्रॉप: {name}',
+  'Sharing your live location': 'आपकी लाइव जगह साझा हो रही है',
+  'Finding your location…': 'आपकी जगह पता लगाई जा रही है…',
+  'Location sharing off': 'जगह साझा करना बंद है',
+  'Location paused while the app is in the background':
+    'ऐप बैकग्राउंड में होने पर जगह साझा करना रुक गया है',
+  'Location permission denied — your position is not shared':
+    'जगह की अनुमति नहीं मिली — आपकी जगह साझा नहीं हो रही',
+  'Your location is temporarily unavailable':
+    'आपकी जगह अभी उपलब्ध नहीं है',
+  'This device cannot share its location':
+    'यह डिवाइस अपनी जगह साझा नहीं कर सकता',
+  'Finding your location is taking longer than usual':
+    'आपकी जगह पता लगाने में आम से ज़्यादा समय लग रहा है',
+  'Route line unavailable right now. Markers still show the locations.':
+    'रूट लाइन अभी उपलब्ध नहीं है। मार्कर जगहें अब भी दिखा रहे हैं।',
+  'Location unavailable for this delivery. Check back after dispatch updates the addresses.':
+    'इस डिलीवरी की जगह उपलब्ध नहीं है। डिस्पैच के पते अपडेट करने के बाद दोबारा देखें।',
+  'Finish your active delivery before accepting another request.':
+    'दूसरा अनुरोध स्वीकार करने से पहले अपनी चालू डिलीवरी पूरी करें।',
+  'This request is no longer in the list. Refresh to see the latest requests.':
+    'यह अनुरोध अब सूची में नहीं है। ताज़ा अनुरोध देखने के लिए रिफ्रेश करें।',
+  'The delivery status could not be updated. Check your connection and try again.':
+    'डिलीवरी की स्थिति अपडेट नहीं हो सकी। कनेक्शन जांचें और फिर कोशिश करें।',
+  'The delivery could not be cancelled. Check your connection and try again.':
+    'डिलीवरी रद्द नहीं हो सकी। कनेक्शन जांचें और फिर कोशिश करें।',
+  'Your location could not be shared with operations. It will retry automatically.':
+    'आपकी जगह ऑपरेशंस के साथ साझा नहीं हो सकी। यह अपने आप दोबारा कोशिश करेगा।',
 }
 
 const bengali: Record<string, string> = {
@@ -1112,6 +1147,41 @@ const bengali: Record<string, string> = {
     'এই আবেদন ইতিমধ্যে পর্যালোচনা করা হয়েছে। পরিবর্তনের জন্য সহায়তার সাথে যোগাযোগ করুন।',
   'Reviewed by {name}': '{name} দ্বারা পর্যালোচিত',
   Administrator: 'অ্যাডমিনিস্ট্রেটর',
+  'Checking for new requests…': 'নতুন অনুরোধ খোঁজা হচ্ছে…',
+  'Navigate to pickup': 'পিকআপে নেভিগেট করুন',
+  'Navigate to drop': 'ড্রপে নেভিগেট করুন',
+  'Centre on my location': 'আমার অবস্থানে সেন্টার করুন',
+  You: 'আপনি',
+  'Your current location': 'আপনার বর্তমান অবস্থান',
+  'Pickup: {name}': 'পিকআপ: {name}',
+  'Drop: {name}': 'ড্রপ: {name}',
+  'Sharing your live location': 'আপনার লাইভ অবস্থান শেয়ার হচ্ছে',
+  'Finding your location…': 'আপনার অবস্থান খোঁজা হচ্ছে…',
+  'Location sharing off': 'অবস্থান শেয়ার বন্ধ আছে',
+  'Location paused while the app is in the background':
+    'অ্যাপ ব্যাকগ্রাউন্ডে থাকলে অবস্থান শেয়ার থেমে যায়',
+  'Location permission denied — your position is not shared':
+    'অবস্থানের অনুমতি দেওয়া হয়নি — আপনার অবস্থান শেয়ার হচ্ছে না',
+  'Your location is temporarily unavailable':
+    'আপনার অবস্থান এই মুহূর্তে পাওয়া যাচ্ছে না',
+  'This device cannot share its location':
+    'এই ডিভাইস তার অবস্থান শেয়ার করতে পারে না',
+  'Finding your location is taking longer than usual':
+    'আপনার অবস্থান খুঁজতে সাধারণের চেয়ে বেশি সময় লাগছে',
+  'Route line unavailable right now. Markers still show the locations.':
+    'রুট লাইন এই মুহূর্তে পাওয়া যাচ্ছে না। মার্কার এখনও অবস্থান দেখাচ্ছে।',
+  'Location unavailable for this delivery. Check back after dispatch updates the addresses.':
+    'এই ডেলিভারির অবস্থান পাওয়া যাচ্ছে না। ডিসপ্যাচ ঠিকানা আপডেট করার পরে আবার দেখুন।',
+  'Finish your active delivery before accepting another request.':
+    'অন্য অনুরোধ গ্রহণ করার আগে আপনার চালু ডেলিভারি শেষ করুন।',
+  'This request is no longer in the list. Refresh to see the latest requests.':
+    'এই অনুরোধ আর তালিকায় নেই। সর্বশেষ অনুরোধ দেখতে রিফ্রেশ করুন।',
+  'The delivery status could not be updated. Check your connection and try again.':
+    'ডেলিভারির অবস্থা আপডেট করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  'The delivery could not be cancelled. Check your connection and try again.':
+    'ডেলিভারি বাতিল করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  'Your location could not be shared with operations. It will retry automatically.':
+    'আপনার অবস্থান অপারেশনসের সাথে শেয়ার করা যায়নি। এটি স্বয়ংক্রিয়ভাবে আবার চেষ্টা করবে।',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =

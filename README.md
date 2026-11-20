@@ -7,18 +7,19 @@ The app is designed as a phone experience: it runs in the browser, looks like a
 modern mobile app, and is built for a 390 × 844 px screen. On larger screens it
 stays a centered app column instead of stretching into a desktop dashboard.
 
-> **Status:** Phases 1–11 of the partner experience are complete as an
-> interactive prototype. Firebase Phone Authentication and onboarding
-> persistence (Firestore + Storage) are connected when `VITE_FIREBASE_*` is
-> configured; without configuration the app falls back to the demo OTP.
-> Administrator approvals, rejections, suspensions, and reinstatements are
-> received from `delivery_admin` through a live Firestore listener.
-> Accepted and in-progress deliveries are mirrored to Firestore for the
-> Administrator console, along with the partner's best-effort GPS position.
-> Earnings, notifications, support and payment data remain mock.
-> The route preview uses OpenStreetMap tiles, while routing, distance and ETA
-> are still demo data. The existing-platform integration (Phases 12–13) is not
-> connected yet.
+> **Status:** Phases 1–11 of the partner experience are complete, and the
+> admin-to-partner delivery loop (Phase 12) is now live. Firebase demo-auth
+> and onboarding persistence stay connected; delivery offers assigned from
+> `delivery_admin` arrive through a live Firestore listener (`onSnapshot`),
+> acceptance is atomic via a Firestore transaction, and the delivery
+> lifecycle — pickup, transit, drop and OTP completion — updates the shared
+> `deliveries/{id}` document the console reads. While a delivery is active the
+> app shares the partner's GPS position on that document (throttled by time
+> and movement), shown live on the console's tracking map. The active-delivery
+> screen uses an interactive Leaflet + OpenStreetMap map with pickup, drop and
+> partner markers plus OSRM route geometry; both tile and routing providers
+> are configurable. Earnings, notifications and support remain mock; the demo
+> OTP remains the default sign-in until the OTP API lands.
 >
 > The product direction is now **PicDrop + HopNgo**, and this repository is its
 > **delivery-partner module**. The PicDrop delivery requirements have been
@@ -78,11 +79,11 @@ material for the project and are not part of the deployed application.
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline and rejection/suspension reasons; decisions arrive live from `delivery_admin` | Built (Firebase + admin) |
-| Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (mock) |
-| Delivery requests | Request cards with countdown, accept or reject | Built (mock) |
-| Active delivery | Timeline, status actions, drop OTP proof, contact and issue reporting | Built (mock) |
-| Map & tracking | Illustrated route preview and distance/ETA | Demo preview |
-| History | Search, status filter and delivery-level earnings | Built (mock) |
+| Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
+| Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept and reject | Built (Firebase) |
+| Active delivery | Interactive OpenStreetMap, timeline, status actions, drop OTP proof, contact, navigation and issue reporting | Built (Firebase) |
+| Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; configurable providers | Built (live) |
+| History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
 | Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (mock) |
 | Notifications | Request, account, delivery and payment alerts with read state | Built (mock) |
 | Help & support | FAQs, ticket submission and ticket status | Built (mock) |
@@ -125,13 +126,14 @@ The Firebase phone-SMS code path (`sendPhoneOtp` / `confirmPhoneOtp`) stays in
 | [Tailwind CSS](https://tailwindcss.com/) | 4 | Styling with design tokens |
 | [React Router](https://reactrouter.com/) | 7 | Routing, guards and navigation |
 | [Firebase](https://firebase.google.com/docs/web/setup) | 13 | Auth, Firestore and Storage SDK foundation |
+| [Leaflet](https://leafletjs.com/) + [React Leaflet](https://react-leaflet.dev/) | 1.9 / 5 | Interactive delivery map on OpenStreetMap tiles |
 | [Lucide React](https://lucide.dev/) | latest | Icons |
-| [OpenStreetMap](https://www.openstreetmap.org/) | — | Route-preview map tiles (no key) |
+| [OpenStreetMap](https://www.openstreetmap.org/) | — | Map tiles (no key); OSRM for route geometry |
 | [Oxlint](https://oxc.rs/) | latest | Code linting |
 
-Firebase provides the demo-OTP auth bridge plus Firestore and Storage
-persistence for partner onboarding. The delivery, earnings, notification and
-support data still come from `src/mock/`.
+Firebase provides the demo-OTP auth bridge, onboarding persistence, the live
+partner-document listener, and the shared `deliveries` collection. Earnings,
+notification and support data still come from `src/mock/`.
 
 ## 5. Current development status
 
@@ -233,13 +235,15 @@ delivery_app/
 │   │   │                     # Select, OtpInput, Toggle, ProgressBar,
 │   │   │                     # SegmentedTabs, StatCard, SectionHeading, EmptyState,
 │   │   │                     # IconTile
-│   │   ├── deliveries/       # DeliveryRequestCard, DeliveryTimeline, MapPreview
+│   │   ├── deliveries/       # DeliveryRequestCard, DeliveryTimeline,
+│   │   │                     # MapPreview, DeliveryMap (Leaflet)
 │   │   └── layout/           # AppLayout, AuthLayout, BottomNavigation,
 │   │                         # ScreenHeader, ModulePlaceholder
 │   ├── context/              # LanguageProvider, AuthProvider, AppProvider, hooks
 │   ├── firebase/             # SDK config plus auth, db and storage exports
-│   ├── services/             # Auth bridge and onboarding persistence
-│   ├── hooks/                # useCountdown
+│   ├── services/             # Auth bridge, onboarding persistence, live
+│   │                         # delivery requests and location publishing
+│   ├── hooks/                # useCountdown, usePartnerTracking (GPS)
 │   ├── i18n/                 # English keys and Hindi/Bengali translations
 │   ├── mock/                 # partner, auth (demo OTP), deliveries, earnings,
 │   │                         # notifications, onboarding, support
@@ -453,40 +457,63 @@ administrator account is recreated, then redeploy the rules.
 
 ### Live delivery and location sharing
 
-`src/services/deliverySync.ts` mirrors every accepted or in-progress job into
-`deliveries/{id}` with `setDoc(..., { merge: true })`, so retries update the same
-record instead of creating duplicates. The document carries:
+Deliveries assigned from `delivery_admin` land in the shared
+`deliveries/{deliveryId}` collection and reach the partner through a live
+`onSnapshot` subscription (`src/services/deliveryRequests.ts`) filtered to the
+signed-in UID — no polling and no refresh. The console's assignment
+write-through publishes each offer with:
 
-- identifiers and the partner's name, vehicle type, and Firebase UID;
-- the partner-side `status` plus the title-case `adminStatus` used by
-  `delivery_admin`;
-- pickup and destination names, addresses, and coordinates;
-- distance, ETA, earnings, item count, payment mode, and a masked customer
-  phone number;
-- the milestone `events`, timestamps, cancellation reason, and delivery proof;
-- `currentLocation` when the partner has shared a GPS position.
+- identifiers (`deliveryId`, `displayId`) and the partner's name, vehicle type
+  and Firebase UID (`partnerUid`);
+- category, pickup and destination names, addresses and coordinates;
+- distance, ETA, earnings, item count, payment mode and handling notes;
+- the customer's 4-digit drop code (`dropOtp`) and an absolute `expiresAt`
+  response window (the console's offer timeout);
+- status `assigned` plus the title-case `adminStatus` (`Pending`).
 
-The lifecycle is mirrored on every transition: `accepted`,
-`pickup_arrived`, `picked_up`, `in_transit`, `drop_arrived`, then `delivered`
-or `cancelled`. Firestore rules allow the partner to create and update only
-their own delivery, and only along that forward path. The administrator can
-read every delivery and may correct or remove one.
+**Acceptance is atomic.** `acceptAssignedDelivery` re-reads the document inside
+a Firestore transaction: an expired, cancelled, reassigned or already-accepted
+offer fails with an actionable message, and Firestore rules independently
+reject any status change that does not follow the forward path. The request
+then leaves the Available list and opens the active delivery.
 
-While the partner is online, the app reads the browser's geolocation once a
-minute and writes `lastLocation`, `lastLocationUpdatedAt`, and `isOnline` on
-`partners/{uid}`. Permission denial or a missing GPS sensor never blocks a
-delivery. Going offline clears the shared position. Location sharing is
-best-effort; the next status change retries the delivery document.
+**Lifecycle.** Every step — `accepted`, `pickup_arrived`, `picked_up`,
+`in_transit`, `drop_arrived`, `delivered` — is written to the same document in
+a transaction with a timestamped `events` entry, so retries are idempotent and
+the console sees progress within seconds. Rejecting an offer records
+`partnerResponse` without changing the status; cancelling records a reason.
+Delivery completes only when the customer's OTP matches `dropOtp` (the demo
+code `4821` is the fallback for sessions without a console-issued code).
 
-`delivery_admin` polls the `deliveries` collection every 30 seconds because its
-REST connection has no live subscription. The Overview map prefers an active
-live delivery, adds a marker for the partner's last position, and falls back to
-demo coordinates when no live job exists. A sync failure shows a retry banner
-in the partner app and a notice on the admin map.
+**Location sharing.** While a delivery is active, `usePartnerTracking` wraps
+`navigator.geolocation.watchPosition` and publishes fixes that moved ≥25 m (or
+once a minute) to `currentLocation` on the delivery document — latitude,
+longitude, accuracy and timestamp. Fixes worse than 150 m accuracy update the
+partner's own map but are not published. Permission denial, GPS loss and
+background tabs are reported honestly on the active-delivery screen ("Location
+permission denied — your position is not shared"); tracking stops and the
+watcher is cleared when the delivery completes, is cancelled or the screen
+unmounts. Separately, while online the app keeps writing `lastLocation`,
+`lastLocationUpdatedAt` and `isOnline` on `partners/{uid}` once a minute as a
+best-effort presence signal.
+
+**Map.** The active-delivery screen uses an interactive Leaflet map
+(`src/components/deliveries/DeliveryMap.tsx`) with distinct pickup, drop and
+partner markers, route geometry from an OSRM-compatible service, and a
+recentre control. Tiles default to OpenStreetMap and routes to the public OSRM
+demo server; both are configurable via `VITE_MAP_TILE_URL` and
+`VITE_ROUTE_API_BASE` because neither public service is SLA-backed. Missing or
+zeroed coordinates show a location-unavailable state instead of a wrong map,
+and a failed route fetch only hides the line — markers stay.
+
+`delivery_admin` reads the same collection over REST (polling, since its REST
+connection has no live subscription), shows the partner's latest position on
+the tracking map, and can cancel an assigned delivery — which the partner's
+listener turns into a cancelled job in history.
 
 A live partner session starts with no requests or history. Demo requests remain
 available only when Firebase is not configured so the prototype can still be
-explored offline.
+explored offline; live accounts never receive mock deliveries.
 
 ### Required Firebase Console setup
 
@@ -549,12 +576,13 @@ explored offline.
 
 ### Still mock
 
-Delivery requests, earnings, payouts, notifications, support tickets, partner
-ratings, routing/distance/ETA and the delivery OTP are still demo data. The
-active-delivery map uses OpenStreetMap tiles and mock coordinates. Accepted and
-in-progress jobs are now mirrored to `deliveries/{id}` for the Administrator
-console, but the remaining Phase 12 service layer is still required; no
-earnings, payout, or payment collection is written by this integration.
+Earnings, payouts, ratings, notifications and support tickets remain demo data.
+Distance and ETA for console-assigned deliveries are the estimates the console
+computes from service-area coordinates (approximate, not routing-engine
+figures). The delivery drop code is whatever the console issued; sessions
+without one fall back to the demo code `4821`, which must be replaced before
+production use. No earnings, payout or payment collection is written by this
+integration.
 
 > **Security:** Vite embeds every `VITE_*` value in the browser bundle.
 > `.env.local` keeps the values out of Git, not out of the browser. Firebase Web
@@ -588,7 +616,7 @@ earnings, payout, or payment collection is written by this integration.
 | 9 | Maps, location permission and routes | OpenStreetMap preview 🟡 |
 | 10 | History, earnings and payments | ✅ Mock records |
 | 11 | Notifications, support and profile settings | ✅ Complete feature set |
-| 12 | Admin and existing-platform integration | 🟡 Admin decisions + live delivery/location sync connected; earnings, notifications, support and platform jobs pending |
+| 12 | Admin and existing-platform integration | 🟡 Admin decisions, assigned delivery offers, lifecycle and live location sharing connected; earnings, notifications and support pending |
 | 13 | Quality checks and release preparation | ⏳ Pending |
 
 ## Decisions still open

@@ -37,7 +37,10 @@ does not already exist. **Do not invent backend endpoints.**
 ## 2. Current development status
 
 **Phases 1–11 — partner app: complete. The Firebase demo-auth bridge and
-onboarding persistence are connected; the remaining modules stay mock-driven.**
+onboarding persistence are connected, and the admin-to-partner delivery loop is
+live: assigned offers arrive via `onSnapshot`, acceptance runs in a Firestore
+transaction, and the lifecycle plus GPS position update the shared `deliveries`
+document. Earnings, notifications and support stay mock-driven.**
 
 What exists today:
 
@@ -57,20 +60,25 @@ What exists today:
 - Dashboard with online/offline availability, daily stats and live request
   preview; delivery requests with countdown, accept/reject; active delivery with
   timeline, route preview, status actions and issue reporting.
+- Live delivery flow with `delivery_admin`: assigned offers arrive through a
+  Firestore `onSnapshot` listener, acceptance runs in a transaction, every
+  lifecycle step writes to the shared `deliveries/{id}` document, and the
+  partner's GPS position is published to it while a job is active. The
+  active-delivery screen uses an interactive Leaflet + OpenStreetMap map with
+  pickup, drop and partner markers plus OSRM route geometry.
 - Searchable history, earnings with period tabs/chart/payouts, notifications with
   read state, support FAQs and tickets, profile with documents and sign-out.
 - English, Hindi and Bengali interface with immediate switching from Profile →
   App language. The choice persists in `localStorage`, covers every screen and
   shared component, and switches date, time and currency formatting to the
   matching locale.
-- Realistic mock data for deliveries, earnings, notifications and support;
-  Firebase data for the authenticated partner and submitted onboarding.
+- Realistic mock data for earnings, notifications and support; Firebase data
+  for the authenticated partner, submitted onboarding, and live deliveries.
 
-**Remaining: the rest of Phase 12 (delivery, earnings, notification, support and
-admin integration) and Phase 13 (release QA).** Both need the open decisions in
-README to be answered. The route preview uses OpenStreetMap tiles, but there is
-no routing/geocoding provider or delivery backend yet, and earnings and request
-timers are demo data.
+**Remaining: earnings, notification and support integration (Phase 12) and
+Phase 13 (release QA).** Both need the open decisions in README to be answered.
+Distance and ETA still come from the console's service-area estimates, and the
+drop OTP falls back to the demo code `4821` when no console code exists.
 
 ---
 
@@ -84,13 +92,15 @@ timers are demo data.
 | Tailwind CSS v4 | Styling through design tokens (`@theme`) |
 | React Router v7 | Client-side routing and navigation state |
 | Firebase JS SDK | Auth, Firestore and Storage foundation |
+| Leaflet + React Leaflet | Interactive OpenStreetMap delivery map |
 | Lucide React | Icon set |
 | Oxlint | Linting |
 
 **Only the libraries listed above are installed.** Do not add a dependency unless
-the task needs it. Firebase is connected for the demo-OTP auth bridge and
-onboarding persistence through `src/services/`; other screens keep using mock
-data until their service layer is connected (see section 15).
+the task needs it. Firebase is connected for the demo-OTP auth bridge,
+onboarding persistence and the live delivery flow through `src/services/`;
+earnings, notification and support screens keep using mock data until their
+service layer is connected (see section 15).
 
 ---
 
@@ -339,20 +349,24 @@ Allowed now:
 - Improving any existing screen, the design system, layout and navigation.
 - Fixing bugs in the Firebase auth/onboarding flows or the remaining mock flows.
 - The demo-OTP authentication bridge, onboarding persistence and Security Rules.
+- The live delivery flow with `delivery_admin`: the shared `deliveries`
+  collection, transactional acceptance, lifecycle writes and GPS position
+  sharing, using the contract documented in README section 12.
 
 Not allowed without explicit instruction:
 
-- Connecting deliveries, earnings, notifications, support or profile fixtures to
-  live Firebase data (the next part of Phase 12).
+- Connecting earnings, notifications, support or profile fixtures to live
+  Firebase data (the remaining part of Phase 12).
 - Real delivery/payment APIs, backend logic or new network services.
-- Replacing OpenStreetMap tiles with a paid map or routing provider.
+- Replacing OpenStreetMap tiles or the OSRM-compatible routing provider with a
+  paid service (both are environment-configurable already).
 - Changing the colour palette or design language.
 - Removing or rewriting working screens.
 - Adding dependencies, test runners or CI.
-- Building admin/platform-integration features beyond the approved auth and
-  onboarding scope.
-- Implementing the PicDrop delivery requirements before the owner has answered
-  the open decisions from the analysis.
+- Building admin/platform-integration features beyond the approved auth,
+  onboarding and delivery scope.
+- Implementing the remaining PicDrop delivery requirements before the owner has
+  answered the open decisions from the analysis.
 
 The PicDrop delivery analysis is complete. Every implementation change must stay
 within the approved scope, and `README.md` and this file must be updated in the

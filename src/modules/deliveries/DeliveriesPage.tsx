@@ -28,9 +28,21 @@ export function DeliveriesPage() {
     history,
     acceptRequest,
     rejectRequest,
+    deliveryActionPending,
+    deliveryActionPendingId,
+    deliveryActionError,
+    deliveryRequestsLoading,
     onboarding,
   } = useApp()
   const [tab, setTab] = useState<DeliveryTab>('available')
+
+  async function handleAccept(id: string) {
+    const accepted = await acceptRequest(id)
+
+    if (accepted) {
+      navigate('/deliveries/active')
+    }
+  }
 
   return (
     <div className="pb-6">
@@ -93,31 +105,71 @@ export function DeliveriesPage() {
                 <Button onClick={() => setOnline(true)}>{t('Go online')}</Button>
               }
             />
-          ) : requests.length > 0 ? (
-            <div className="space-y-3">
-              {requests.map((delivery) => (
-                <DeliveryRequestCard
-                  key={delivery.id}
-                  delivery={delivery}
-                  onAccept={() => {
-                    acceptRequest(delivery.id)
-                    navigate('/deliveries/active')
-                  }}
-                  onReject={() => rejectRequest(delivery.id)}
-                />
+          ) : deliveryRequestsLoading ? (
+            <div className="space-y-3" aria-live="polite">
+              {[0, 1].map((key) => (
+                <Card key={key} padding="md" className="animate-pulse">
+                  <div className="h-4 w-28 rounded bg-brand-soft" />
+                  <div className="mt-3 h-3 w-48 rounded bg-brand-soft" />
+                  <div className="mt-2 h-3 w-40 rounded bg-brand-soft" />
+                  <div className="mt-4 h-10 w-full rounded-lg bg-brand-soft" />
+                </Card>
               ))}
+              <p className="text-center text-[11.5px] text-ink-soft">
+                {t('Checking for new requests…')}
+              </p>
             </div>
           ) : (
-            <EmptyState
-              icon={Package}
-              title={t('No new requests')}
-              description={t(
-                'When you are online, nearby grocery and restaurant requests will appear here.',
+            <>
+              {deliveryActionError ? (
+                <Card
+                  padding="sm"
+                  className="border-danger/30 bg-danger-soft"
+                  role="alert"
+                >
+                  <p className="text-[12px] font-medium text-danger">
+                    {t(deliveryActionError)}
+                  </p>
+                </Card>
+              ) : null}
+              {requests.length > 0 ? (
+                <div className="space-y-3">
+                  {requests.map((delivery) => (
+                    <DeliveryRequestCard
+                      key={delivery.id}
+                      delivery={delivery}
+                      isAccepting={
+                        deliveryActionPending === 'accept' &&
+                        deliveryActionPendingId === delivery.id
+                      }
+                      isRejecting={
+                        deliveryActionPending === 'reject' &&
+                        deliveryActionPendingId === delivery.id
+                      }
+                      isBusy={
+                        deliveryActionPending !== null &&
+                        deliveryActionPendingId !== delivery.id
+                      }
+                      onAccept={() => void handleAccept(delivery.id)}
+                      onReject={() => void rejectRequest(delivery.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={Package}
+                  title={t('No new requests')}
+                  description={t(
+                    'When you are online, nearby grocery and restaurant requests will appear here.',
+                  )}
+                  action={
+                    <Button onClick={() => navigate('/')}>
+                      {t('Back to home')}
+                    </Button>
+                  }
+                />
               )}
-              action={
-                <Button onClick={() => navigate('/')}>{t('Back to home')}</Button>
-              }
-            />
+            </>
           )
         ) : null}
 
@@ -146,6 +198,7 @@ export function DeliveriesPage() {
               <Button
                 className="mt-4"
                 fullWidth
+                isLoading={deliveryActionPending !== null}
                 onClick={() => navigate('/deliveries/active')}
               >
                 {t('Open active delivery')}
@@ -168,47 +221,64 @@ export function DeliveriesPage() {
         ) : null}
 
         {tab === 'completed' ? (
-          <div className="space-y-3">
-            {history.map((delivery) => (
-              <Card key={delivery.id} padding="sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12.5px] font-bold text-ink">
-                        {delivery.id}
-                      </span>
-                      <Badge
-                        tone={
-                          delivery.status === 'cancelled' ? 'danger' : 'success'
-                        }
-                        size="sm"
-                      >
-                        {t(
-                          delivery.status === 'cancelled'
-                            ? 'Cancelled'
-                            : 'Completed',
-                        )}
-                      </Badge>
+          history.length > 0 ? (
+            <div className="space-y-3">
+              {history.map((delivery) => (
+                <Card key={delivery.id} padding="sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12.5px] font-bold text-ink">
+                          {delivery.id}
+                        </span>
+                        <Badge
+                          tone={
+                            delivery.status === 'cancelled'
+                              ? 'danger'
+                              : 'success'
+                          }
+                          size="sm"
+                        >
+                          {t(
+                            delivery.status === 'cancelled'
+                              ? 'Cancelled'
+                              : 'Completed',
+                          )}
+                        </Badge>
+                      </div>
+                      <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                        {delivery.pickup.name} →{' '}
+                        {delivery.destination.name}
+                      </p>
+                      {delivery.cancellationReason ? (
+                        <p className="mt-0.5 truncate text-[11px] text-ink-soft">
+                          {delivery.cancellationReason}
+                        </p>
+                      ) : null}
                     </div>
-                    <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
-                      {delivery.pickup.name} →{' '}
-                      {delivery.destination.name}
-                    </p>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[12.5px] font-bold text-ink">
+                        {formatCurrency(delivery.earnings, locale)}
+                      </p>
+                      <p className="text-[10.5px] text-ink-soft">
+                        {delivery.completedAt
+                          ? formatShortDate(delivery.completedAt, locale)
+                          : '—'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[12.5px] font-bold text-ink">
-                      {formatCurrency(delivery.earnings, locale)}
-                    </p>
-                    <p className="text-[10.5px] text-ink-soft">
-                      {delivery.completedAt
-                        ? formatShortDate(delivery.completedAt, locale)
-                        : '—'}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Package}
+              title={t('No completed deliveries')}
+              description={t(
+                'Finished and cancelled deliveries will appear here.',
+              )}
+            />
+          )
         ) : null}
       </div>
     </div>

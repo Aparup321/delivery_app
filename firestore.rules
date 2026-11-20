@@ -130,6 +130,7 @@ service cloud.firestore {
 
     function validDeliveryTransition(previous, next) {
       return next == previous
+        || (previous == 'assigned' && next == 'accepted')
         || (previous == 'accepted'
           && next in ['pickup_arrived', 'cancelled'])
         || (previous == 'pickup_arrived'
@@ -142,23 +143,32 @@ service cloud.firestore {
           && next in ['delivered', 'cancelled']);
     }
 
-    // The partner app publishes accepted and in-progress deliveries. The
-    // Administrator console reads every delivery and may assign or correct one.
+    // Fields the assigned partner may change on a delivery. Everything the
+    // Administrator controls — the route, customer data, payout, drop code and
+    // the assignment itself — is deliberately absent, so the partner app can
+    // advance a delivery but never rewrite one.
+    function partnerDeliveryFields() {
+      return [
+        'status', 'adminStatus', 'acceptedAt', 'completedAt',
+        'cancellationReason', 'proof', 'events', 'currentLocation',
+        'updatedAt', 'partnerResponse'
+      ];
+    }
+
+    // Offers are created by the Administrator console (status 'assigned', with
+    // partnerUid set to the intended partner). The assigned partner reads and
+    // advances their own delivery; a partner can never create, reassign or
+    // rewrite one. Status changes follow validDeliveryTransition only.
     match /deliveries/{deliveryId} {
       allow read: if isAdmin()
         || (request.auth != null
           && resource.data.partnerUid == request.auth.uid);
-      allow create: if request.auth != null
-        && request.resource.data.partnerUid == request.auth.uid
-        && request.resource.data.status
-          in ['accepted', 'pickup_arrived', 'picked_up', 'in_transit', 'drop_arrived']
-        && request.resource.data.deliveryId is string
-        && request.resource.data.pickup is map
-        && request.resource.data.destination is map;
+      allow create: if isAdmin();
       allow update: if isAdmin()
         || (request.auth != null
           && resource.data.partnerUid == request.auth.uid
-          && request.resource.data.partnerUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(partnerDeliveryFields())
           && validDeliveryTransition(
             resource.data.status,
             request.resource.data.status));

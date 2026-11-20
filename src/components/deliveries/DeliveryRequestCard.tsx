@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react'
 import { ArrowDownRight, Clock3, MapPin, Navigation, Wallet } from 'lucide-react'
 import { Badge } from '../common/Badge'
 import { Button } from '../common/Button'
 import { Card } from '../common/Card'
 import { useLanguage } from '../../context/language'
-import { useCountdown } from '../../hooks/useCountdown'
 import type { Delivery } from '../../types/delivery'
 import { formatCurrency } from '../../utils/format'
 
@@ -11,17 +11,55 @@ export interface DeliveryRequestCardProps {
   delivery: Delivery
   onAccept: () => void
   onReject: () => void
+  /** True while the accept transaction is in flight for this request. */
+  isAccepting?: boolean
+  /** True while the reject write is in flight for this request. */
+  isRejecting?: boolean
+  /** True when the whole list is busy with another request's action. */
+  isBusy?: boolean
+}
+
+/** Absolute expiry instant for the request, when one exists. */
+function expiryInstant(delivery: Delivery): number | null {
+  if (delivery.expiresAt) {
+    const at = new Date(delivery.expiresAt).getTime()
+    return Number.isFinite(at) ? at : null
+  }
+
+  if (delivery.expiresInSeconds !== undefined) {
+    return Date.now() + delivery.expiresInSeconds * 1000
+  }
+
+  return null
 }
 
 export function DeliveryRequestCard({
   delivery,
   onAccept,
   onReject,
+  isAccepting = false,
+  isRejecting = false,
+  isBusy = false,
 }: DeliveryRequestCardProps) {
   const { t, locale } = useLanguage()
-  const { secondsLeft, isFinished } = useCountdown(
-    delivery.expiresInSeconds ?? 45,
-  )
+  const deadline = expiryInstant(delivery)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (deadline === null) {
+      return
+    }
+
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [deadline])
+
+  const secondsLeft =
+    deadline === null
+      ? null
+      : Math.max(0, Math.round((deadline - now) / 1000))
+  const isFinished = secondsLeft !== null && secondsLeft <= 0
+  const busy = isAccepting || isRejecting || isBusy
 
   return (
     <Card padding="md">
@@ -44,12 +82,14 @@ export function DeliveryRequestCard({
           </p>
         </div>
 
-        <Badge tone={isFinished ? 'danger' : 'warning'} size="sm">
-          <Clock3 className="size-3" aria-hidden="true" />
-          {isFinished
-            ? t('Expired')
-            : t('{count}s', { count: secondsLeft })}
-        </Badge>
+        {secondsLeft !== null ? (
+          <Badge tone={isFinished ? 'danger' : 'warning'} size="sm">
+            <Clock3 className="size-3" aria-hidden="true" />
+            {isFinished
+              ? t('Expired')
+              : t('{count}s', { count: secondsLeft })}
+          </Badge>
+        ) : null}
       </div>
 
       <div className="mt-3 space-y-2.5">
@@ -104,10 +144,19 @@ export function DeliveryRequestCard({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <Button variant="outline" onClick={onReject}>
+        <Button
+          variant="outline"
+          onClick={onReject}
+          disabled={busy || isFinished}
+          isLoading={isRejecting}
+        >
           {t('Reject')}
         </Button>
-        <Button onClick={onAccept} disabled={isFinished}>
+        <Button
+          onClick={onAccept}
+          disabled={busy || isFinished}
+          isLoading={isAccepting}
+        >
           {t('Accept')}
         </Button>
       </div>

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Delivery } from '../types/delivery'
+import type { Delivery, DeliveryLocation } from '../types/delivery'
 import type { AppNotification } from '../types/notification'
 import type {
   OnboardingFiles,
@@ -8,6 +8,7 @@ import type {
   SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
+import type { TrackingStatus } from '../hooks/usePartnerTracking'
 
 export interface AppContextValue {
   isOnline: boolean
@@ -18,12 +19,38 @@ export interface AppContextValue {
   requests: Delivery[]
   activeDelivery: Delivery | null
   history: Delivery[]
-  acceptRequest: (id: string) => void
-  rejectRequest: (id: string) => void
-  advanceDelivery: () => void
+  /**
+   * Accepts an assigned request. Resolves true when the delivery is now
+   * active; false means the offer expired or was taken by someone else.
+   */
+  acceptRequest: (id: string) => Promise<boolean>
+  rejectRequest: (id: string) => Promise<void>
+  /** Advances the active delivery to its next milestone. */
+  advanceDelivery: () => Promise<boolean>
   /** Verifies the customer's delivery code and closes the active job. */
-  completeDelivery: (otp: string) => boolean
-  cancelDelivery: (reason: string) => void
+  completeDelivery: (otp: string) => Promise<boolean>
+  /** Cancels the active delivery with a reason. */
+  cancelDelivery: (reason: string) => Promise<boolean>
+
+  /**
+   * The delivery action currently in flight, e.g. 'accept' or 'advance', or
+   * null when nothing is pending.
+   */
+  deliveryActionPending: string | null
+  /** The request id a pending accept or reject belongs to. */
+  deliveryActionPendingId: string | null
+  /** Actionable message for the last failed delivery action. */
+  deliveryActionError: string | null
+  /** True while the first live delivery snapshot has not arrived yet. */
+  deliveryRequestsLoading: boolean
+
+  /**
+   * How live location sharing is doing on the active delivery: 'active',
+   * 'denied', 'paused', and so on. 'idle' when no delivery is in progress.
+   */
+  trackingStatus: TrackingStatus
+  /** The partner's latest GPS fix on this device, when available. */
+  trackingPosition: DeliveryLocation | null
 
   notifications: AppNotification[]
   unreadNotifications: number

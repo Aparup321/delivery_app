@@ -28,6 +28,13 @@ export interface DeliveryProof {
   verifiedAt: string
 }
 
+/** The partner's answer to an assigned request that they declined. */
+export interface DeliveryPartnerResponse {
+  decision: 'rejected'
+  at: string
+  reason?: string
+}
+
 /** A delivery job offered to, or handled by, the partner. */
 export interface Delivery {
   id: string
@@ -45,10 +52,26 @@ export interface Delivery {
   requestedAt: string
   /** Seconds the partner has to respond to an offered request. */
   expiresInSeconds?: number
+  /** Absolute offer deadline from delivery_admin, when the admin set one. */
+  expiresAt?: string
+  /** Delivery code issued by delivery_admin for the customer, when provided. */
+  dropOtp?: string
+  /** Set when this partner already declined the assigned request. */
+  partnerResponse?: DeliveryPartnerResponse
+  /** True for records written by delivery_admin rather than local demo data. */
+  isLive?: boolean
   acceptedAt?: string
   completedAt?: string
   status: DeliveryStatus
   events: DeliveryEvent[]
   proof?: DeliveryProof
   cancellationReason?: string
+}
+
+/** Partner position shared on the delivery document while a job is active. */
+export interface DeliveryLocation {
+  latitude: number
+  longitude: number
+  accuracy: number | null
+  updatedAt: string
 }

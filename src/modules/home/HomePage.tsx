@@ -51,6 +51,10 @@ export function HomePage() {
     activeDelivery,
     acceptRequest,
     rejectRequest,
+    deliveryActionPending,
+    deliveryActionPendingId,
+    deliveryActionError,
+    deliveryRequestsLoading,
     unreadNotifications,
     onboarding,
   } = useApp()
@@ -60,6 +64,14 @@ export function HomePage() {
   const displayName = onboarding.fullName.trim() || t('Partner')
   const firstName = displayName.split(' ')[0] ?? displayName
   const applicationStatus = applicationStatusMeta[onboarding.status]
+
+  async function handleAccept(id: string) {
+    const accepted = await acceptRequest(id)
+
+    if (accepted) {
+      navigate('/deliveries/active')
+    }
+  }
 
   return (
     <div className="pb-6">
@@ -376,18 +388,35 @@ export function HomePage() {
                 </span>
               </div>
 
+              {deliveryActionError &&
+              deliveryActionPendingId === nextRequest.id ? (
+                <p
+                  role="alert"
+                  className="mt-2 text-[11.5px] font-medium text-danger"
+                >
+                  {t(deliveryActionError)}
+                </p>
+              ) : null}
+
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => rejectRequest(nextRequest.id)}
+                  disabled={deliveryActionPending !== null}
+                  isLoading={
+                    deliveryActionPending === 'reject' &&
+                    deliveryActionPendingId === nextRequest.id
+                  }
+                  onClick={() => void rejectRequest(nextRequest.id)}
                 >
                   {t('Reject')}
                 </Button>
                 <Button
-                  onClick={() => {
-                    acceptRequest(nextRequest.id)
-                    navigate('/deliveries/active')
-                  }}
+                  disabled={deliveryActionPending !== null}
+                  isLoading={
+                    deliveryActionPending === 'accept' &&
+                    deliveryActionPendingId === nextRequest.id
+                  }
+                  onClick={() => void handleAccept(nextRequest.id)}
                 >
                   {t('Accept')}
                 </Button>
@@ -397,7 +426,9 @@ export function HomePage() {
             <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
               {t(
                 isOnline
-                  ? 'No requests right now. Stay online to get the next job.'
+                  ? deliveryRequestsLoading
+                    ? 'Checking for new requests…'
+                    : 'No requests right now. Stay online to get the next job.'
                   : 'Turn on availability to start receiving nearby grocery and restaurant requests.',
               )}
             </p>

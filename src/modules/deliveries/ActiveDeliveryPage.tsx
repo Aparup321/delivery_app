@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   AlertTriangle,
+  Crosshair,
   MapPin,
   Navigation,
   Phone,
@@ -13,16 +14,18 @@ import { Card } from '../../components/common/Card'
 import { EmptyState } from '../../components/common/EmptyState'
 import { Input } from '../../components/common/Input'
 import { SectionHeading } from '../../components/common/SectionHeading'
+import { DeliveryMap } from '../../components/deliveries/DeliveryMap'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
-import { MapPreview } from '../../components/deliveries/MapPreview'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
+import type { TrackingStatus } from '../../hooks/usePartnerTracking'
 import {
   deliveryStatusLabels,
   nextDeliveryAction,
 } from '../../utils/delivery'
 import { formatCurrency } from '../../utils/format'
+import { navigationUrl } from '../../utils/navigation'
 
 const issueReasons = [
   'Customer is unreachable',
@@ -31,14 +34,45 @@ const issueReasons = [
   'Vehicle breakdown',
 ]
 
+const trackingStatusLabels: Record<TrackingStatus, string> = {
+  idle: 'Location sharing off',
+  requesting: 'Finding your location…',
+  active: 'Sharing your live location',
+  paused: 'Location paused while the app is in the background',
+  denied: 'Location permission denied — your position is not shared',
+  unavailable: 'Your location is temporarily unavailable',
+  unsupported: 'This device cannot share its location',
+  error: 'Finding your location is taking longer than usual',
+}
+
+const trackingStatusTones: Record<TrackingStatus, 'success' | 'warning' | 'danger' | 'neutral' | 'brand'> = {
+  idle: 'neutral',
+  requesting: 'warning',
+  active: 'success',
+  paused: 'warning',
+  denied: 'danger',
+  unavailable: 'warning',
+  unsupported: 'neutral',
+  error: 'warning',
+}
+
 export function ActiveDeliveryPage() {
   const navigate = useNavigate()
   const { t, locale } = useLanguage()
-  const { activeDelivery, advanceDelivery, completeDelivery, cancelDelivery } =
-    useApp()
+  const {
+    activeDelivery,
+    advanceDelivery,
+    completeDelivery,
+    cancelDelivery,
+    deliveryActionPending,
+    deliveryActionError,
+    trackingStatus,
+    trackingPosition,
+  } = useApp()
   const [showIssues, setShowIssues] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState('')
+  const [actionError, setActionError] = useState('')
 
   if (!activeDelivery) {
     return (
@@ -69,19 +103,43 @@ export function ActiveDeliveryPage() {
 
   const actionLabel = nextDeliveryAction[activeDelivery.status]
   const isAwaitingDropCode = activeDelivery.status === 'drop_arrived'
+  // Before pickup the map and navigation lead to the shop; afterwards they
+  // lead to the customer's drop location.
+  const focus: 'pickup' | 'destination' =
+    activeDelivery.status === 'accepted' || activeDelivery.status === 'pickup_arrived'
+      ? 'pickup'
+      : 'destination'
+  const pendingAction = deliveryActionPending
 
-  function handleAdvance() {
-    advanceDelivery()
+  async function handleAdvance() {
+    setActionError('')
+    setOtpError('')
+
+    const advanced = await advanceDelivery()
+
+    if (!advanced) {
+      setActionError(
+        deliveryActionError ??
+          'The delivery status could not be updated. Check your connection and try again.',
+      )
+    }
   }
 
-  function handleComplete() {
+  async function handleComplete() {
+    setActionError('')
+
     if (otp.length !== 4) {
       setOtpError('Enter the 4-digit delivery code from the customer.')
       return
     }
 
-    if (!completeDelivery(otp)) {
-      setOtpError('That code does not match. Check with the customer and try again.')
+    const completed = await completeDelivery(otp)
+
+    if (!completed) {
+      setOtpError(
+        deliveryActionError ??
+          'That code does not match. Check with the customer and try again.',
+      )
       return
     }
 
@@ -90,9 +148,19 @@ export function ActiveDeliveryPage() {
     navigate('/history')
   }
 
-  function handleCancel(reason: string) {
-    cancelDelivery(reason)
-    navigate('/deliveries')
+  async function handleCancel(reason: string) {
+    setActionError('')
+
+    const cancelled = await cancelDelivery(reason)
+
+    if (cancelled) {
+      navigate('/deliveries')
+    } else {
+      setActionError(
+        deliveryActionError ??
+          'The delivery could not be cancelled. Check your connection and try again.',
+      )
+    }
   }
 
   return (
@@ -128,7 +196,7 @@ export function ActiveDeliveryPage() {
               <span className="mt-0.5 grid size-6 place-items-center rounded-full bg-success-soft text-success">
                 <MapPin className="size-3.5" aria-hidden="true" />
               </span>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-[11.5px] font-medium text-ink-muted">
                   {t('Pickup')}
                 </p>
@@ -139,13 +207,22 @@ export function ActiveDeliveryPage() {
                   {activeDelivery.pickup.address}
                 </p>
               </div>
+              <a
+                href={navigationUrl(activeDelivery.pickup)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                aria-label={t('Navigate to pickup')}
+              >
+                <Navigation className="size-4" aria-hidden="true" />
+              </a>
             </div>
 
             <div className="flex items-start gap-2.5">
               <span className="mt-0.5 grid size-6 place-items-center rounded-full bg-danger-soft text-danger">
                 <Navigation className="size-3.5" aria-hidden="true" />
               </span>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-[11.5px] font-medium text-ink-muted">
                   {t('Deliver to')}
                 </p>
@@ -156,6 +233,15 @@ export function ActiveDeliveryPage() {
                   {activeDelivery.destination.address}
                 </p>
               </div>
+              <a
+                href={navigationUrl(activeDelivery.destination)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                aria-label={t('Navigate to drop')}
+              >
+                <Navigation className="size-4" aria-hidden="true" />
+              </a>
             </div>
           </div>
 
@@ -169,10 +255,28 @@ export function ActiveDeliveryPage() {
           </div>
         </Card>
 
-        <MapPreview
+        <DeliveryMap
           pickup={activeDelivery.pickup}
           destination={activeDelivery.destination}
+          partnerLocation={trackingPosition}
+          focus={focus}
         />
+
+        <Card padding="sm">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+              <Crosshair className="size-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <Badge
+                tone={trackingStatusTones[trackingStatus]}
+                size="sm"
+              >
+                {t(trackingStatusLabels[trackingStatus])}
+              </Badge>
+            </div>
+          </div>
+        </Card>
 
         <Card padding="md">
           <SectionHeading title={t('Delivery progress')} />
@@ -188,6 +292,18 @@ export function ActiveDeliveryPage() {
             </p>
             <p className="mt-0.5 text-[12px] text-ink-muted">
               {activeDelivery.note}
+            </p>
+          </Card>
+        ) : null}
+
+        {actionError || deliveryActionError ? (
+          <Card
+            padding="sm"
+            className="border-danger/30 bg-danger-soft"
+            role="alert"
+          >
+            <p className="text-[12px] font-medium text-danger">
+              {t(actionError || deliveryActionError || '')}
             </p>
           </Card>
         ) : null}
@@ -210,7 +326,11 @@ export function ActiveDeliveryPage() {
                   placeholder={t('4-digit code')}
                   value={otp}
                   error={otpError ? t(otpError) : undefined}
-                  hint={t('Demo build: use 4821 to complete the delivery.')}
+                  hint={
+                    activeDelivery.dropOtp
+                      ? undefined
+                      : t('Demo build: use 4821 to complete the delivery.')
+                  }
                   onChange={(event) => {
                     setOtp(event.target.value.replace(/\D/g, ''))
                     setOtpError('')
@@ -221,13 +341,19 @@ export function ActiveDeliveryPage() {
                 className="mt-3"
                 fullWidth
                 size="lg"
-                onClick={handleComplete}
+                isLoading={pendingAction === 'complete'}
+                onClick={() => void handleComplete()}
               >
                 {t('Complete delivery')}
               </Button>
             </Card>
           ) : (
-            <Button fullWidth size="lg" onClick={handleAdvance}>
+            <Button
+              fullWidth
+              size="lg"
+              isLoading={pendingAction === 'advance'}
+              onClick={() => void handleAdvance()}
+            >
               {actionLabel ? t(actionLabel) : t('Delivery completed')}
             </Button>
           )}
@@ -244,6 +370,7 @@ export function ActiveDeliveryPage() {
             </Button>
             <Button
               variant="outline"
+              disabled={pendingAction !== null}
               onClick={() => setShowIssues((value) => !value)}
               leftIcon={<AlertTriangle className="size-4" aria-hidden="true" />}
             >
@@ -263,8 +390,9 @@ export function ActiveDeliveryPage() {
                 <button
                   key={reason}
                   type="button"
-                  onClick={() => handleCancel(reason)}
-                  className="w-full rounded-2xl border border-line bg-surface px-3.5 py-2.5 text-left text-[12.5px] font-medium text-ink transition-colors hover:border-danger/40 hover:bg-danger-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30"
+                  disabled={pendingAction !== null}
+                  onClick={() => void handleCancel(reason)}
+                  className="w-full rounded-2xl border border-line bg-surface px-3.5 py-2.5 text-left text-[12.5px] font-medium text-ink transition-colors hover:border-danger/40 hover:bg-danger-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30 disabled:opacity-60"
                 >
                   {t(reason)}
                 </button>

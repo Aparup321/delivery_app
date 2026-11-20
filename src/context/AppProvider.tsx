@@ -3,7 +3,6 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useRef,
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
@@ -22,10 +21,20 @@ import {
   watchPartnerAccount,
 } from '../services/partnerOnboarding'
 import {
-  publishDelivery,
+  deliveryDocumentId,
   publishPartnerLocation,
   type PartnerLocation,
 } from '../services/deliverySync'
+import {
+  acceptAssignedDelivery,
+  advanceDeliveryStatus,
+  cancelActiveDelivery,
+  completeDeliveryWithOtp,
+  publishDeliveryLocation,
+  rejectAssignedDelivery,
+  subscribePartnerDeliveries,
+} from '../services/deliveryRequests'
+import { usePartnerTracking } from '../hooks/usePartnerTracking'
 import type { AppNotification } from '../types/notification'
 import type {
   OnboardingFiles,
@@ -34,6 +43,7 @@ import type {
   SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
+import type { Delivery, DeliveryLocation } from '../types/delivery'
 import { publishSupportTicket } from '../services/supportTickets'
 import { isCompleteApplication } from '../utils/onboardingValidation'
 import { AppContext } from './app-store'
@@ -124,6 +134,19 @@ function draftOnboarding(state: OnboardingState): OnboardingState {
   }
 }
 
+/** Active-delivery statuses: everything between offer and a final outcome. */
+function isActiveStatus(delivery: Delivery): boolean {
+  return !['assigned', 'delivered', 'cancelled'].includes(delivery.status)
+}
+
+/** Newest first, using the completion time with sensible fallbacks. */
+function historySort(left: Delivery, right: Delivery): number {
+  const leftAt = left.completedAt ?? left.acceptedAt ?? left.requestedAt
+  const rightAt = right.completedAt ?? right.acceptedAt ?? right.requestedAt
+
+  return rightAt.localeCompare(leftAt)
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
 
@@ -156,13 +179,21 @@ function AppDataProvider({
   const unverifiedDemoSession = Boolean(
     uid && isFirebaseConfigured && uid.startsWith('demo:'),
   )
-  const [deliveries, dispatch] = useReducer(deliveryReducer, remoteEnabled
+  // The local reducer only drives the offline prototype. A live account keeps
+  // every delivery in Firestore, so mock requests can never leak into the
+  // production flow.
+  const [demoDeliveries, dispatch] = useReducer(deliveryReducer, remoteEnabled
     ? { requests: [], activeDelivery: null, history: [] }
     : {
         requests: initialRequests,
         activeDelivery: null,
         history: initialHistory,
       })
+  const [liveDeliveries, setLiveDeliveries] = useState<Delivery[]>([])
+  const [liveLocations, setLiveLocations] = useState<
+    Record<string, DeliveryLocation | null>
+  >({})
+  const [liveLoaded, setLiveLoaded] = useState(false)
   const [isOnline, setOnlineState] = useState(false)
   const [notifications, setNotifications] =
     useState<AppNotification[]>(initialNotifications)
@@ -205,9 +236,15 @@ function AppDataProvider({
     null,
   )
   const [deliveryRetryToken, setDeliveryRetryToken] = useState(0)
-  const [locationTick, setLocationTick] = useState(0)
-  const locationRef = useRef<PartnerLocation | null>(null)
-  const publishedDeliveriesRef = useRef<Map<string, string>>(new Map())
+  const [deliveryActionPending, setDeliveryActionPending] = useState<
+    string | null
+  >(null)
+  const [deliveryActionPendingId, setDeliveryActionPendingId] = useState<
+    string | null
+  >(null)
+  const [deliveryActionError, setDeliveryActionError] = useState<string | null>(
+    null,
+  )
   const canGoOnline =
     onboarding.status === 'approved' && onboarding.accountStatus === 'active'
 
@@ -436,59 +473,239 @@ function AppDataProvider({
     setLiveRetryToken((value) => value + 1)
   }, [])
 
-  // Mirror each accepted or progressed job into Firestore. The signature keeps
-  // retries idempotent and avoids writing on every unrelated render.
+  // Live subscription to the deliveries assigned to this partner. Firestore
+  // rules limit the query to the signed-in UID, so assigned requests arrive
+  // without polling and no other partner's deliveries can appear here. The
+  // provider remounts per session UID, so demo sessions simply never start it.
   useEffect(() => {
     if (!remoteEnabled || !uid) {
       return
     }
 
-    const delivery = deliveries.activeDelivery ?? deliveries.history[0]
-    if (!delivery) {
-      return
-    }
+    let active = true
 
-    const signature = [
-      delivery.status,
-      delivery.events.length,
-      delivery.completedAt ?? '',
-      delivery.proof?.verifiedAt ?? '',
-      locationRef.current?.updatedAt ?? '',
-    ].join('|')
+    const unsubscribe = subscribePartnerDeliveries(
+      uid,
+      (snapshot) => {
+        if (!active) {
+          return
+        }
 
-    if (publishedDeliveriesRef.current.get(delivery.id) === signature) {
-      return
-    }
-
-    publishedDeliveriesRef.current.set(delivery.id, signature)
-
-    void publishDelivery(delivery, {
-      partnerUid: uid,
-      partnerName:
-        onboarding.fullName.trim() || phone || 'Delivery partner',
-      vehicleType: onboarding.vehicle.type,
-      source: 'live',
-      currentLocation: locationRef.current,
-    })
-      .then(() => {
+        setLiveDeliveries(snapshot.deliveries)
+        setLiveLocations(snapshot.locations)
+        setLiveLoaded(true)
         setDeliverySyncError(null)
-      })
-      .catch(() => {
-        publishedDeliveriesRef.current.delete(delivery.id)
-        setDeliverySyncError(
-          'This delivery could not be synced to the Administrator console. Retry when you are back online.',
+      },
+      (error) => {
+        if (!active) {
+          return
+        }
+
+        setLiveLoaded(true)
+        setDeliverySyncError(error.message)
+      },
+    )
+
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [remoteEnabled, uid, deliveryRetryToken])
+
+  // Live mode derives every list from Firestore; demo mode keeps the reducer.
+  const requests = useMemo(() => {
+    if (!remoteEnabled) {
+      return demoDeliveries.requests
+    }
+
+    return liveDeliveries.filter(
+      (delivery) => delivery.status === 'assigned' && !delivery.partnerResponse,
+    )
+  }, [remoteEnabled, demoDeliveries.requests, liveDeliveries])
+
+  const activeDelivery = useMemo(() => {
+    if (!remoteEnabled) {
+      return demoDeliveries.activeDelivery
+    }
+
+    return liveDeliveries.find(isActiveStatus) ?? null
+  }, [remoteEnabled, demoDeliveries.activeDelivery, liveDeliveries])
+
+  const history = useMemo(() => {
+    if (!remoteEnabled) {
+      return demoDeliveries.history
+    }
+
+    return liveDeliveries
+      .filter((delivery) => !isActiveStatus(delivery))
+      .sort(historySort)
+  }, [remoteEnabled, demoDeliveries.history, liveDeliveries])
+
+  const retryDeliverySync = useCallback(() => {
+    setDeliverySyncError(null)
+    setDeliveryActionError(null)
+    setDeliveryRetryToken((value) => value + 1)
+  }, [])
+
+  /**
+   * Runs one delivery action against Firestore, surfacing a single pending
+   * flag and one actionable error message. The boolean return lets screens
+   * navigate only when the change actually landed.
+   */
+  const runDeliveryAction = useCallback(
+    async (
+      action: string,
+      id: string | null,
+      run: () => Promise<void | boolean>,
+    ): Promise<boolean> => {
+      setDeliveryActionPending(action)
+      setDeliveryActionPendingId(id)
+      setDeliveryActionError(null)
+
+      try {
+        const result = await run()
+        return result !== false
+      } catch (error) {
+        setDeliveryActionError(
+          error instanceof Error ? error.message : 'The delivery update failed. Try again.',
         )
-      })
-  }, [
-    deliveries,
-    remoteEnabled,
-    uid,
-    onboarding.fullName,
-    onboarding.vehicle.type,
-    phone,
-    deliveryRetryToken,
-    locationTick,
-  ])
+        return false
+      } finally {
+        setDeliveryActionPending(null)
+        setDeliveryActionPendingId(null)
+      }
+    },
+    [],
+  )
+
+  const acceptRequest = useCallback(
+    (id: string) => {
+      const request = requests.find((item) => item.id === id)
+
+      if (!request) {
+        setDeliveryActionError(
+          'This request is no longer in the list. Refresh to see the latest requests.',
+        )
+        return Promise.resolve(false)
+      }
+
+      // Offline prototype: the reducer keeps the local state consistent.
+      if (!uid || uid.startsWith('demo:')) {
+        if (activeDelivery) {
+          setDeliveryActionError(
+            'Finish your active delivery before accepting another request.',
+          )
+          return Promise.resolve(false)
+        }
+
+        dispatch({ type: 'accept', id, at: new Date().toISOString() })
+        return Promise.resolve(true)
+      }
+
+      if (activeDelivery) {
+        setDeliveryActionError(
+          'Finish your active delivery before accepting another request.',
+        )
+        return Promise.resolve(false)
+      }
+
+      return runDeliveryAction('accept', id, () =>
+        acceptAssignedDelivery(uid, request),
+      )
+    },
+    [requests, activeDelivery, runDeliveryAction, uid],
+  )
+
+  const rejectRequest = useCallback(
+    (id: string) => {
+      const request = requests.find((item) => item.id === id)
+
+      if (!request) {
+        return Promise.resolve()
+      }
+
+      if (!uid || uid.startsWith('demo:')) {
+        dispatch({ type: 'reject', id })
+        return Promise.resolve()
+      }
+
+      return runDeliveryAction('reject', id, () =>
+        rejectAssignedDelivery(uid, request),
+      ).then(() => undefined)
+    },
+    [requests, runDeliveryAction, uid],
+  )
+
+  const advanceDelivery = useCallback(() => {
+    const delivery = activeDelivery
+
+    if (!delivery) {
+      return Promise.resolve(false)
+    }
+
+    if (!uid || uid.startsWith('demo:')) {
+      dispatch({ type: 'advance', at: new Date().toISOString() })
+      return Promise.resolve(true)
+    }
+
+    return runDeliveryAction('advance', null, () =>
+      advanceDeliveryStatus(uid, delivery),
+    )
+  }, [activeDelivery, runDeliveryAction, uid])
+
+  const completeDelivery = useCallback(
+    (otp: string) => {
+      const delivery = activeDelivery
+
+      if (!delivery) {
+        return Promise.resolve(false)
+      }
+
+      // Offline prototype (no Firebase session, or a device-only fallback):
+      // verify against the delivery's demo code locally.
+      if (!uid || uid.startsWith('demo:')) {
+        if (delivery.status !== 'drop_arrived') {
+          return Promise.resolve(false)
+        }
+
+        if (otp.trim() !== (delivery.dropOtp ?? DEMO_PROOF_OTP)) {
+          return Promise.resolve(false)
+        }
+
+        dispatch({ type: 'complete', at: new Date().toISOString() })
+        return Promise.resolve(true)
+      }
+
+      return runDeliveryAction('complete', null, () =>
+        completeDeliveryWithOtp(uid, delivery, otp, DEMO_PROOF_OTP),
+      )
+    },
+    [activeDelivery, runDeliveryAction, uid],
+  )
+
+  const cancelDelivery = useCallback(
+    (reason: string) => {
+      const delivery = activeDelivery
+
+      if (!delivery) {
+        return Promise.resolve(false)
+      }
+
+      if (!uid || uid.startsWith('demo:')) {
+        dispatch({
+          type: 'cancel',
+          reason,
+          at: new Date().toISOString(),
+        })
+        return Promise.resolve(true)
+      }
+
+      return runDeliveryAction('cancel', null, () =>
+        cancelActiveDelivery(uid, delivery, reason),
+      )
+    },
+    [activeDelivery, runDeliveryAction, uid],
+  )
 
   // Share the partner's last known position while they are online. This is
   // best-effort: a denied permission never blocks deliveries. Wait until the
@@ -501,7 +718,6 @@ function AppDataProvider({
     }
 
     if (!isOnline) {
-      locationRef.current = null
       void publishPartnerLocation(uid, null, false).catch(() => {
         // Offline state is also best-effort.
       })
@@ -529,8 +745,6 @@ function AppDataProvider({
               : null,
             updatedAt: new Date().toISOString(),
           }
-          locationRef.current = location
-          setLocationTick((value) => value + 1)
 
           void publishPartnerLocation(uid, location, true).catch(() => {
             // The next status change retries the delivery document.
@@ -549,49 +763,50 @@ function AppDataProvider({
     return () => {
       control.cancelled = true
       window.clearInterval(timer)
-      locationRef.current = null
       void publishPartnerLocation(uid, null, false).catch(() => {
         // The next sign-in can correct a stale online flag.
       })
     }
   }, [remoteEnabled, uid, isOnline, isLoading])
 
-  const retryDeliverySync = useCallback(() => {
-    setDeliverySyncError(null)
-    setDeliveryRetryToken((value) => value + 1)
-  }, [])
+  // Active-delivery GPS tracking. The hook throttles publishes by time and
+  // movement; each accepted fix is written to the shared delivery document so
+  // delivery_admin sees the partner's latest position.
+  const handleTrackingPublish = useCallback(
+    (location: PartnerLocation) => {
+      const delivery = activeDelivery
 
-  const acceptRequest = useCallback((id: string) => {
-    dispatch({ type: 'accept', id, at: new Date().toISOString() })
-  }, [])
-
-  const rejectRequest = useCallback((id: string) => {
-    dispatch({ type: 'reject', id })
-  }, [])
-
-  const advanceDelivery = useCallback(() => {
-    dispatch({ type: 'advance', at: new Date().toISOString() })
-  }, [])
-
-  const completeDelivery = useCallback(
-    (otp: string) => {
-      if (deliveries.activeDelivery?.status !== 'drop_arrived') {
-        return false
+      if (!delivery || !uid || uid.startsWith('demo:')) {
+        return
       }
 
-      if (otp.trim() !== DEMO_PROOF_OTP) {
-        return false
-      }
-
-      dispatch({ type: 'complete', at: new Date().toISOString() })
-      return true
+      void publishDeliveryLocation(delivery, location)
+        .then(() => setDeliverySyncError(null))
+        .catch((error: unknown) => {
+          setDeliverySyncError(
+            error instanceof Error
+              ? error.message
+              : 'Your location could not be shared with operations. It will retry automatically.',
+          )
+        })
     },
-    [deliveries.activeDelivery],
+    [activeDelivery, uid],
   )
 
-  const cancelDelivery = useCallback((reason: string) => {
-    dispatch({ type: 'cancel', reason, at: new Date().toISOString() })
-  }, [])
+  const { status: trackingStatus, position: trackingPosition } =
+    usePartnerTracking({
+      enabled: activeDelivery !== null,
+      onPublish: handleTrackingPublish,
+    })
+
+  // The partner marker prefers this device's GPS fix; when sharing is denied
+  // or paused, the last position stored on the delivery document still shows
+  // where the partner was last seen.
+  const trackingLocation: DeliveryLocation | null =
+    trackingPosition ??
+    (activeDelivery
+      ? liveLocations[deliveryDocumentId(activeDelivery.id)] ?? null
+      : null)
 
   const markNotificationRead = useCallback((id: string) => {
     setNotifications((current) =>
@@ -702,14 +917,20 @@ function AppDataProvider({
       isOnline,
       canGoOnline,
       setOnline,
-      requests: deliveries.requests,
-      activeDelivery: deliveries.activeDelivery,
-      history: deliveries.history,
+      requests,
+      activeDelivery,
+      history,
       acceptRequest,
       rejectRequest,
       advanceDelivery,
       completeDelivery,
       cancelDelivery,
+      deliveryActionPending,
+      deliveryActionPendingId,
+      deliveryActionError,
+      deliveryRequestsLoading: remoteEnabled && !liveLoaded,
+      trackingStatus,
+      trackingPosition: trackingLocation,
       notifications,
       unreadNotifications,
       markNotificationRead,
@@ -730,12 +951,21 @@ function AppDataProvider({
       isOnline,
       canGoOnline,
       setOnline,
-      deliveries,
+      requests,
+      activeDelivery,
+      history,
       acceptRequest,
       rejectRequest,
       advanceDelivery,
       completeDelivery,
       cancelDelivery,
+      deliveryActionPending,
+      deliveryActionPendingId,
+      deliveryActionError,
+      remoteEnabled,
+      liveLoaded,
+      trackingStatus,
+      trackingLocation,
       notifications,
       unreadNotifications,
       markNotificationRead,
