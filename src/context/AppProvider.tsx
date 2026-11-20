@@ -34,6 +34,7 @@ import type {
   SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
+import { publishSupportTicket } from '../services/supportTickets'
 import { isCompleteApplication } from '../utils/onboardingValidation'
 import { AppContext } from './app-store'
 import { deliveryReducer } from './deliveryReducer'
@@ -615,7 +616,10 @@ function AppDataProvider({
       createdAt: new Date().toISOString(),
     }
     setTickets((current) => [ticket, ...current])
-  }, [])
+    void publishSupportTicket(uid ?? '', ticket).catch(() => {
+      // The local ticket remains visible if the network is unavailable.
+    })
+  }, [uid])
 
   const updateOnboarding = useCallback((patch: Partial<OnboardingState>) => {
     setOnboarding((current) => ({ ...current, ...patch }))
