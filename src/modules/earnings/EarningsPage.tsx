@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Wallet } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/common/Badge'
+import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
+import { EmptyState } from '../../components/common/EmptyState'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { StatCard } from '../../components/common/StatCard'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
@@ -16,7 +19,8 @@ import type { EarningsPeriod } from '../../types/earnings'
 import { formatCurrency, formatShortDate } from '../../utils/format'
 
 export function EarningsPage() {
-  const { history } = useApp()
+  const navigate = useNavigate()
+  const { history, isLiveSession } = useApp()
   const { t, locale } = useLanguage()
   const [period, setPeriod] = useState<EarningsPeriod>('today')
 
@@ -60,16 +64,31 @@ export function EarningsPage() {
       />
 
       <div className="space-y-4 px-4 pt-5">
-        <SegmentedTabs
-          label={t('Earnings period')}
-          value={period}
-          onChange={(value) => setPeriod(value as EarningsPeriod)}
-          items={[
-            { id: 'today', label: t('Today') },
-            { id: 'week', label: t('Week') },
-            { id: 'month', label: t('Month') },
-          ]}
-        />
+        {isLiveSession ? (
+          <EmptyState
+            icon={Wallet}
+            title={t('No earnings recorded yet')}
+            description={t(
+              'Completed deliveries will add their earnings here once payout recording is connected.',
+            )}
+            action={
+              <Button onClick={() => navigate('/')}>
+                {t('Back to home')}
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <SegmentedTabs
+              label={t('Earnings period')}
+              value={period}
+              onChange={(value) => setPeriod(value as EarningsPeriod)}
+              items={[
+                { id: 'today', label: t('Today') },
+                { id: 'week', label: t('Week') },
+                { id: 'month', label: t('Month') },
+              ]}
+            />
 
         <Card padding="lg">
           <p className="text-[12px] font-medium text-ink-muted">
@@ -227,6 +246,8 @@ export function EarningsPage() {
             'Demo data for this phase. Earnings will come from live delivery and payment records after the backend integration.',
           )}
         </p>
+          </>
+        )}
       </div>
     </div>
   )

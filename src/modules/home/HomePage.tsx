@@ -20,8 +20,6 @@ import { SectionHeading } from '../../components/common/SectionHeading'
 import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
-import { dashboardStats, earningsSummary } from '../../mock/earnings'
-import { currentPartner } from '../../mock/partner'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { deliveryStatusLabels } from '../../utils/delivery'
 import { formatCurrency, formatDate } from '../../utils/format'
@@ -47,6 +45,7 @@ export function HomePage() {
     isOnline,
     canGoOnline,
     setOnline,
+    dashboardStats,
     requests,
     activeDelivery,
     acceptRequest,
@@ -59,7 +58,6 @@ export function HomePage() {
     onboarding,
   } = useApp()
   const { t, locale } = useLanguage()
-  const partner = currentPartner
   const nextRequest = requests[0]
   const displayName = onboarding.fullName.trim() || t('Partner')
   const firstName = displayName.split(' ')[0] ?? displayName
@@ -84,7 +82,7 @@ export function HomePage() {
           >
             <Avatar
               name={displayName}
-              src={onboarding.profilePhoto || partner.avatarUrl}
+              src={onboarding.profilePhoto || undefined}
               className="ring-2 ring-brand-soft"
             />
             <div className="min-w-0">
@@ -281,7 +279,7 @@ export function HomePage() {
               {t('Deliveries')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {earningsSummary.deliveriesToday}
+              {dashboardStats.deliveriesToday}
             </p>
           </Link>
           <Link
@@ -292,7 +290,7 @@ export function HomePage() {
               {t('Earnings')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {formatCurrency(earningsSummary.today, locale)}
+              {formatCurrency(dashboardStats.earningsToday, locale)}
             </p>
           </Link>
           <Link
@@ -303,7 +301,9 @@ export function HomePage() {
               {t('Rating')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {dashboardStats.rating.toFixed(1)}
+              {dashboardStats.rating === null
+                ? t('New')
+                : dashboardStats.rating.toFixed(1)}
             </p>
           </Link>
         </div>

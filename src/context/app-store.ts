@@ -10,11 +10,29 @@ import type {
 import type { SupportTicket } from '../types/support'
 import type { TrackingStatus } from '../hooks/usePartnerTracking'
 
+/** Headline figures shown on the Home dashboard. */
+export interface DashboardStats {
+  deliveriesToday: number
+  earningsToday: number
+  /** null when the partner has no rating yet. */
+  rating: number | null
+}
+
 export interface AppContextValue {
   isOnline: boolean
   /** True only for an approved application with an active account. */
   canGoOnline: boolean
   setOnline: (online: boolean) => void
+
+  /**
+   * True when the session talks to Firebase with a real UID, so every list is
+   * live data and no demo fixture may be shown. The offline prototype
+   * (Firebase unconfigured or the connection failed) is false.
+   */
+  isLiveSession: boolean
+
+  /** Headline dashboard figures, real for live sessions. */
+  dashboardStats: DashboardStats
 
   requests: Delivery[]
   activeDelivery: Delivery | null

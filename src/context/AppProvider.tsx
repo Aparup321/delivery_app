@@ -16,6 +16,10 @@ import { isFirebaseConfigured } from '../firebase/config'
 import { initialOnboarding } from '../mock/onboarding'
 import { initialTickets } from '../mock/support'
 import {
+  earningsSummary,
+  dashboardStats as mockDashboardStats,
+} from '../mock/earnings'
+import {
   loadPartnerOnboarding,
   savePartnerOnboarding,
   watchPartnerAccount,
@@ -45,8 +49,10 @@ import type {
 import type { SupportTicket } from '../types/support'
 import type { Delivery, DeliveryLocation } from '../types/delivery'
 import { publishSupportTicket } from '../services/supportTickets'
+import { todayDateString } from '../utils/date'
 import { isCompleteApplication } from '../utils/onboardingValidation'
 import { AppContext } from './app-store'
+import type { DashboardStats } from './app-store'
 import { deliveryReducer } from './deliveryReducer'
 import { useAuth } from './auth'
 
@@ -195,9 +201,15 @@ function AppDataProvider({
   >({})
   const [liveLoaded, setLiveLoaded] = useState(false)
   const [isOnline, setOnlineState] = useState(false)
-  const [notifications, setNotifications] =
-    useState<AppNotification[]>(initialNotifications)
-  const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets)
+  // Demo fixtures are the offline prototype's content. A live account starts
+  // with empty lists so a brand-new number never sees demo data; real records
+  // arrive from Firestore.
+  const [notifications, setNotifications] = useState<AppNotification[]>(
+    remoteEnabled ? [] : initialNotifications,
+  )
+  const [tickets, setTickets] = useState<SupportTicket[]>(
+    remoteEnabled ? [] : initialTickets,
+  )
   const [onboarding, setOnboarding] = useState<OnboardingState>(() => {
     const local = readOnboarding(phone)
 
@@ -540,6 +552,33 @@ function AppDataProvider({
       .filter((delivery) => !isActiveStatus(delivery))
       .sort(historySort)
   }, [remoteEnabled, demoDeliveries.history, liveDeliveries])
+
+  // Headline dashboard figures. Live sessions compute them from real
+  // deliveries completed today and show no rating until one exists; the
+  // offline prototype keeps its labelled demo figures.
+  const dashboardStats = useMemo<DashboardStats>(() => {
+    if (!remoteEnabled) {
+      return {
+        deliveriesToday: earningsSummary.deliveriesToday,
+        earningsToday: earningsSummary.today,
+        rating: mockDashboardStats.rating,
+      }
+    }
+
+    const today = todayDateString()
+    const todays = history.filter(
+      (delivery) =>
+        delivery.status === 'delivered' &&
+        delivery.completedAt !== undefined &&
+        new Date(delivery.completedAt).toDateString() === today,
+    )
+
+    return {
+      deliveriesToday: todays.length,
+      earningsToday: todays.reduce((sum, delivery) => sum + delivery.earnings, 0),
+      rating: null,
+    }
+  }, [remoteEnabled, history])
 
   const retryDeliverySync = useCallback(() => {
     setDeliverySyncError(null)
@@ -917,6 +956,8 @@ function AppDataProvider({
       isOnline,
       canGoOnline,
       setOnline,
+      isLiveSession: remoteEnabled,
+      dashboardStats,
       requests,
       activeDelivery,
       history,
@@ -951,6 +992,8 @@ function AppDataProvider({
       isOnline,
       canGoOnline,
       setOnline,
+      remoteEnabled,
+      dashboardStats,
       requests,
       activeDelivery,
       history,
@@ -962,7 +1005,6 @@ function AppDataProvider({
       deliveryActionPending,
       deliveryActionPendingId,
       deliveryActionError,
-      remoteEnabled,
       liveLoaded,
       trackingStatus,
       trackingLocation,

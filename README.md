@@ -84,10 +84,10 @@ material for the project and are not part of the deployed application.
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, drop OTP proof, contact, navigation and issue reporting | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
-| Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (mock) |
-| Notifications | Request, account, delivery and payment alerts with read state | Built (mock) |
-| Help & support | FAQs, ticket submission and ticket status | Built (mock) |
-| Profile & settings | Partner details, documents, English/Hindi/Bengali language switching, alerts, application status and sign-out | Built (mock) |
+| Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (labelled demo; offline prototype only — live accounts see an empty state) |
+| Notifications | Request, account, delivery and payment alerts with read state | Built (empty for live accounts; demo fixtures offline only) |
+| Help & support | FAQs, ticket submission and ticket status | Built (empty tickets for live accounts; FAQs are static help content) |
+| Profile & settings | Partner details, documents, English/Hindi/Bengali language switching, alerts, application status and sign-out | Built (live partner record) |
 
 ### Demo access
 
@@ -133,7 +133,8 @@ The Firebase phone-SMS code path (`sendPhoneOtp` / `confirmPhoneOtp`) stays in
 
 Firebase provides the demo-OTP auth bridge, onboarding persistence, the live
 partner-document listener, and the shared `deliveries` collection. Earnings,
-notification and support data still come from `src/mock/`.
+notification and support fixtures come from `src/mock/` and are shown only for
+the offline prototype; live accounts start empty.
 
 ## 5. Current development status
 
@@ -349,29 +350,37 @@ screens use the same treatment and pull their card over the brand header.
 
 ## 11. Mock data and app state
 
-Firebase is connected for authentication and onboarding only. `src/mock/` still
-holds realistic Kolkata-based data for the partner fixture, delivery requests,
-completed deliveries, earnings, payouts, notifications, onboarding defaults and
-support FAQs.
+Demo fixtures are the **offline prototype's** content and are shown only when
+Firebase is not configured (or the connection failed and the app fell back to
+the device-only demo session). `src/mock/` holds realistic Kolkata-based data
+for delivery requests, completed deliveries, earnings, payouts, notifications,
+onboarding defaults and support FAQs. A signed-in Firebase account — including
+a brand-new number — never receives any of it: its requests, active delivery,
+history, notifications and tickets start empty and fill only with real records.
 
 `src/context/AppProvider.tsx` owns the interactive state behind those screens:
 online availability, requests, the active delivery, history, notifications,
-support tickets and onboarding progress. `src/context/AuthProvider.tsx` owns the
-Firebase session, with a local demo fallback when configuration is absent.
+support tickets, dashboard figures and onboarding progress.
+`src/context/AuthProvider.tsx` owns the Firebase session, with a local demo
+fallback when configuration is absent.
 
 - Firebase persists the authenticated session. A fresh launch restores it only
   when Firestore confirms a submitted or reviewed application; a sign-in-only or
   draft account returns to `/login`. Reloading the running tab keeps the session,
   and submitted onboarding data is stored in Firestore and Storage.
 - Draft onboarding progress and the language choice use `localStorage`.
-- Delivery and notification changes live in memory and reset on reload.
+- Live dashboard figures (deliveries today, earnings today) are computed from
+  real completed deliveries; the rating cell shows "New" until a rating source
+  exists. The offline prototype keeps its labelled demo figures.
+- The Earnings screen shows the labelled demo dataset only for the offline
+  prototype; live accounts see an honest empty state until payout recording is
+  connected.
 - Every figure shown on the earnings screen is demo data and labelled as such.
 
 Screens read state from the context hooks (`useApp`, `useAuth`) and render typed
-models from `src/types/`. Two exceptions still import fixtures directly — the
-signed-in partner (`src/mock/partner.ts`, used by Home and Profile) and the
-earnings summary (`src/mock/earnings.ts`, used by Home) — and will move behind
-the service layer with the remaining backend integration.
+models from `src/types/`. The old `src/mock/partner.ts` fixture was removed:
+Profile and Home render the signed-in partner from the onboarding record and
+the Firebase session.
 
 ## 12. Firebase setup and connected scope
 
@@ -576,7 +585,10 @@ explored offline; live accounts never receive mock deliveries.
 
 ### Still mock
 
-Earnings, payouts, ratings, notifications and support tickets remain demo data.
+Earnings, payouts, ratings, notifications and support tickets remain demo data
+for the offline prototype only — a signed-in Firebase account starts with empty
+lists and no demo figures anywhere (the old `src/mock/partner.ts` fixture was
+removed; Profile renders the onboarding record and the session).
 Distance and ETA for console-assigned deliveries are the estimates the console
 computes from service-area coordinates (approximate, not routing-engine
 figures). The delivery drop code is whatever the console issued; sessions

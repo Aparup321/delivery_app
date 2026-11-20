@@ -599,6 +599,10 @@ const hindi: Record<string, string> = {
     'डिलीवरी रद्द नहीं हो सकी। कनेक्शन जांचें और फिर कोशिश करें।',
   'Your location could not be shared with operations. It will retry automatically.':
     'आपकी जगह ऑपरेशंस के साथ साझा नहीं हो सकी। यह अपने आप दोबारा कोशिश करेगा।',
+  New: 'नया',
+  'No earnings recorded yet': 'अभी कोई कमाई दर्ज नहीं हुई है',
+  'Completed deliveries will add their earnings here once payout recording is connected.':
+    'पेआउट रिकॉर्डिंग जुड़ने के बाद पूर्ण डिलीवरी की कमाई यहां दिखेगी।',
 }
 
 const bengali: Record<string, string> = {
@@ -1182,6 +1186,10 @@ const bengali: Record<string, string> = {
     'ডেলিভারি বাতিল করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
   'Your location could not be shared with operations. It will retry automatically.':
     'আপনার অবস্থান অপারেশনসের সাথে শেয়ার করা যায়নি। এটি স্বয়ংক্রিয়ভাবে আবার চেষ্টা করবে।',
+  New: 'নতুন',
+  'No earnings recorded yet': 'এখনও কোনো আয় রেকর্ড হয়নি',
+  'Completed deliveries will add their earnings here once payout recording is connected.':
+    'পেআউট রেকর্ডিং যুক্ত হলে সম্পন্ন ডেলিভারির আয় এখানে দেখা যাবে।',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =

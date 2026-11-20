@@ -397,9 +397,9 @@ If a requirement conflicts with this document, ask before proceeding.
 
 ## 15. Firebase integration rules
 
-Firebase is connected for the demo-OTP auth bridge and onboarding persistence.
-The remaining product modules stay mock-driven until their service layer is
-added:
+Firebase is connected for the demo-OTP auth bridge, onboarding persistence and
+the live delivery flow. The remaining product modules stay mock-driven until
+their service layer is added:
 
 - Keep data access out of components: use `src/services/` as the only layer that
   talks to Firebase, and `src/context/` for shared auth/app state.
@@ -409,9 +409,13 @@ added:
 - Firestore models must follow the roadmap collections: `partners`,
   `partner_documents`, `vehicles`, `training`, `training_progress`,
   `deliveries`, `delivery_types`, `earnings`, `payments`, `notifications`,
-  `support_tickets`, `admin_users`.
+  `support_tickets`, `admin_users`. The `deliveries` contract (offer fields,
+  status values, partner-owned fields) is documented in README section 12 and
+  enforced by `firestore.rules`; keep both in sync with
+  `src/services/deliveryRequests.ts`.
 - Store file metadata and storage paths, not file contents, in Firestore.
-- Keep configuration in environment variables (`VITE_FIREBASE_*`) with the
+- Keep configuration in environment variables (`VITE_FIREBASE_*`, plus
+  `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE` for the map providers) with the
   tracked `.env.example` template. Never commit secrets, service accounts or API
   keys; `.env` and every other `.env.*` file stay ignored. `VITE_*` values are
   embedded in the browser bundle, so only public Firebase Web App configuration
@@ -424,13 +428,15 @@ added:
   consistent with the roadmap (logout, expired OTP errors, account status
   gating).
 - Keep the frontend usable with mocks if configuration is missing, so demos and
-  reviews never depend on live credentials.
+  reviews never depend on live credentials. Live accounts never receive mock
+  deliveries: mock data stays behind the `remoteEnabled` check in
+  `AppProvider`.
 
 ---
 
 ## 16. Current implementation state and handoff
 
-> Last updated: 18 November 2026. Read this section before starting work; it
+> Last updated: 20 November 2026. Read this section before starting work; it
 > records what is built, what is intentionally missing, and what an agent
 > picking up the project should do next.
 
@@ -503,16 +509,45 @@ added:
   configured because no verification service exists.
 - **Dashboard** — light header, availability switch, three headline stats, six
   quick actions and a request preview. Requests only appear when online. The
-  application-status card is shown only until approval.
+  application-status card is shown only until approval. For live sessions the
+  stats are computed from real deliveries completed today (rating shows "New"
+  until a rating source exists); the offline prototype keeps its labelled demo
+  figures. Demo fixtures never seed a live account: notifications, support
+  tickets and earnings datasets stay empty until real records exist, and the
+  `src/mock/partner.ts` fixture was removed — Profile and Home render the
+  onboarding record and the Firebase session.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
   behind availability and the empty state offers a "Go online" action.
+- **Live delivery flow** — offers assigned in `delivery_admin` are written to
+  `deliveries/{deliveryId}` over the Firestore REST API (assignment
+  write-through, built from the console's audit events) and arrive in the
+  partner app through `subscribePartnerDeliveries` (`onSnapshot`, filtered to
+  the signed-in UID). Acceptance, rejection, every lifecycle step, OTP
+  completion and cancellation each run in a Firestore transaction in
+  `src/services/deliveryRequests.ts`, so duplicate acceptance is impossible and
+  retries are idempotent. Offer expiry, reassignment and cancellation surface
+  as actionable errors and refresh from the listener. Live accounts derive
+  requests, the active delivery and history entirely from Firestore; mock
+  deliveries stay behind the demo-session check in `AppProvider`.
 - **Active delivery** — accepted → pickup arrived → picked up → on the way → drop
-  arrived → delivered, with a live timer, OpenStreetMap route preview, issue
-  reporting and a demo drop OTP (`4821`). Completed and cancelled jobs move to
-  history.
+  arrived → delivered, with per-stage primary actions, an interactive
+  Leaflet/OpenStreetMap map (pickup, drop and live partner markers, OSRM route
+  line, recentre control), external turn-by-turn navigation per leg, customer
+  contact, issue reporting, a live location-sharing status chip, and OTP
+  completion (`dropOtp` from the console; demo fallback `4821`). Completed and
+  cancelled jobs move to history.
+- **GPS tracking** — `usePartnerTracking` wraps `watchPosition` while a
+  delivery is active and publishes throttled fixes (≥25 m movement or one
+  minute, accuracy ≤150 m) to `currentLocation` on the delivery document.
+  Permission denial, GPS loss, background tabs and unsupported devices are
+  shown honestly; the watcher is cleared on completion, cancellation and
+  unmount. While online, `partners/{uid}` also keeps `lastLocation` and
+  `isOnline` updated once a minute.
 - **History, earnings, notifications, support, profile** — searchable history,
-  demo earnings, read/unread notifications, FAQ + ticket creation, and profile
-  with documents, language, alerts and sign-out. Every section header has a back
+  read/unread notifications, FAQ + ticket creation, and profile with documents,
+  language, alerts and sign-out. The Earnings screen shows the labelled demo
+  dataset only for the offline prototype; live accounts see an honest empty
+  state until payout recording is connected. Every section header has a back
   control with an explicit fallback; Home is the root and has none.
 - **Language** — Profile → App language switches every screen, shared component,
   validation message and mock notification/FAQ string immediately between
@@ -523,9 +558,8 @@ added:
 
 ### Intentionally missing (do not fake these)
 
-- No live delivery, earnings, notification, support or payment data. Firebase
-  is connected for auth and onboarding only. The active-delivery preview loads
-  OpenStreetMap tiles, but there is no routing/geocoding provider, push
+- No live earnings, notification, support or payment data. Firebase is
+  connected for auth, onboarding and the delivery flow only; there are no push
   notifications or payments.
 - No seller, buyer, fleet, admin or HopNgo passenger surface. Those belong to
   other PicDrop + HopNgo modules and are out of scope here.
@@ -534,6 +568,14 @@ added:
   review workflow. Files over 2 MB are rejected before the name is recorded.
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
   as demo where they could be mistaken for live data.
+- Distance and ETA on console-assigned deliveries are service-area estimates
+  from the console, not routing-engine figures. The public OpenStreetMap tile
+  servers and the OSRM demo server are defaults, not SLA-backed services;
+  `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE` exist for production services.
+- The drop OTP falls back to the demo code `4821` when the console issued none;
+  real verification needs the backend-issued code.
+- Partner location updates stop when the browser tab is backgrounded; there is
+  no background tracking. Continuous tracking needs a native/PWA layer.
 - Onboarding quiz, working shifts, service zones and post-submission editing are
   not built.
 
@@ -555,11 +597,14 @@ errors.
 1. Connect the application-status review flow to a real verification service,
    then add document-level review states and eligibility gating before going
    online.
-2. Persist availability, requests, history, earnings, notifications and support
-   tickets in the planned service layer.
-3. Add onboarding editing after submission (currently the submitted screen is
+2. Persist earnings, notifications and support tickets in the planned service
+   layer (requests, history and the active delivery are already live).
+3. Replace the demo OTP fallback (`4821`) with the backend-issued delivery code
+   end to end, and add customer contact details to the console's offer when its
+   privacy review permits.
+4. Add onboarding editing after submission (currently the submitted screen is
    read-only and the profile button says "View partner details").
-4. Design alignment for the remaining screens (history, support, profile).
+5. Design alignment for the remaining screens (history, support, profile).
 
 ### Working agreements that still apply
 

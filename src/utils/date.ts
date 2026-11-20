@@ -12,3 +12,8 @@ export function getGreeting(date: Date = new Date()): string {
 
   return 'Good Evening'
 }
+
+/** Calendar-date key (local time) used to group records by day. */
+export function todayDateString(): string {
+  return new Date().toDateString()
+}

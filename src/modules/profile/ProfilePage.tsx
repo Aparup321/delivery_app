@@ -24,18 +24,16 @@ import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
 import { languageOptions } from '../../i18n/translations'
 import type { Language } from '../../i18n/translations'
-import { currentPartner } from '../../mock/partner'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 
 export function ProfilePage() {
   const navigate = useNavigate()
   const { session, signOut } = useAuth()
-  const { onboarding } = useApp()
+  const { onboarding, dashboardStats } = useApp()
   const { language, setLanguage, t } = useLanguage()
   const [jobAlerts, setJobAlerts] = useState(true)
 
-  const partner = currentPartner
-  const displayName = onboarding.fullName.trim() || partner.fullName
+  const displayName = onboarding.fullName.trim() || t('Partner')
   const documents = [
     { label: 'Aadhaar card', fileName: onboarding.documents.aadhaar },
     { label: 'PAN card', fileName: onboarding.documents.pan },
@@ -70,7 +68,7 @@ export function ProfilePage() {
         right={
           <Avatar
             name={displayName}
-            src={onboarding.profilePhoto || partner.avatarUrl}
+            src={onboarding.profilePhoto || undefined}
           />
         }
       />
@@ -81,7 +79,9 @@ export function ProfilePage() {
             <div>
               <p className="text-[16px] font-semibold text-ink">{displayName}</p>
               <p className="mt-0.5 text-[11.5px] text-ink-muted">
-                {t('Partner ID · {id}', { id: partner.id })}
+                {onboarding.adminPartnerId
+                  ? t('Partner ID · {id}', { id: onboarding.adminPartnerId })
+                  : t('Delivery partner')}
               </p>
             </div>
             <Badge tone={isSuspended ? 'danger' : applicationStatus.tone} size="sm">
@@ -90,10 +90,12 @@ export function ProfilePage() {
           </div>
 
           <div className="mt-3 flex items-center gap-3 border-t border-line pt-3 text-[11.5px] text-ink-muted">
-            <span className="flex items-center gap-1">
-              <Star className="size-3.5 text-warning" aria-hidden="true" />
-              {t('{rating} rating', { rating: partner.rating.toFixed(1) })}
-            </span>
+            {dashboardStats.rating !== null ? (
+              <span className="flex items-center gap-1">
+                <Star className="size-3.5 text-warning" aria-hidden="true" />
+                {t('{rating} rating', { rating: dashboardStats.rating.toFixed(1) })}
+              </span>
+            ) : null}
             <span className="flex items-center gap-1">
               <Truck className="size-3.5" aria-hidden="true" />
               {vehicleLabel}

@@ -1,10 +1,82 @@
 # Changelog
 
 Notable changes to the PicDrop delivery module. Dates use ISO format, newest
-first. Firebase authentication (demo OTP bridge) and onboarding persistence are
-connected; delivery, earnings, notification and support data remain mock.
+first. Firebase authentication (demo OTP bridge), onboarding persistence and
+the admin-to-partner delivery flow are connected; earnings, notification and
+support fixtures remain mock for the offline prototype only.
 
 ## [Unreleased]
+
+### Added
+
+- **Assigned deliveries arrive live from the Administrator console.** When
+  `delivery_admin` assigns a linked partner, the console publishes an offer to
+  `deliveries/{id}` (category, pickup/drop coordinates, distance, ETA, payout,
+  item count, payment mode, customer drop code, expiry window) and the partner
+  app receives it through a Firestore `onSnapshot` listener filtered to the
+  signed-in UID — no polling or refresh. Request cards show an honest countdown
+  from the offer's absolute expiry, plus loading, empty and error states with
+  per-request pending spinners.
+- **Atomic acceptance and rejection.** Accepting re-reads the offer inside a
+  Firestore transaction, so an expired, cancelled, reassigned or already-taken
+  request fails with an actionable message instead of a double assignment;
+  Firestore rules independently enforce the `assigned → accepted` transition
+  and reject any partner write that touches console-controlled fields.
+  Rejecting records `partnerResponse` without changing the status, and the
+  request leaves the partner's list.
+- **Transactional delivery lifecycle.** `accepted → pickup_arrived → picked_up
+  → in_transit → drop_arrived → delivered/cancelled` each write timestamped
+  events to the shared document in a transaction, so retries are idempotent and
+  the console's tracking view follows progress within seconds. Completion
+  verifies the customer's OTP against the console-issued `dropOtp` (demo
+  fallback `4821` remains for sessions without a console code); cancellation
+  records a reason.
+- **Live GPS sharing on the delivery document.** While a job is active,
+  `watchPosition` fixes that moved at least 25 m (or once a minute) and are
+  accurate to 150 m or better are published to `currentLocation` with latitude,
+  longitude, accuracy and timestamp; the console's tracking map shows the
+  partner's latest position. Sharing status (active, paused in background,
+  denied, unavailable, unsupported) is shown honestly on the active-delivery
+  screen, stops at completion or cancellation, and the watcher is always
+  cleaned up.
+- **Interactive OpenStreetMap delivery map.** The active-delivery screen now
+  uses a Leaflet map with distinct pickup, drop and partner markers, a route
+  line from an OSRM-compatible provider focused on the current leg, a recentre
+  control and required OSM attribution. Tile and routing providers are
+  configurable via `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE`; missing or
+  invalid coordinates show a location-unavailable state, and a failed route
+  fetch only hides the line. Per-leg external turn-by-turn navigation links
+  were added beside the pickup and drop cards.
+- `firestore.rules` now allow only the administrator UID to create delivery
+  documents, restrict partner updates to partner-owned fields plus the valid
+  forward status path (including `assigned → accepted`), and keep location
+  writes limited to the assigned partner.
+- The Admin console's delivery dialog gained category, item count, payment
+  mode and an editable partner-payout field with a distance-based suggestion;
+  assignments generate a 4-digit delivery code shown on the delivery detail
+  page and published with the offer.
+
+### Changed
+
+- **A new number no longer receives any demo data.** Every demo fixture is now
+  confined to the offline prototype (Firebase unconfigured, or the connection
+  failed and the app fell back to the device-only session). A signed-in
+  Firebase account — including a brand-new number — starts with empty
+  notifications, empty support tickets and empty delivery lists, and fills only
+  with real records. The Home dashboard figures (deliveries today, earnings
+  today) are computed from real completed deliveries and the rating cell shows
+  "New" until a rating source exists. Profile no longer shows the demo partner
+  ID (`FDP-10248`), the demo 4.8 rating or the demo name fallback: it renders
+  the onboarding record, the verified number and the Administrator's partner ID
+  once approved. The Earnings screen shows the labelled demo dataset only for
+  the offline prototype; live accounts see an honest "No earnings recorded yet"
+  state. The unused `src/mock/partner.ts` fixture was removed.
+- Mock delivery requests are isolated to the offline prototype. A signed-in
+  Firebase account derives its requests, active delivery and history entirely
+  from Firestore; demo sessions (Firebase unconfigured or connection failed)
+  keep the previous local flow. Delivery actions became async across the
+  context so screens navigate only after a write lands, with a shared pending
+  state and one actionable error message.
 
 ### Fixed
 
