@@ -31,6 +31,7 @@ export type DeliveryActionCode =
   | 'delivery/expired'
   | 'delivery/unavailable'
   | 'delivery/invalid-transition'
+  | 'delivery/no-otp'
   | 'firestore/permission-denied'
   | 'firestore/unavailable'
 
@@ -503,14 +504,14 @@ export async function advanceDeliveryStatus(
 }
 
 /**
- * Verifies the customer's delivery code and closes the job. Returns false when
- * the code does not match; nothing is written in that case.
+ * Verifies the customer's delivery code and closes the job. The code is the
+ * one delivery_admin issued on the assignment; there is no fallback value.
+ * Returns false when the code does not match; nothing is written in that case.
  */
 export async function completeDeliveryWithOtp(
   uid: string,
   delivery: Delivery,
   otp: string,
-  fallbackOtp: string,
 ): Promise<boolean> {
   try {
     const firestore = requireDb()
@@ -549,7 +550,16 @@ export async function completeDeliveryWithOtp(
         )
       }
 
-      const expected = asText(data.dropOtp) || fallbackOtp
+      const expected = asText(data.dropOtp)
+
+      if (!expected) {
+        // No code was issued (an offer created before the console started
+        // generating codes). Refuse to close the job without verification.
+        throw new DeliveryActionError(
+          'delivery/no-otp',
+          'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.',
+        )
+      }
 
       if (otp.trim() !== expected) {
         return false

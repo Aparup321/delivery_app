@@ -42,11 +42,19 @@ export function deliveryDocumentId(deliveryId: string): string {
   )
 }
 
-/** Publishes the partner's last known position while they are online. */
+/**
+ * The partner's work availability, mirrored to delivery_admin. It is distinct
+ * from the account status the Administrator controls: an approved account can
+ * be offline, and an online partner mid-delivery is busy.
+ */
+export type PartnerAvailability = 'Available' | 'On Delivery' | 'Offline'
+
+/** Publishes the partner's availability and last known position. */
 export async function publishPartnerLocation(
   uid: string,
   location: PartnerLocation | null,
   online: boolean,
+  availability: PartnerAvailability = online ? 'Available' : 'Offline',
 ): Promise<void> {
   if (!db) {
     return
@@ -56,9 +64,22 @@ export async function publishPartnerLocation(
     doc(db, 'partners', uid),
     {
       isOnline: online,
+      availability,
       lastLocation: location,
       lastLocationUpdatedAt: new Date().toISOString(),
     },
     { merge: true },
   )
+}
+
+/** Updates only the availability flag, leaving the last position untouched. */
+export async function publishPartnerAvailability(
+  uid: string,
+  availability: PartnerAvailability,
+): Promise<void> {
+  if (!db) {
+    return
+  }
+
+  await setDoc(doc(db, 'partners', uid), { availability }, { merge: true })
 }

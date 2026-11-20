@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
@@ -26,6 +27,7 @@ import {
 } from '../services/partnerOnboarding'
 import {
   deliveryDocumentId,
+  publishPartnerAvailability,
   publishPartnerLocation,
   type PartnerLocation,
 } from '../services/deliverySync'
@@ -50,6 +52,11 @@ import type { SupportTicket } from '../types/support'
 import type { Delivery, DeliveryLocation } from '../types/delivery'
 import { publishSupportTicket } from '../services/supportTickets'
 import { todayDateString } from '../utils/date'
+import {
+  notifyIfBackground,
+  requestNotificationPermission,
+} from '../utils/browserNotifications'
+import { translate } from '../i18n/translations'
 import { isCompleteApplication } from '../utils/onboardingValidation'
 import { AppContext } from './app-store'
 import type { DashboardStats } from './app-store'
@@ -408,6 +415,34 @@ function AppDataProvider({
     }
   }, [remoteEnabled, uid, phone, liveRetryToken])
 
+  // Real-event notifications for live sessions: the first delivery snapshot
+  // and account snapshot are baselines, and every later change the partner did
+  // not make themselves becomes an in-app notification.
+  const seenDeliveriesRef = useRef(new Map<string, string>())
+  const deliveriesBaselinedRef = useRef(false)
+  const lastAccountStatusRef = useRef<string | null>(null)
+
+  const addLiveNotifications = useCallback((items: AppNotification[]) => {
+    if (items.length === 0) {
+      return
+    }
+
+    const first = items[0]
+    notifyIfBackground(
+      translate('en', first.title, first.vars),
+      translate('en', first.body, first.vars),
+    )
+
+    setNotifications((current) => {
+      const known = new Set(current.map((item) => item.id))
+      const additions = items.filter((item) => !known.has(item.id))
+
+      return additions.length > 0
+        ? [...additions, ...current].slice(0, 30)
+        : current
+    })
+  }, [])
+
   useEffect(() => {
     if (!remoteEnabled || !uid) {
       return
@@ -426,6 +461,39 @@ function AppDataProvider({
           }
 
           setLiveSyncError(null)
+
+          // Administrator decisions become notifications. The first snapshot
+          // only records the baseline so a reload never replays old decisions.
+          const previousStatus = lastAccountStatusRef.current
+          lastAccountStatusRef.current = snapshot.accountStatus
+
+          if (previousStatus !== null && previousStatus !== snapshot.accountStatus) {
+            if (snapshot.accountStatus === 'active') {
+              addLiveNotifications([
+                {
+                  id: `live-account-active-${snapshot.statusUpdatedAt ?? ''}`,
+                  type: 'account',
+                  title: 'Your account was approved',
+                  body: 'You can now go online and receive delivery requests.',
+                  at: new Date().toISOString(),
+                  isRead: false,
+                },
+              ])
+            } else if (snapshot.accountStatus === 'paused') {
+              addLiveNotifications([
+                {
+                  id: `live-account-paused-${snapshot.statusUpdatedAt ?? ''}`,
+                  type: 'account',
+                  title: 'Your account was suspended',
+                  body: '{reason} Check the Profile page for details.',
+                  vars: { reason: snapshot.suspensionReason ?? '' },
+                  at: new Date().toISOString(),
+                  isRead: false,
+                },
+              ])
+            }
+          }
+
           setOnboarding((current) => {
             const hasSubmittedApplication =
               snapshot.applicationStatus !== 'draft' ||
@@ -478,7 +546,7 @@ function AppDataProvider({
       window.clearTimeout(reportTimer)
       unsubscribe?.()
     }
-  }, [remoteEnabled, uid, liveRetryToken])
+  }, [remoteEnabled, uid, liveRetryToken, addLiveNotifications])
 
   const retryLiveSync = useCallback(() => {
     setLiveSyncError(null)
@@ -507,6 +575,88 @@ function AppDataProvider({
         setLiveLocations(snapshot.locations)
         setLiveLoaded(true)
         setDeliverySyncError(null)
+
+        // Turn snapshot changes the partner did not make themselves into
+        // notifications. The first snapshot is the baseline, so reloading the
+        // app never replays old events.
+        const seen = seenDeliveriesRef.current
+        const fresh: AppNotification[] = []
+
+        if (!deliveriesBaselinedRef.current) {
+          for (const delivery of snapshot.deliveries) {
+            seen.set(delivery.id, delivery.status)
+          }
+          deliveriesBaselinedRef.current = true
+          return
+        }
+
+        const currentIds = new Set(snapshot.deliveries.map((d) => d.id))
+
+        for (const delivery of snapshot.deliveries) {
+          const previous = seen.get(delivery.id)
+          seen.set(delivery.id, delivery.status)
+
+          if (previous === undefined && delivery.status === 'assigned') {
+            fresh.push({
+              id: `live-${delivery.id}-assigned`,
+              type: 'request',
+              title: 'New delivery request {id}',
+              body: '{category} · {pickup} to {drop}. Accept before it expires.',
+              vars: {
+                id: delivery.id,
+                category: delivery.category,
+                pickup: delivery.pickup.name,
+                drop: delivery.destination.name,
+              },
+              at: new Date().toISOString(),
+              isRead: false,
+            })
+            // Ask once for browser alerts so background offers can surface.
+            void requestNotificationPermission()
+            continue
+          }
+
+          if (
+            previous !== undefined &&
+            previous !== 'cancelled' &&
+            delivery.status === 'cancelled'
+          ) {
+            fresh.push({
+              id: `live-${delivery.id}-cancelled`,
+              type: 'delivery',
+              title: 'Delivery {id} was cancelled',
+              body: '{reason}',
+              vars: {
+                id: delivery.id,
+                reason: delivery.cancellationReason ?? '',
+              },
+              at: new Date().toISOString(),
+              isRead: false,
+            })
+          }
+        }
+
+        for (const [id, status] of seen) {
+          if (currentIds.has(id)) {
+            continue
+          }
+
+          seen.delete(id)
+
+          if (status === 'assigned') {
+            fresh.push({
+              id: `live-${id}-gone`,
+              type: 'request',
+              title: 'The offer for {id} is no longer available',
+              body: 'This request expired or was assigned to another partner.',
+              vars: { id },
+              at: new Date().toISOString(),
+              isRead: false,
+            })
+          }
+        }
+
+        addLiveNotifications(fresh)
       },
       (error) => {
         if (!active) {
@@ -522,7 +672,7 @@ function AppDataProvider({
       active = false
       unsubscribe()
     }
-  }, [remoteEnabled, uid, deliveryRetryToken])
+  }, [remoteEnabled, uid, deliveryRetryToken, addLiveNotifications])
 
   // Live mode derives every list from Firestore; demo mode keeps the reducer.
   const requests = useMemo(() => {
@@ -716,7 +866,7 @@ function AppDataProvider({
       }
 
       return runDeliveryAction('complete', null, () =>
-        completeDeliveryWithOtp(uid, delivery, otp, DEMO_PROOF_OTP),
+        completeDeliveryWithOtp(uid, delivery, otp),
       )
     },
     [activeDelivery, runDeliveryAction, uid],
@@ -746,18 +896,42 @@ function AppDataProvider({
     [activeDelivery, runDeliveryAction, uid],
   )
 
-  // Share the partner's last known position while they are online. This is
-  // best-effort: a denied permission never blocks deliveries. Wait until the
-  // first Firestore read has settled: a merge write started before that read
-  // can surface as a location-only document locally and make a submitted
-  // partner look like a brand-new sign-in, which sends them to the wizard.
+  // Availability is read by the presence interval without re-subscribing GPS
+  // every time a delivery starts or ends.
+  const hasActiveDeliveryRef = useRef(false)
+
+  useEffect(() => {
+    hasActiveDeliveryRef.current = activeDelivery !== null
+  }, [activeDelivery])
+
+  // Reflect Available ↔ On Delivery immediately when a delivery starts or
+  // ends, instead of waiting up to a minute for the next presence tick.
+  useEffect(() => {
+    if (!remoteEnabled || !uid || !isOnline || isLoading) {
+      return
+    }
+
+    void publishPartnerAvailability(
+      uid,
+      activeDelivery !== null ? 'On Delivery' : 'Available',
+    ).catch(() => {
+      // The next presence tick retries the availability flag.
+    })
+  }, [remoteEnabled, uid, isOnline, isLoading, activeDelivery])
+
+  // Share the partner's availability and last known position while they are
+  // online. This is best-effort: a denied permission never blocks deliveries.
+  // Wait until the first Firestore read has settled: a merge write started
+  // before that read can surface as a location-only document locally and make
+  // a submitted partner look like a brand-new sign-in, which sends them to the
+  // wizard.
   useEffect(() => {
     if (!remoteEnabled || !uid || isLoading) {
       return
     }
 
     if (!isOnline) {
-      void publishPartnerLocation(uid, null, false).catch(() => {
+      void publishPartnerLocation(uid, null, false, 'Offline').catch(() => {
         // Offline state is also best-effort.
       })
       return
@@ -785,7 +959,12 @@ function AppDataProvider({
             updatedAt: new Date().toISOString(),
           }
 
-          void publishPartnerLocation(uid, location, true).catch(() => {
+          void publishPartnerLocation(
+            uid,
+            location,
+            true,
+            hasActiveDeliveryRef.current ? 'On Delivery' : 'Available',
+          ).catch(() => {
             // The next status change retries the delivery document.
           })
         },
@@ -802,7 +981,7 @@ function AppDataProvider({
     return () => {
       control.cancelled = true
       window.clearInterval(timer)
-      void publishPartnerLocation(uid, null, false).catch(() => {
+      void publishPartnerLocation(uid, null, false, 'Offline').catch(() => {
         // The next sign-in can correct a stale online flag.
       })
     }

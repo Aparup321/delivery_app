@@ -121,6 +121,15 @@ export function DeliveriesPage() {
             </div>
           ) : (
             <>
+              {activeDelivery ? (
+                <Card padding="sm" className="border-warning/20 bg-warning-soft">
+                  <p className="text-[12px] font-medium text-warning">
+                    {t(
+                      'Finish your active delivery before accepting another request.',
+                    )}
+                  </p>
+                </Card>
+              ) : null}
               {deliveryActionError ? (
                 <Card
                   padding="sm"

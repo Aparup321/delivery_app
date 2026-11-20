@@ -24,7 +24,7 @@ import {
   deliveryStatusLabels,
   nextDeliveryAction,
 } from '../../utils/delivery'
-import { formatCurrency } from '../../utils/format'
+import { formatCurrency, formatTime } from '../../utils/format'
 import { navigationUrl } from '../../utils/navigation'
 
 const issueReasons = [
@@ -66,6 +66,7 @@ export function ActiveDeliveryPage() {
     cancelDelivery,
     deliveryActionPending,
     deliveryActionError,
+    isLiveSession,
     trackingStatus,
     trackingPosition,
   } = useApp()
@@ -274,6 +275,13 @@ export function ActiveDeliveryPage() {
               >
                 {t(trackingStatusLabels[trackingStatus])}
               </Badge>
+              {trackingPosition ? (
+                <p className="mt-1.5 text-[11px] text-ink-muted">
+                  {t('Updated {time}', {
+                    time: formatTime(trackingPosition.updatedAt, locale),
+                  })}
+                </p>
+              ) : null}
             </div>
           </div>
         </Card>
@@ -327,7 +335,7 @@ export function ActiveDeliveryPage() {
                   value={otp}
                   error={otpError ? t(otpError) : undefined}
                   hint={
-                    activeDelivery.dropOtp
+                    isLiveSession
                       ? undefined
                       : t('Demo build: use 4821 to complete the delivery.')
                   }
@@ -337,6 +345,16 @@ export function ActiveDeliveryPage() {
                   }}
                 />
               </div>
+              {isLiveSession && !activeDelivery.dropOtp ? (
+                <p
+                  role="status"
+                  className="mt-2 rounded-xl bg-warning-soft px-3 py-2 text-[11.5px] font-medium text-warning"
+                >
+                  {t(
+                    'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.',
+                  )}
+                </p>
+              ) : null}
               <Button
                 className="mt-3"
                 fullWidth

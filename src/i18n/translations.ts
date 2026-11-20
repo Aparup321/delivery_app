@@ -603,6 +603,25 @@ const hindi: Record<string, string> = {
   'No earnings recorded yet': 'अभी कोई कमाई दर्ज नहीं हुई है',
   'Completed deliveries will add their earnings here once payout recording is connected.':
     'पेआउट रिकॉर्डिंग जुड़ने के बाद पूर्ण डिलीवरी की कमाई यहां दिखेगी।',
+  'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.':
+    'इस डिलीवरी के लिए कोई कोड जारी नहीं हुआ। ड्रॉप सत्यापित करने और पूरा करने के लिए ऑपरेशंस से संपर्क करें।',
+  'New delivery request {id}': 'नया डिलीवरी अनुरोध {id}',
+  '{category} · {pickup} to {drop}. Accept before it expires.':
+    '{category} · {pickup} से {drop}। समाप्त होने से पहले स्वीकार करें।',
+  'Delivery {id} was cancelled': 'डिलीवरी {id} रद्द कर दी गई',
+  '{reason}': '{reason}',
+  'The offer for {id} is no longer available':
+    '{id} के लिए ऑफर अब उपलब्ध नहीं है',
+  'Your account was approved': 'आपका खाता स्वीकृत हो गया',
+  'You can now go online and receive delivery requests.':
+    'अब आप ऑनलाइन जा सकते हैं और डिलीवरी अनुरोध प्राप्त कर सकते हैं।',
+  'Your account was suspended': 'आपका खाता निलंबित कर दिया गया',
+  '{reason} Check the Profile page for details.':
+    '{reason} विवरण के लिए प्रोफ़ाइल पेज देखें।',
+  'This request expired or was assigned to another partner.':
+    'यह अनुरोध समाप्त हो गया या दूसरे पार्टनर को दे दिया गया।',
+  'On a delivery': 'डिलीवरी पर हैं',
+  'Updated {time}': '{time} पर अपडेट हुआ',
 }
 
 const bengali: Record<string, string> = {
@@ -1190,6 +1209,24 @@ const bengali: Record<string, string> = {
   'No earnings recorded yet': 'এখনও কোনো আয় রেকর্ড হয়নি',
   'Completed deliveries will add their earnings here once payout recording is connected.':
     'পেআউট রেকর্ডিং যুক্ত হলে সম্পন্ন ডেলিভারির আয় এখানে দেখা যাবে।',
+  'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.':
+    'এই ডেলিভারির জন্য কোনো কোড ইস্যু করা হয়নি। ড্রপ যাচাই করতে ও সম্পন্ন করতে অপারেশনসের সাথে যোগাযোগ করুন।',
+  'New delivery request {id}': 'নতুন ডেলিভারি অনুরোধ {id}',
+  '{category} · {pickup} to {drop}. Accept before it expires.':
+    '{category} · {pickup} থেকে {drop}। মেয়াদ শেষ হওয়ার আগে গ্রহণ করুন।',
+  'Delivery {id} was cancelled': 'ডেলিভারি {id} বাতিল করা হয়েছে',
+  '{reason}': '{reason}',
+  'The offer for {id} is no longer available': '{id} এর অফার আর নেই',
+  'Your account was approved': 'আপনার অ্যাকাউন্ট অনুমোদিত হয়েছে',
+  'You can now go online and receive delivery requests.':
+    'আপনি এখন অনলাইনে গিয়ে ডেলিভারি অনুরোধ পেতে পারেন।',
+  'Your account was suspended': 'আপনার অ্যাকাউন্ট স্থগিত করা হয়েছে',
+  '{reason} Check the Profile page for details.':
+    '{reason} বিস্তারিত জানতে প্রোফাইল পেজ দেখুন।',
+  'This request expired or was assigned to another partner.':
+    'এই অনুরোধের মেয়াদ শেষ হয়েছে বা অন্য পার্টনারকে দেওয়া হয়েছে।',
+  'On a delivery': 'ডেলিভারিতে আছেন',
+  'Updated {time}': '{time} এ আপডেট হয়েছে',
 }
 
 export const translations: Record<Exclude<Language, 'en'>, Record<string, string>> =

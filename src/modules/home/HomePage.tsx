@@ -141,7 +141,9 @@ export function HomePage() {
                         ? 'Account suspended'
                         : 'Approval required'
                       : isOnline
-                        ? 'Receiving delivery requests'
+                        ? activeDelivery
+                          ? 'On a delivery'
+                          : 'Receiving delivery requests'
                         : 'Go online to receive requests',
                   )}
                 </p>

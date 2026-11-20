@@ -22,7 +22,7 @@ service cloud.firestore {
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
         'city', 'addressLine', 'pincode', 'vehicleType', 'rating', 'joinedOn',
         'submittedAt', 'updatedAt', 'bank', 'lastLocation',
-        'lastLocationUpdatedAt', 'isOnline'
+        'lastLocationUpdatedAt', 'isOnline', 'availability'
       ];
     }
 
