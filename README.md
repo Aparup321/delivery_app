@@ -199,9 +199,11 @@ shared mock state layer:
   updated dates plus a four-step tracker. The submitted state is read from
   Firestore, and the Administrator's decision arrives through a live listener.
   A rejected application shows the Administrator's reason; a suspended account
-  shows a suspension notice instead of the availability switch. The labelled
-  demo control is shown only when Firebase is not configured because no
-  verification service is connected.
+  shows a suspension notice instead of the availability switch. The Home
+  application-status card is shown only until approval, so an approved partner
+  sees the availability control and delivery overview without the approval
+  prompt. The labelled demo control is shown only when Firebase is not
+  configured because no verification service is connected.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
   completed or cancelled jobs are added to history.
@@ -433,7 +435,7 @@ seeded partners instead.
 | `statusUpdatedAt`, `updatedAt` | ISO timestamps |
 
 - **Approve:** `applicationStatus: approved` and `status: active`. The partner can
-  go online.
+  go online, and the Home application-status card is removed by the live listener.
 - **Reject:** `applicationStatus: rejected`, `status: pending`, and the reason in
   `adminReview.reason`. The app shows that reason on Home and Application
   status.

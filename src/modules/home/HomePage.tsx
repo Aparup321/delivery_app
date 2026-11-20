@@ -185,46 +185,50 @@ export function HomePage() {
           </Card>
         ) : null}
 
-        <Card padding="md">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <IconTile size="sm">
-                <BadgeCheck className="size-4" aria-hidden="true" />
-              </IconTile>
-              <p className="text-[13px] font-semibold text-ink">
-                {t(applicationStatus.headline)}
-              </p>
+        {onboarding.status !== 'approved' ? (
+          <Card padding="md">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <IconTile size="sm">
+                  <BadgeCheck className="size-4" aria-hidden="true" />
+                </IconTile>
+                <p className="text-[13px] font-semibold text-ink">
+                  {t(applicationStatus.headline)}
+                </p>
+              </div>
+              <Badge tone={applicationStatus.tone} size="sm">
+                {t(applicationStatus.label)}
+              </Badge>
             </div>
-            <Badge tone={applicationStatus.tone} size="sm">
-              {t(applicationStatus.label)}
-            </Badge>
-          </div>
-          <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
-            {t(applicationStatus.description)}
-          </p>
-          {onboarding.submittedAt ? (
-            <p className="mt-1 text-[11px] text-ink-soft">
-              {t('Submitted')} {formatDate(onboarding.submittedAt, locale)}
+            <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
+              {t(applicationStatus.description)}
             </p>
-          ) : null}
-          <Button
-            className="-ml-2 mt-2"
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              navigate(
+            {onboarding.submittedAt ? (
+              <p className="mt-1 text-[11px] text-ink-soft">
+                {t('Submitted')} {formatDate(onboarding.submittedAt, locale)}
+              </p>
+            ) : null}
+            <Button
+              className="-ml-2 mt-2"
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                navigate(
+                  onboarding.status === 'draft'
+                    ? '/onboarding'
+                    : '/application-status',
+                )
+              }
+              rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
+            >
+              {t(
                 onboarding.status === 'draft'
-                  ? '/onboarding'
-                  : '/application-status',
-              )
-            }
-            rightIcon={<ChevronRight className="size-4" aria-hidden="true" />}
-          >
-            {t(
-              onboarding.status === 'draft' ? 'Continue setup' : 'Track status',
-            )}
-          </Button>
-        </Card>
+                  ? 'Continue setup'
+                  : 'Track status',
+              )}
+            </Button>
+          </Card>
+        ) : null}
 
         {activeDelivery ? (
           <Card padding="md">

@@ -488,7 +488,8 @@ added:
   labelled demo control for review outcomes appears only when Firebase is not
   configured because no verification service exists.
 - **Dashboard** — light header, availability switch, three headline stats, six
-  quick actions and a request preview. Requests only appear when online.
+  quick actions and a request preview. Requests only appear when online. The
+  application-status card is shown only until approval.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
   behind availability and the empty state offers a "Go online" action.
 - **Active delivery** — accepted → pickup arrived → picked up → on the way → drop

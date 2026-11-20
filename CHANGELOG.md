@@ -8,6 +8,10 @@ connected; delivery, earnings, notification and support data remain mock.
 
 ### Fixed
 
+- The Home application-status card is now removed after an Administrator
+  approves the KYC application, so an approved partner sees the availability
+  control and delivery overview without the approval prompt. Submitted,
+  under-review and rejected applications still show their status card.
 - Re-entering an already registered mobile number now resumes its submitted
   application instead of reopening the onboarding wizard. The demo bridge uses a
   stable Email/Password Firebase account derived from the number, so the same
