@@ -94,6 +94,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // delivery_admin's shared workflow document. Partner apps never read it.
+    match /admin_state/{docId} {
+      allow read, write: if isAdmin();
+    }
+
     match /partner_documents/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       // Administrators write their verification decision under adminDocuments;
