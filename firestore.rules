@@ -96,7 +96,9 @@ service cloud.firestore {
 
     match /partner_documents/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid) && applicationOpen(uid);
+      // Administrators write their verification decision under adminDocuments;
+      // the partner still owns the uploaded file metadata.
+      allow write: if isAdmin() || (isOwner(uid) && applicationOpen(uid));
     }
 
     match /vehicles/{uid} {
