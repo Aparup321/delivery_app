@@ -27,8 +27,8 @@ import {
 } from '../services/partnerOnboarding'
 import {
   deliveryDocumentId,
-  publishPartnerAvailability,
   publishPartnerLocation,
+  publishPartnerStatus,
   type PartnerLocation,
 } from '../services/deliverySync'
 import {
@@ -908,36 +908,36 @@ function AppDataProvider({
     hasActiveDeliveryRef.current = activeDelivery !== null
   }, [activeDelivery])
 
-  // Reflect Available ↔ On Delivery immediately when a delivery starts or
-  // ends, instead of waiting up to a minute for the next presence tick.
-  useEffect(() => {
-    if (!remoteEnabled || !uid || !isOnline || isLoading) {
-      return
-    }
-
-    void publishPartnerAvailability(
-      uid,
-      activeDelivery !== null ? 'On Delivery' : 'Available',
-    ).catch(() => {
-      // The next presence tick retries the availability flag.
-    })
-  }, [remoteEnabled, uid, isOnline, isLoading, activeDelivery])
-
-  // Share the partner's availability and last known position while they are
-  // online. This is best-effort: a denied permission never blocks deliveries.
-  // Wait until the first Firestore read has settled: a merge write started
-  // before that read can surface as a location-only document locally and make
-  // a submitted partner look like a brand-new sign-in, which sends them to the
-  // wizard.
+  // Publish presence as soon as the switch changes. This must not depend on a
+  // GPS fix: a denied location permission would otherwise leave isOnline false
+  // and make an online partner look unavailable to the administrator.
   useEffect(() => {
     if (!remoteEnabled || !uid || isLoading) {
       return
     }
 
-    if (!isOnline) {
-      void publishPartnerLocation(uid, null, false, 'Offline').catch(() => {
-        // Offline state is also best-effort.
-      })
+    void publishPartnerStatus(
+      uid,
+      isOnline,
+      isOnline
+        ? activeDelivery !== null
+          ? 'On Delivery'
+          : 'Available'
+        : 'Offline',
+    ).catch(() => {
+      // The next presence tick retries the status.
+    })
+  }, [remoteEnabled, uid, isLoading, isOnline, activeDelivery])
+
+  // Share the partner's last known position while they are online. This is
+  // best-effort: geolocation may be unavailable or denied, but presence is
+  // already published above and work continues.
+  // Wait until the first Firestore read has settled: a merge write started
+  // before that read can surface as a location-only document locally and make
+  // a submitted partner look like a brand-new sign-in, which sends them to the
+  // wizard.
+  useEffect(() => {
+    if (!remoteEnabled || !uid || isLoading || !isOnline) {
       return
     }
 
@@ -985,11 +985,23 @@ function AppDataProvider({
     return () => {
       control.cancelled = true
       window.clearInterval(timer)
+    }
+  }, [remoteEnabled, uid, isOnline, isLoading])
+
+  // Clear the online flag when the session ends. This is intentionally
+  // separate from the presence effect so changing availability or starting a
+  // delivery cannot race an offline write against the online status.
+  useEffect(() => {
+    if (!remoteEnabled || !uid) {
+      return
+    }
+
+    return () => {
       void publishPartnerLocation(uid, null, false, 'Offline').catch(() => {
         // The next sign-in can correct a stale online flag.
       })
     }
-  }, [remoteEnabled, uid, isOnline, isLoading])
+  }, [remoteEnabled, uid])
 
   // Active-delivery GPS tracking. The hook throttles publishes by time and
   // movement; each accepted fix is written to the shared delivery document so

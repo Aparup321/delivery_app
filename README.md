@@ -515,12 +515,14 @@ partner's own map but are not published. Permission denial, GPS loss and
 background tabs are reported honestly on the active-delivery screen ("Location
 permission denied — your position is not shared"); tracking stops and the
 watcher is cleared when the delivery completes, is cancelled or the screen
-unmounts. Separately, while online the app keeps writing `lastLocation`,
-`lastLocationUpdatedAt`, `isOnline` and `availability`
-(`Available` / `On Delivery` / `Offline`) on `partners/{uid}` once a minute as
-a best-effort presence signal. Availability flips to `On Delivery` the moment a
-delivery starts and back to `Available` when it ends, so the console can
-distinguish an online partner from a busy one.
+unmounts. Separately, `partners/{uid}` keeps the online presence and
+availability (`Available` / `On Delivery` / `Offline`) in step: `isOnline` and
+`availability` publish immediately when the switch changes, independently of
+geolocation, and position fields (`lastLocation`, `lastLocationUpdatedAt`)
+update as fixes arrive. A denied or unavailable GPS permission therefore cannot
+make an online partner look offline to the console. Availability flips to
+`On Delivery` the moment a delivery starts and back to `Available` when it ends,
+so the console can distinguish an online partner from a busy one.
 
 **Map.** The active-delivery screen uses an interactive Leaflet map
 (`src/components/deliveries/DeliveryMap.tsx`) with distinct pickup, drop and

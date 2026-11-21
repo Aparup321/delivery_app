@@ -83,3 +83,24 @@ export async function publishPartnerAvailability(
 
   await setDoc(doc(db, 'partners', uid), { availability }, { merge: true })
 }
+
+/**
+ * Publishes the online flag and work availability without requiring a GPS fix.
+ * Presence and location are separate on purpose: a denied location permission
+ * must not make an otherwise online partner look offline to the administrator.
+ */
+export async function publishPartnerStatus(
+  uid: string,
+  online: boolean,
+  availability: PartnerAvailability,
+): Promise<void> {
+  if (!db) {
+    return
+  }
+
+  await setDoc(
+    doc(db, 'partners', uid),
+    { isOnline: online, availability },
+    { merge: true },
+  )
+}

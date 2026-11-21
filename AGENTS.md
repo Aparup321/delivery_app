@@ -545,9 +545,11 @@ their service layer is added:
   minute, accuracy ≤150 m) to `currentLocation` on the delivery document.
   Permission denial, GPS loss, background tabs and unsupported devices are
   shown honestly; the watcher is cleared on completion, cancellation and
-  unmount. While online, `partners/{uid}` also keeps `lastLocation`, `isOnline`
-  and `availability` (`Available` / `On Delivery` / `Offline`) updated once a
-  minute, and availability flips immediately when a delivery starts or ends.
+  unmount. Separately, `partners/{uid}` keeps `isOnline` and `availability`
+  (`Available` / `On Delivery` / `Offline`) in step: presence publishes
+  immediately when the switch changes, even when geolocation is denied or
+  unavailable, and `lastLocation` / `lastLocationUpdatedAt` update as fixes
+  arrive. Availability flips immediately when a delivery starts or ends.
 - **Notifications** — live listeners turn real events into in-app
   notifications: new assigned offers, deliveries the Administrator cancels,
   offers that expire or get reassigned, and account decisions (approved or

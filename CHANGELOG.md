@@ -25,6 +25,19 @@ support fixtures remain mock for the offline prototype only.
   one. Home shows the busy state, and the Available list explains that an
   active delivery blocks accepting another offer.
 
+### Fixed
+
+- **Admin-assigned offers reach the partner app again.** Delivery assignment and
+  cancellation writes now target `deliveries/{deliveryId}` explicitly instead of
+  the configured partners collection, so the live listener in the partner app
+  receives the offer. An offer previously written under
+  `partners/{deliveryId}` never appeared in Orders.
+- **Online presence no longer depends on GPS permission.** `isOnline` and
+  `availability` publish immediately when the partner goes online, even when
+  geolocation is denied or unavailable; only the location fields wait for a fix.
+  The deployed Firestore Rules were refreshed so these profile writes are
+  accepted.
+
 ### Changed
 
 - **The demo OTP is gone from live sessions.** Delivery completion verifies the
