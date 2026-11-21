@@ -589,8 +589,35 @@ function AppDataProvider({
         if (!deliveriesBaselinedRef.current) {
           for (const delivery of snapshot.deliveries) {
             seen.set(delivery.id, delivery.status)
+            // An order assigned while the app was closed is still actionable
+            // when the partner opens the app. Surface it once instead of
+            // treating the first snapshot as an invisible baseline.
+            if (
+              delivery.status === 'assigned' &&
+              !delivery.partnerResponse &&
+              (!delivery.expiresAt || new Date(delivery.expiresAt).getTime() > Date.now())
+            ) {
+              fresh.push({
+                id: `live-${delivery.id}-assigned`,
+                type: 'request',
+                title: 'New delivery request {id}',
+                body: '{category} · {pickup} to {drop}. Accept before it expires.',
+                vars: {
+                  id: delivery.id,
+                  category: delivery.category,
+                  pickup: delivery.pickup.name,
+                  drop: delivery.destination.name,
+                },
+                at: new Date().toISOString(),
+                isRead: false,
+              })
+            }
           }
           deliveriesBaselinedRef.current = true
+          addLiveNotifications(fresh)
+          if (fresh.length > 0) {
+            void requestNotificationPermission()
+          }
           return
         }
 
