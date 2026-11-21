@@ -41,6 +41,7 @@ import {
   subscribePartnerDeliveries,
 } from '../services/deliveryRequests'
 import { usePartnerTracking } from '../hooks/usePartnerTracking'
+import { useWakeLock } from '../hooks/useWakeLock'
 import type { AppNotification } from '../types/notification'
 import type {
   OnboardingFiles,
@@ -49,8 +50,18 @@ import type {
   SubmitOnboardingOptions,
 } from '../types/onboarding'
 import type { SupportTicket } from '../types/support'
-import type { Delivery, DeliveryLocation } from '../types/delivery'
+import type {
+  Delivery,
+  DeliveryCompletionProof,
+  DeliveryLocation,
+} from '../types/delivery'
 import { publishSupportTicket } from '../services/supportTickets'
+import {
+  markAllPartnerNotificationsRead,
+  markPartnerNotificationRead,
+  persistPartnerNotification,
+  subscribePartnerNotifications,
+} from '../services/partnerNotifications'
 import { todayDateString } from '../utils/date'
 import {
   notifyIfBackground,
@@ -64,6 +75,7 @@ import { deliveryReducer } from './deliveryReducer'
 import { useAuth } from './auth'
 
 const ONBOARDING_STORAGE_PREFIX = 'fafo.partner.onboarding'
+const REQUEST_ALERTS_KEY = 'fafo.partner.requestAlerts'
 
 /** Each verified mobile number keeps its own onboarding draft. */
 function onboardingKey(phone: string): string {
@@ -214,6 +226,21 @@ function AppDataProvider({
   const [notifications, setNotifications] = useState<AppNotification[]>(
     remoteEnabled ? [] : initialNotifications,
   )
+  const [requestAlertsEnabled, setRequestAlertsState] = useState(() => {
+    try {
+      return window.localStorage.getItem(REQUEST_ALERTS_KEY) !== 'false'
+    } catch {
+      return true
+    }
+  })
+  const setRequestAlertsEnabled = useCallback((enabled: boolean) => {
+    setRequestAlertsState(enabled)
+    try {
+      window.localStorage.setItem(REQUEST_ALERTS_KEY, String(enabled))
+    } catch {
+      // The preference remains in memory when storage is unavailable.
+    }
+  }, [])
   const [tickets, setTickets] = useState<SupportTicket[]>(
     remoteEnabled ? [] : initialTickets,
   )
@@ -283,6 +310,14 @@ function AppDataProvider({
     [canGoOnline],
   )
 
+  // Ask once when the partner deliberately goes online. The in-app alert works
+  // without this permission; the browser alert covers a background tab.
+  useEffect(() => {
+    if (isOnline && requestAlertsEnabled) {
+      void requestNotificationPermission()
+    }
+  }, [isOnline, requestAlertsEnabled])
+
   useEffect(() => {
     if (!phone || isLoading) {
       return
@@ -308,8 +343,19 @@ function AppDataProvider({
     let active = true
     const local = readOnboarding(accountPhone)
 
+    async function loadRemoteWithRetry() {
+      try {
+        return await loadPartnerOnboarding(accountUid)
+      } catch {
+        // A fresh tab can briefly race the Firestore session during startup.
+        // Retry once before falling back to the locally stored application.
+        await new Promise((resolve) => window.setTimeout(resolve, 1_200))
+        return loadPartnerOnboarding(accountUid)
+      }
+    }
+
     async function loadOrRestore() {
-      const remote = await loadPartnerOnboarding(accountUid)
+      const remote = await loadRemoteWithRetry()
 
       if (!active) {
         return
@@ -422,26 +468,103 @@ function AppDataProvider({
   const deliveriesBaselinedRef = useRef(false)
   const lastAccountStatusRef = useRef<string | null>(null)
 
-  const addLiveNotifications = useCallback((items: AppNotification[]) => {
-    if (items.length === 0) {
+  const notificationsRef = useRef<AppNotification[]>([])
+  const persistedNotificationIds = useRef<Set<string>>(new Set())
+  const requestAlertsRef = useRef(requestAlertsEnabled)
+
+  useEffect(() => {
+    notificationsRef.current = notifications
+  }, [notifications])
+
+  useEffect(() => {
+    requestAlertsRef.current = requestAlertsEnabled
+  }, [requestAlertsEnabled])
+
+  const addLiveNotifications = useCallback(
+    (items: AppNotification[]) => {
+      if (items.length === 0) {
+        return
+      }
+
+      const known = new Set(notificationsRef.current.map((item) => item.id))
+      const additions = items.filter((item) => !known.has(item.id))
+
+      if (additions.length === 0) {
+        return
+      }
+
+      const first = additions[0]
+
+      if (first.type !== 'request' || requestAlertsRef.current) {
+        notifyIfBackground(
+          translate('en', first.title, first.vars),
+          translate('en', first.body, first.vars),
+        )
+      }
+
+      if (remoteEnabled && uid && !uid.startsWith('demo:')) {
+        for (const item of additions) {
+          const key = `${uid}:${item.id}`
+
+          if (persistedNotificationIds.current.has(key)) {
+            continue
+          }
+
+          persistedNotificationIds.current.add(key)
+          void persistPartnerNotification(uid, item).catch(() => {
+            persistedNotificationIds.current.delete(key)
+          })
+        }
+      }
+
+      setNotifications((current) => {
+        const existing = new Set(current.map((item) => item.id))
+        const fresh = additions.filter((item) => !existing.has(item.id))
+        return fresh.length > 0
+          ? [...fresh, ...current].slice(0, 50)
+          : current
+      })
+    },
+    [remoteEnabled, uid],
+  )
+
+  // Persisted text notifications survive a reload; the delivery listener still
+  // generates them, and this feed supplies the read state on later launches.
+  useEffect(() => {
+    if (!remoteEnabled || !uid || isLoading) {
       return
     }
 
-    const first = items[0]
-    notifyIfBackground(
-      translate('en', first.title, first.vars),
-      translate('en', first.body, first.vars),
+    let active = true
+    const unsubscribe = subscribePartnerNotifications(
+      uid,
+      (stored) => {
+        if (!active) {
+          return
+        }
+
+        setNotifications((current) => {
+          const merged = new Map(current.map((item) => [item.id, item]))
+
+          for (const item of stored) {
+            merged.set(item.id, item)
+          }
+
+          return [...merged.values()]
+            .sort((a, b) => b.at.localeCompare(a.at))
+            .slice(0, 50)
+        })
+      },
+      () => {
+        // The in-memory event feed keeps working when the stored feed fails.
+      },
     )
 
-    setNotifications((current) => {
-      const known = new Set(current.map((item) => item.id))
-      const additions = items.filter((item) => !known.has(item.id))
-
-      return additions.length > 0
-        ? [...additions, ...current].slice(0, 30)
-        : current
-    })
-  }, [])
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [remoteEnabled, uid, isLoading])
 
   // A ref keeps the stale-snapshot guard without a mutable closure variable.
   const accountWatcherActiveRef = useRef(true)
@@ -705,16 +828,50 @@ function AppDataProvider({
     }
   }, [remoteEnabled, uid, deliveryRetryToken, addLiveNotifications])
 
+  // Expired offers must disappear even when no new Firestore snapshot arrives.
+  // The clock runs only while an offer has an absolute deadline.
+  const [requestClock, setRequestClock] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!remoteEnabled) {
+      return
+    }
+
+    const hasExpiringOffer = liveDeliveries.some(
+      (delivery) =>
+        delivery.status === 'assigned' &&
+        !delivery.partnerResponse &&
+        delivery.expiresAt,
+    )
+
+    if (!hasExpiringOffer) {
+      return
+    }
+
+    const timer = window.setInterval(() => setRequestClock(Date.now()), 1_000)
+    return () => window.clearInterval(timer)
+  }, [remoteEnabled, liveDeliveries])
+
   // Live mode derives every list from Firestore; demo mode keeps the reducer.
   const requests = useMemo(() => {
     if (!remoteEnabled) {
       return demoDeliveries.requests
     }
 
-    return liveDeliveries.filter(
-      (delivery) => delivery.status === 'assigned' && !delivery.partnerResponse,
-    )
-  }, [remoteEnabled, demoDeliveries.requests, liveDeliveries])
+    const now = requestClock
+
+    return liveDeliveries
+      .filter(
+        (delivery) =>
+          delivery.status === 'assigned' &&
+          !delivery.partnerResponse &&
+          (!delivery.expiresAt ||
+            new Date(delivery.expiresAt).getTime() > now),
+      )
+      .sort((a, b) =>
+        (a.expiresAt ?? '9999').localeCompare(b.expiresAt ?? '9999'),
+      )
+  }, [remoteEnabled, demoDeliveries.requests, liveDeliveries, requestClock])
 
   const activeDelivery = useMemo(() => {
     if (!remoteEnabled) {
@@ -733,6 +890,8 @@ function AppDataProvider({
       .filter((delivery) => !isActiveStatus(delivery))
       .sort(historySort)
   }, [remoteEnabled, demoDeliveries.history, liveDeliveries])
+
+  useWakeLock(remoteEnabled && activeDelivery !== null)
 
   // Headline dashboard figures. Live sessions compute them from real
   // deliveries completed today and show no rating until one exists; the
@@ -837,7 +996,7 @@ function AppDataProvider({
   )
 
   const rejectRequest = useCallback(
-    (id: string) => {
+    (id: string, reason = '') => {
       const request = requests.find((item) => item.id === id)
 
       if (!request) {
@@ -850,7 +1009,7 @@ function AppDataProvider({
       }
 
       return runDeliveryAction('reject', id, () =>
-        rejectAssignedDelivery(uid, request),
+        rejectAssignedDelivery(uid, request, reason),
       ).then(() => undefined)
     },
     [requests, runDeliveryAction, uid],
@@ -874,7 +1033,7 @@ function AppDataProvider({
   }, [activeDelivery, runDeliveryAction, uid])
 
   const completeDelivery = useCallback(
-    (otp: string) => {
+    (otp: string, proof: DeliveryCompletionProof = {}) => {
       const delivery = activeDelivery
 
       if (!delivery) {
@@ -897,7 +1056,7 @@ function AppDataProvider({
       }
 
       return runDeliveryAction('complete', null, () =>
-        completeDeliveryWithOtp(uid, delivery, otp),
+        completeDeliveryWithOtp(uid, delivery, otp, proof),
       )
     },
     [activeDelivery, runDeliveryAction, uid],
@@ -1075,13 +1234,25 @@ function AppDataProvider({
         item.id === id ? { ...item, isRead: true } : item,
       ),
     )
-  }, [])
+
+    if (remoteEnabled && uid && !uid.startsWith('demo:')) {
+      void markPartnerNotificationRead(uid, id).catch(() => {
+        // The local read state remains even if the stored feed is unavailable.
+      })
+    }
+  }, [remoteEnabled, uid])
 
   const markAllNotificationsRead = useCallback(() => {
     setNotifications((current) =>
       current.map((item) => ({ ...item, isRead: true })),
     )
-  }, [])
+
+    if (remoteEnabled && uid && !uid.startsWith('demo:')) {
+      void markAllPartnerNotificationsRead(uid).catch(() => {
+        // The local list remains marked read.
+      })
+    }
+  }, [remoteEnabled, uid])
 
   const createTicket = useCallback((subject: string, message: string) => {
     const ticket: SupportTicket = {
@@ -1196,6 +1367,8 @@ function AppDataProvider({
       trackingPosition: trackingLocation,
       notifications,
       unreadNotifications,
+      requestAlertsEnabled,
+      setRequestAlertsEnabled,
       markNotificationRead,
       markAllNotificationsRead,
       tickets,
@@ -1232,6 +1405,8 @@ function AppDataProvider({
       trackingLocation,
       notifications,
       unreadNotifications,
+      requestAlertsEnabled,
+      setRequestAlertsEnabled,
       markNotificationRead,
       markAllNotificationsRead,
       tickets,

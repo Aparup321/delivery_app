@@ -156,11 +156,14 @@ export function DeliveriesPage() {
                         deliveryActionPendingId === delivery.id
                       }
                       isBusy={
-                        deliveryActionPending !== null &&
-                        deliveryActionPendingId !== delivery.id
+                        Boolean(activeDelivery) ||
+                        (deliveryActionPending !== null &&
+                          deliveryActionPendingId !== delivery.id)
                       }
                       onAccept={() => void handleAccept(delivery.id)}
-                      onReject={() => void rejectRequest(delivery.id)}
+                      onReject={(reason) =>
+                        void rejectRequest(delivery.id, reason)
+                      }
                     />
                   ))}
                 </div>

@@ -73,6 +73,8 @@ export function ActiveDeliveryPage() {
   const [showIssues, setShowIssues] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState('')
+  const [recipientName, setRecipientName] = useState('')
+  const [handoverNote, setHandoverNote] = useState('')
   const [actionError, setActionError] = useState('')
 
   if (!activeDelivery) {
@@ -134,7 +136,11 @@ export function ActiveDeliveryPage() {
       return
     }
 
-    const completed = await completeDelivery(otp)
+    const completed = await completeDelivery(otp, {
+      recipientName,
+      note: handoverNote,
+      location: trackingPosition,
+    })
 
     if (!completed) {
       setOtpError(
@@ -146,6 +152,8 @@ export function ActiveDeliveryPage() {
 
     setOtp('')
     setOtpError('')
+    setRecipientName('')
+    setHandoverNote('')
     navigate('/history')
   }
 
@@ -344,6 +352,22 @@ export function ActiveDeliveryPage() {
                     setOtpError('')
                   }}
                 />
+                <div className="mt-3 space-y-2.5">
+                  <Input
+                    label={t('Recipient name (optional)')}
+                    value={recipientName}
+                    maxLength={80}
+                    placeholder={t('Who received the order?')}
+                    onChange={(event) => setRecipientName(event.target.value)}
+                  />
+                  <Input
+                    label={t('Handover note (optional)')}
+                    value={handoverNote}
+                    maxLength={280}
+                    placeholder={t('Gate, floor or a short handover note')}
+                    onChange={(event) => setHandoverNote(event.target.value)}
+                  />
+                </div>
               </div>
               {isLiveSession && !activeDelivery.dropOtp ? (
                 <p

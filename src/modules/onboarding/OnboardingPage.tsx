@@ -40,6 +40,7 @@ import { formatDate } from '../../utils/format'
 import { validateStep } from '../../utils/onboardingValidation'
 import { DocumentUploadTile } from './DocumentUploadTile'
 import { KycDocumentCard } from './KycDocumentCard'
+import { mediaUploadsEnabled } from '../../config/media'
 
 const vehicleOptions: Array<{
   value: OnboardingState['vehicle']['type']
@@ -387,8 +388,9 @@ export function OnboardingPage() {
               subtitle={t('Tell us about yourself')}
             />
 
-            <div className="flex flex-col items-center gap-1.5">
-              <label className="relative cursor-pointer">
+            {mediaUploadsEnabled ? (
+              <div className="flex flex-col items-center gap-1.5">
+                <label className="relative cursor-pointer">
                 <span className="sr-only">{t('Profile photo')}</span>
                 {onboarding.profilePhoto ? (
                   <img
@@ -431,7 +433,8 @@ export function OnboardingPage() {
                   {t(photoError)}
                 </p>
               ) : null}
-            </div>
+              </div>
+            ) : null}
 
             <Card padding="md" className="space-y-3">
               <Input
@@ -510,7 +513,11 @@ export function OnboardingPage() {
             <OnboardingStepHeading
               icon={ShieldCheck}
               title={t('KYC Verification')}
-              subtitle={t('Each file must be JPG or PDF and within 2 MB')}
+              subtitle={t(
+                mediaUploadsEnabled
+                  ? 'Each file must be JPG or PDF and within 2 MB'
+                  : 'Enter document numbers for manual verification',
+              )}
             />
 
             <div className="space-y-2.5">
@@ -691,19 +698,27 @@ export function OnboardingPage() {
                     }
                   />
 
-                  <DocumentUploadTile
-                    className="mt-[26px]"
-                    documentName={t('Bank passbook')}
-                    fileName={onboarding.documents.passbook}
-                    onFileChange={(file) =>
-                      handleDocumentChange('passbook', file)
-                    }
-                  />
+                  {mediaUploadsEnabled ? (
+                    <DocumentUploadTile
+                      className="mt-[26px]"
+                      documentName={t('Bank passbook')}
+                      fileName={onboarding.documents.passbook}
+                      onFileChange={(file) =>
+                        handleDocumentChange('passbook', file)
+                      }
+                    />
+                  ) : (
+                    <span className="mt-[26px] grid w-[104px] shrink-0 place-items-center rounded-2xl border border-dashed border-line bg-canvas px-2 py-2.5 text-center text-[10.5px] font-medium text-ink-muted">
+                      {t('Manual review')}
+                    </span>
+                  )}
                 </div>
 
                 <p className="mt-2 break-words text-[11px] leading-relaxed text-ink-muted">
-                  {onboarding.documents.passbook ||
-                    t('Passbook or cancelled cheque · JPG or PDF · max 2 MB')}
+                  {mediaUploadsEnabled
+                    ? onboarding.documents.passbook ||
+                      t('Passbook or cancelled cheque · JPG or PDF · max 2 MB')
+                    : t('Document number only · manual verification')}
                 </p>
 
                 {documentErrors.passbook ? (
@@ -997,20 +1012,28 @@ export function OnboardingPage() {
                     {t('Edit')}
                   </button>
                 </div>
-                <p className="mt-1.5 text-[11.5px] text-ink-muted">
-                  {t('Aadhaar card')}{' '}
-                  {t(onboarding.documents.aadhaar ? 'uploaded' : 'missing')} ·{' '}
-                  {t('PAN card')}{' '}
-                  {t(onboarding.documents.pan ? 'uploaded' : 'missing')}
-                </p>
-                <p className="text-[11.5px] text-ink-muted">
-                  {t('Driving licence')}{' '}
-                  {t(onboarding.documents.licence ? 'uploaded' : 'missing')} ·{' '}
-                  {t('Vehicle RC')}{' '}
-                  {t(onboarding.documents.registration ? 'uploaded' : 'missing')}{' '}
-                  · {t('Bank passbook')}{' '}
-                  {t(onboarding.documents.passbook ? 'uploaded' : 'missing')}
-                </p>
+                {mediaUploadsEnabled ? (
+                  <>
+                    <p className="mt-1.5 text-[11.5px] text-ink-muted">
+                      {t('Aadhaar card')}{' '}
+                      {t(onboarding.documents.aadhaar ? 'uploaded' : 'missing')} ·{' '}
+                      {t('PAN card')}{' '}
+                      {t(onboarding.documents.pan ? 'uploaded' : 'missing')}
+                    </p>
+                    <p className="text-[11.5px] text-ink-muted">
+                      {t('Driving licence')}{' '}
+                      {t(onboarding.documents.licence ? 'uploaded' : 'missing')} ·{' '}
+                      {t('Vehicle RC')}{' '}
+                      {t(onboarding.documents.registration ? 'uploaded' : 'missing')}{' '}
+                      · {t('Bank passbook')}{' '}
+                      {t(onboarding.documents.passbook ? 'uploaded' : 'missing')}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-1.5 text-[11.5px] text-ink-muted">
+                    {t('Document numbers are reviewed manually in this build.')}
+                  </p>
+                )}
                 <p className="text-[11.5px] text-ink-muted">
                   {onboarding.bank.accountHolder} ····{' '}
                   {onboarding.bank.accountNumber.slice(-4)}

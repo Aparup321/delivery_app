@@ -26,6 +26,19 @@ export interface DeliveryEvent {
 export interface DeliveryProof {
   method: 'otp'
   verifiedAt: string
+  /** Optional text-only handover details, used instead of a signature/photo. */
+  recipientName?: string
+  note?: string
+  latitude?: number
+  longitude?: number
+  accuracy?: number | null
+}
+
+/** Text-only handover details supplied when the partner closes a delivery. */
+export interface DeliveryCompletionProof {
+  recipientName?: string
+  note?: string
+  location?: DeliveryLocation | null
 }
 
 /** The partner's answer to an assigned request that they declined. */

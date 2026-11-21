@@ -3,6 +3,7 @@ import { ArrowDownRight, Clock3, MapPin, Navigation, Wallet } from 'lucide-react
 import { Badge } from '../common/Badge'
 import { Button } from '../common/Button'
 import { Card } from '../common/Card'
+import { RejectOfferDialog } from './RejectOfferDialog'
 import { useLanguage } from '../../context/language'
 import type { Delivery } from '../../types/delivery'
 import { formatCurrency } from '../../utils/format'
@@ -10,7 +11,7 @@ import { formatCurrency } from '../../utils/format'
 export interface DeliveryRequestCardProps {
   delivery: Delivery
   onAccept: () => void
-  onReject: () => void
+  onReject: (reason: string) => void
   /** True while the accept transaction is in flight for this request. */
   isAccepting?: boolean
   /** True while the reject write is in flight for this request. */
@@ -44,6 +45,7 @@ export function DeliveryRequestCard({
   const { t, locale } = useLanguage()
   const deadline = expiryInstant(delivery)
   const [now, setNow] = useState(() => Date.now())
+  const [showReject, setShowReject] = useState(false)
 
   useEffect(() => {
     if (deadline === null) {
@@ -62,7 +64,8 @@ export function DeliveryRequestCard({
   const busy = isAccepting || isRejecting || isBusy
 
   return (
-    <Card padding="md">
+    <>
+      <Card padding="md">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -146,7 +149,7 @@ export function DeliveryRequestCard({
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Button
           variant="outline"
-          onClick={onReject}
+          onClick={() => setShowReject(true)}
           disabled={busy || isFinished}
           isLoading={isRejecting}
         >
@@ -160,6 +163,18 @@ export function DeliveryRequestCard({
           {t('Accept')}
         </Button>
       </div>
-    </Card>
+      </Card>
+
+      {showReject ? (
+        <RejectOfferDialog
+          isBusy={isRejecting}
+          onCancel={() => setShowReject(false)}
+          onConfirm={(reason) => {
+            setShowReject(false)
+            onReject(reason)
+          }}
+        />
+      ) : null}
+    </>
   )
 }

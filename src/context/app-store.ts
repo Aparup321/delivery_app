@@ -1,5 +1,9 @@
 import { createContext, useContext } from 'react'
-import type { Delivery, DeliveryLocation } from '../types/delivery'
+import type {
+  Delivery,
+  DeliveryCompletionProof,
+  DeliveryLocation,
+} from '../types/delivery'
 import type { AppNotification } from '../types/notification'
 import type {
   OnboardingFiles,
@@ -42,11 +46,14 @@ export interface AppContextValue {
    * active; false means the offer expired or was taken by someone else.
    */
   acceptRequest: (id: string) => Promise<boolean>
-  rejectRequest: (id: string) => Promise<void>
+  rejectRequest: (id: string, reason?: string) => Promise<void>
   /** Advances the active delivery to its next milestone. */
   advanceDelivery: () => Promise<boolean>
   /** Verifies the customer's delivery code and closes the active job. */
-  completeDelivery: (otp: string) => Promise<boolean>
+  completeDelivery: (
+    otp: string,
+    proof?: DeliveryCompletionProof,
+  ) => Promise<boolean>
   /** Cancels the active delivery with a reason. */
   cancelDelivery: (reason: string) => Promise<boolean>
 
@@ -72,6 +79,9 @@ export interface AppContextValue {
 
   notifications: AppNotification[]
   unreadNotifications: number
+  /** When false, new-request sound/vibration and browser alerts are muted. */
+  requestAlertsEnabled: boolean
+  setRequestAlertsEnabled: (enabled: boolean) => void
   markNotificationRead: (id: string) => void
   markAllNotificationsRead: () => void
 

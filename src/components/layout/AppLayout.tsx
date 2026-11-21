@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/app-store'
+import { OfferAlert } from '../deliveries/OfferAlert'
 import { BottomNavigation } from './BottomNavigation'
 import { FirebaseStatusBanner } from './FirebaseStatusBanner'
 import { LiveSyncBanner } from './LiveSyncBanner'
@@ -25,7 +26,7 @@ export function AppLayout() {
 
   return (
     <div className="flex h-svh justify-center overflow-hidden bg-canvas">
-      <div className="flex h-svh w-full max-w-[430px] flex-col overflow-hidden bg-canvas lg:border-x lg:border-line">
+      <div className="relative flex h-svh w-full max-w-[430px] flex-col overflow-hidden bg-canvas lg:border-x lg:border-line">
         <FirebaseStatusBanner />
         <LiveSyncBanner />
         <main
@@ -35,6 +36,7 @@ export function AppLayout() {
           <Outlet />
         </main>
         {isOnboardingForm ? null : <BottomNavigation />}
+        {isOnboardingForm ? null : <OfferAlert />}
       </div>
     </div>
   )

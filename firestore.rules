@@ -116,6 +116,36 @@ service cloud.firestore {
       allow write: if isOwner(uid) && applicationOpen(uid);
     }
 
+    // Text-only in-app notification feed. The partner app writes the events it
+    // derives from live delivery/account changes and only the owner can mark
+    // them read. No media fields are allowed here.
+    match /notifications/{notificationId} {
+      allow read: if isAdmin()
+        || (request.auth != null
+          && resource.data.partnerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.partnerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'partnerUid', 'notificationId', 'type', 'title', 'body', 'vars',
+          'createdAt', 'readAt', 'updatedAt'
+        ])
+        && request.resource.data.type in [
+          'request', 'account', 'delivery', 'payment'
+        ]
+        && request.resource.data.notificationId is string
+        && request.resource.data.title is string
+        && request.resource.data.body is string
+        && request.resource.data.createdAt is string;
+      allow update: if request.auth != null
+        && resource.data.partnerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'readAt', 'updatedAt'
+        ]);
+      allow delete: if isAdmin()
+        || (request.auth != null
+          && resource.data.partnerUid == request.auth.uid);
+    }
+
     // Partner-created support tickets are read by the owning partner and the
     // operations administrator. The admin console uses them for notifications.
     match /support_tickets/{ticketId} {

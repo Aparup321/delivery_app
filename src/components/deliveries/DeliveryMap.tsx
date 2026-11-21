@@ -183,22 +183,59 @@ function partnerIcon() {
   })
 }
 
-/** Fits the map to the visible points whenever the set changes. */
-function MapFocus({ points }: { points: [number, number][] }) {
+/**
+ * Fits the map once per delivery/focus change. Partner GPS updates must not
+ * refit the map every few seconds or the view jumps while the partner moves.
+ */
+function MapFocus({
+  points,
+  focusKey,
+}: {
+  points: [number, number][]
+  focusKey: string
+}) {
   const map = useMap()
+  const pointsRef = useRef(points)
 
   useEffect(() => {
-    if (points.length === 0) {
+    pointsRef.current = points
+  }, [points])
+
+  useEffect(() => {
+    const current = pointsRef.current
+
+    if (current.length === 0) {
       return
     }
 
-    if (points.length === 1) {
-      map.setView(points[0], 15)
+    if (current.length === 1) {
+      map.setView(current[0], 15)
       return
     }
 
-    map.fitBounds(L.latLngBounds(points).pad(0.3))
-  }, [points, map])
+    map.fitBounds(L.latLngBounds(current).pad(0.3))
+  }, [focusKey, map])
+
+  return null
+}
+
+/** Pans to each new fix only while the partner has opted into follow mode. */
+function FollowPartner({
+  point,
+  follow,
+}: {
+  point: [number, number] | null
+  follow: boolean
+}) {
+  const map = useMap()
+  const latitude = point?.[0]
+  const longitude = point?.[1]
+
+  useEffect(() => {
+    if (follow && latitude !== undefined && longitude !== undefined) {
+      map.panTo([latitude, longitude], { animate: true })
+    }
+  }, [follow, latitude, longitude, map])
 
   return null
 }
@@ -230,6 +267,7 @@ export function DeliveryMap({
 }: DeliveryMapProps) {
   const { t } = useLanguage()
   const mapRef = useRef<L.Map | null>(null)
+  const [follow, setFollow] = useState(false)
 
   const pickupPoint = useMemo(
     () =>
@@ -281,6 +319,16 @@ export function DeliveryMap({
     }
     return points
   }, [partnerPoint, pickupPoint, destinationPoint])
+
+  const focusKey = [
+    pickup.name,
+    destination.name,
+    pickupPoint?.latitude ?? '',
+    pickupPoint?.longitude ?? '',
+    destinationPoint?.latitude ?? '',
+    destinationPoint?.longitude ?? '',
+    focus,
+  ].join('|')
 
   if (!pickupPoint && !destinationPoint) {
     return (
@@ -359,7 +407,15 @@ export function DeliveryMap({
             />
           ) : null}
 
-          <MapFocus points={visiblePoints} />
+          <MapFocus points={visiblePoints} focusKey={focusKey} />
+          <FollowPartner
+            point={
+              partnerPoint
+                ? [partnerPoint.latitude, partnerPoint.longitude]
+                : null
+            }
+            follow={follow}
+          />
         </MapContainer>
 
         <button
@@ -370,16 +426,26 @@ export function DeliveryMap({
               return
             }
 
+            const next = !follow
+            setFollow(next)
+
             if (partnerPoint) {
               map.setView([partnerPoint.latitude, partnerPoint.longitude], 15, {
                 animate: true,
               })
-            } else {
+            } else if (!next) {
               map.setZoom(map.getZoom() + 1)
             }
           }}
-          className="absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-white/95 text-ink-muted shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-          aria-label={t('Centre on my location')}
+          aria-pressed={follow}
+          className={
+            follow
+              ? 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-brand/30 bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+              : 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-white/95 text-ink-muted shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+          }
+          aria-label={t(
+            follow ? 'Stop following my location' : 'Follow my location',
+          )}
         >
           <Crosshair className="size-4" aria-hidden="true" />
         </button>

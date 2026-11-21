@@ -16,6 +16,7 @@ import {
 import type {
   Delivery,
   DeliveryCategory,
+  DeliveryCompletionProof,
   DeliveryEvent,
   DeliveryLocation,
   DeliveryProof,
@@ -407,6 +408,7 @@ export async function acceptAssignedDelivery(
 export async function rejectAssignedDelivery(
   uid: string,
   delivery: Delivery,
+  reason = '',
 ): Promise<void> {
   try {
     const firestore = requireDb()
@@ -426,8 +428,14 @@ export async function rejectAssignedDelivery(
 
       assertAssigned(data, uid, now)
 
+      const trimmedReason = reason.trim().slice(0, 160)
+
       transaction.update(ref, {
-        partnerResponse: { decision: 'rejected', at: now },
+        partnerResponse: {
+          decision: 'rejected',
+          at: now,
+          ...(trimmedReason ? { reason: trimmedReason } : {}),
+        },
         updatedAt: now,
       })
     })
@@ -512,6 +520,7 @@ export async function completeDeliveryWithOtp(
   uid: string,
   delivery: Delivery,
   otp: string,
+  proof: DeliveryCompletionProof = {},
 ): Promise<boolean> {
   try {
     const firestore = requireDb()
@@ -565,11 +574,34 @@ export async function completeDeliveryWithOtp(
         return false
       }
 
+      const handover: DeliveryProof = {
+        method: 'otp',
+        verifiedAt: now,
+      }
+      const recipientName = proof.recipientName?.trim()
+      const note = proof.note?.trim()
+
+      if (recipientName) {
+        handover.recipientName = recipientName.slice(0, 80)
+      }
+      if (note) {
+        handover.note = note.slice(0, 280)
+      }
+      if (
+        proof.location &&
+        Number.isFinite(proof.location.latitude) &&
+        Number.isFinite(proof.location.longitude)
+      ) {
+        handover.latitude = proof.location.latitude
+        handover.longitude = proof.location.longitude
+        handover.accuracy = proof.location.accuracy
+      }
+
       transaction.update(ref, {
         status: 'delivered',
         adminStatus: adminDeliveryStatus('delivered'),
         completedAt: now,
-        proof: { method: 'otp', verifiedAt: now },
+        proof: handover,
         events: [...asEvents(data.events), { status: 'delivered', at: now }],
         updatedAt: now,
       })

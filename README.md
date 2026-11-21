@@ -18,8 +18,10 @@ stays a centered app column instead of stretching into a desktop dashboard.
 > and movement), shown live on the console's tracking map. The active-delivery
 > screen uses an interactive Leaflet + OpenStreetMap map with pickup, drop and
 > partner markers plus OSRM route geometry; both tile and routing providers
-> are configurable. Earnings, notifications and support remain mock; the demo
-> OTP remains the default sign-in until the OTP API lands.
+> are configurable. Notifications are now real and persisted; earnings and
+> support remain mock. The demo OTP remains the default sign-in until the OTP
+> API lands, and this test build hides media uploads because Storage is not
+> configured.
 >
 > The product direction is now **PicDrop + HopNgo**, and this repository is its
 > **delivery-partner module**. The PicDrop delivery requirements have been
@@ -74,20 +76,20 @@ material for the project and are not part of the deployed application.
 | Module | What it does | Status |
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
-| Onboarding | Five steps matching the design: personal (text fields required, all file uploads optional), KYC and bank, vehicle, training, review | Built (Firebase) |
-| KYC & documents | Aadhaar, PAN, licence and RC numbers with optional upload controls, plus a bank passbook upload; files go to Storage and metadata to Firestore | Built (Firebase) |
+| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. This test build is text-only: profile-photo and document uploads are hidden | Built (Firebase) |
+| KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline and rejection/suspension reasons; decisions arrive live from `delivery_admin` | Built (Firebase + admin) |
 | Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
-| Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept and reject | Built (Firebase) |
-| Active delivery | Interactive OpenStreetMap, timeline, status actions, drop OTP proof, contact, navigation and issue reporting | Built (Firebase) |
-| Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; configurable providers | Built (live) |
+| Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept/reject, a global sound/vibration alert, and expired-offer removal | Built (Firebase) |
+| Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting | Built (Firebase) |
+| Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
 | Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (labelled demo; offline prototype only — live accounts see an empty state) |
-| Notifications | Real-event in-app notifications (new assignment, cancellation, offer expiry/reassignment, approval, suspension) with read state; background tab gets a system alert | Built (live) |
+| Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission and ticket status | Built (empty tickets for live accounts; FAQs are static help content) |
-| Profile & settings | Partner details, documents, English/Hindi/Bengali language switching, alerts, application status and sign-out | Built (live partner record) |
+| Profile & settings | Partner details, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
 
 ### Demo access
 
@@ -483,29 +485,41 @@ write-through publishes each offer with:
 **Acceptance is atomic.** `acceptAssignedDelivery` re-reads the document inside
 a Firestore transaction: an expired, cancelled, reassigned or already-accepted
 offer fails with an actionable message, and Firestore rules independently
-reject any status change that does not follow the forward path. The request
-then leaves the Available list and opens the active delivery.
+reject any status change that does not follow the forward path. Expired offers
+also leave the Available list on a one-second clock without waiting for a new
+snapshot. The request then opens the active delivery. Accept is disabled while
+another delivery is active.
 
 **Lifecycle.** Every step — `accepted`, `pickup_arrived`, `picked_up`,
 `in_transit`, `drop_arrived`, `delivered` — is written to the same document in
 a transaction with a timestamped `events` entry, so retries are idempotent and
-the console sees progress within seconds. Rejecting an offer records
-`partnerResponse` without changing the status; cancelling records a reason.
+the console sees progress within seconds. Rejecting an offer asks for a short
+text reason and records it in `partnerResponse` without changing the status;
+cancelling records a reason.
 Delivery completes only when the customer's OTP matches the `dropOtp` the
 console issued with the assignment — there is no fallback code. If an offer
 has no code (created before the console started issuing them), the app refuses
-to close the job and tells the partner to contact operations.
+to close the job and tells the partner to contact operations. The same
+completion can carry text-only handover details (recipient name, short note)
+and the last GPS fix, stored in `proof`; no photo, signature image or audio is
+required.
 
 **Notifications.** The live listeners turn events the partner did not create
 themselves into in-app notifications: a new assigned offer, a delivery the
 Administrator cancelled, an offer that expired or was reassigned, and account
-decisions (approved or suspended) from the partner-document watcher. The first
-snapshot after load is a baseline, so reloads never replay old events. When
-the tab is in the background and the partner has granted browser-notification
-permission, a system alert is shown. Browser notifications only work while the
-app is open — notifying a closed app needs Firebase Cloud Messaging plus a
-Cloud Function that fans out assignment events, which this project does not
-run yet.
+decisions (approved or suspended) from the partner-document watcher. A new
+offer also opens a global Accept/Reject card on every screen, plays a short
+generated chime and vibrates where supported, so a partner on Profile or
+History cannot miss it. Notification items deep-link to Orders, Profile or
+Earnings. Live notifications are also persisted in
+`notifications/{uid_eventId}` as text, so the list and read state survive a
+reload; the first delivery snapshot remains a baseline so old events are not
+replayed. The Profile preference **Alert sound & vibration** mutes the chime
+and browser alert but keeps the visual request card. When the tab is in the
+background and the partner has granted browser-notification permission, a
+system alert is shown. Browser notifications only work while the app is open —
+notifying a closed app needs Firebase Cloud Messaging plus a Cloud Function
+that fans out assignment events, which this project does not run yet.
 
 **Location sharing.** While a delivery is active, `usePartnerTracking` wraps
 `navigator.geolocation.watchPosition` and publishes fixes that moved ≥25 m (or
@@ -515,7 +529,9 @@ partner's own map but are not published. Permission denial, GPS loss and
 background tabs are reported honestly on the active-delivery screen ("Location
 permission denied — your position is not shared"); tracking stops and the
 watcher is cleared when the delivery completes, is cancelled or the screen
-unmounts. Separately, `partners/{uid}` keeps the online presence and
+unmounts. While a delivery is active the app also requests a Screen Wake Lock
+where supported, so the phone screen does not sleep and interrupt foreground
+GPS; this is not background tracking. Separately, `partners/{uid}` keeps the online presence and
 availability (`Available` / `On Delivery` / `Offline`) in step: `isOnline` and
 `availability` publish immediately when the switch changes, independently of
 geolocation, and position fields (`lastLocation`, `lastLocationUpdatedAt`)
@@ -527,16 +543,20 @@ so the console can distinguish an online partner from a busy one.
 **Map.** The active-delivery screen uses an interactive Leaflet map
 (`src/components/deliveries/DeliveryMap.tsx`) with distinct pickup, drop and
 partner markers, route geometry from an OSRM-compatible service, and a
-recentre control. Tiles default to OpenStreetMap and routes to the public OSRM
-demo server; both are configurable via `VITE_MAP_TILE_URL` and
-`VITE_ROUTE_API_BASE` because neither public service is SLA-backed. Missing or
-zeroed coordinates show a location-unavailable state instead of a wrong map,
-and a failed route fetch only hides the line — markers stay.
+follow-my-location control. The map fits once per delivery instead of
+refitting on every GPS fix; follow mode pans to each new fix while it is on.
+Tiles default to OpenStreetMap and routes to the public OSRM demo server; both
+are configurable via `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE` because
+neither public service is SLA-backed. Missing or zeroed coordinates show a
+location-unavailable state instead of a wrong map, and a failed route fetch
+only hides the line — markers stay.
 
 `delivery_admin` reads the same collection over REST (polling, since its REST
 connection has no live subscription), shows the partner's latest position on
 the tracking map, and can cancel an assigned delivery — which the partner's
-listener turns into a cancelled job in history.
+listener turns into a cancelled job in history. The dedicated Tracking page
+refreshes every 15 seconds while visible, with a 5-second cache and a
+two-minute stale warning; other console pages keep the one-minute cadence.
 
 A live partner session starts with no requests or history. Demo requests remain
 available only when Firebase is not configured so the prototype can still be
@@ -554,13 +574,12 @@ explored offline; live accounts never receive mock deliveries.
    under Authentication → Settings → Authorized domains. When the SMS flow
    returns, also enable **Phone** and add test phone numbers under Phone → Phone
    numbers for testing.
-2. Create a **Firestore Database** and initialize **Storage** in the same project
-   as the Web App configuration. Firebase Storage requires the pay-as-you-go
-   **Blaze** plan for a new default bucket: open **Databases & Storage →
-   Storage**, click **Get started**, choose a location and finish the setup. The
-   bucket name must match `VITE_FIREBASE_STORAGE_BUCKET`
-   (`<project-id>.firebasestorage.app` for buckets created after September
-   2024).
+2. Create a **Firestore Database**. **Storage is optional in this text-only
+   test build**: media upload controls are hidden and document numbers are
+   reviewed manually, so no bucket or Blaze plan is required. When Storage is
+   added later, initialize it in the same project, set the bucket name to match
+   `VITE_FIREBASE_STORAGE_BUCKET`, and set `mediaUploadsEnabled` in
+   `src/config/media.ts` to `true` after re-testing uploads.
 3. Deploy the rules with the Firebase CLI:
 
    ```bash

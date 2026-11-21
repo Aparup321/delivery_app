@@ -486,23 +486,19 @@ their service layer is added:
   records every 60 seconds and on window focus. Delivery, earnings, notification
   and support data remain mock.
 - **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
-  Training, Review) with a purple stepper header, number-plus-upload cards for
-  Aadhaar, PAN, driving licence and vehicle RC, an optional bank passbook upload
-  beside the account number, vehicle tiles (bike, scooter, bicycle, on foot),
-  licence and registration fields shared with the vehicle step, an optional
-  profile photo and a submitted/under-review state.
-  Draft progress is stored under `fafo.partner.onboarding.<phone>`, one draft
-  per verified number. All required text fields are validated; every file
-  upload, including the profile photo and KYC documents, is optional. Submission
-  uploads selected files to Storage and writes `partners`, `partner_documents`,
-  `vehicles` and `training_progress` documents in Firestore. Uploads run when
-  files are selected and Storage is available. Without Storage, the
-  submission stores document metadata and the 256px profile preview inline in
-  Firestore, so onboarding is not blocked. If a files upload still fails, the
-  error panel offers **Submit without documents**, which retries the Firestore
-  write with metadata only. Draft partners are redirected back to the wizard
-  until they submit; the wizard header offers Sign out. The wizard hides the
-  bottom navigation while a draft is being completed; the submitted confirmation
+  Training, Review) with a purple stepper header. The current test build is
+  text-only: `src/config/media.ts` hides the profile-photo and document upload
+  controls, and KYC cards collect Aadhaar, PAN, licence, RC and bank numbers for
+  manual review. Vehicle tiles (bike, scooter, bicycle, on foot), licence and
+  registration fields are shared with the vehicle step. Draft progress is
+  stored under `fafo.partner.onboarding.<phone>`, one draft per verified number.
+  All required text fields are validated. Submission writes `partners`,
+  `partner_documents`, `vehicles` and `training_progress` documents in
+  Firestore. The upload code remains for when Storage is provisioned; set
+  `mediaUploadsEnabled` to `true` only after re-testing uploads. Draft partners
+  are redirected back to the wizard until they submit; the wizard header offers
+  Sign out. The wizard hides the bottom navigation while a draft is being
+  completed; the submitted confirmation
   renders inside the shell.
 - **Application status** — Profile → Application status shows pending,
   submitted, under review, approved or rejected, with submitted and updated
@@ -519,7 +515,9 @@ their service layer is added:
   `src/mock/partner.ts` fixture was removed — Profile and Home render the
   onboarding record and the Firebase session.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
-  behind availability and the empty state offers a "Go online" action.
+  behind availability and the empty state offers a "Go online" action. Offers
+  past their `expiresAt` are removed on a one-second clock, and Accept/Reject is
+  disabled while another delivery is active.
 - **Live delivery flow** — offers assigned in `delivery_admin` are written to
   `deliveries/{deliveryId}` over the Firestore REST API (assignment
   write-through, built from the console's audit events) and arrive in the
@@ -534,18 +532,22 @@ their service layer is added:
 - **Active delivery** — accepted → pickup arrived → picked up → on the way → drop
   arrived → delivered, with per-stage primary actions, an interactive
   Leaflet/OpenStreetMap map (pickup, drop and live partner markers, OSRM route
-  line, recentre control), external turn-by-turn navigation per leg, customer
-  contact, issue reporting, a live location-sharing status chip (with the last
-  successful GPS update time), and OTP completion against the `dropOtp` the
-  console issued — live sessions have no fallback code, and offers without one
-  cannot be completed. The demo code `4821` exists only in the offline
-  prototype. Completed and cancelled jobs move to history.
+  line, follow-my-location control that fits once per delivery), external
+  turn-by-turn navigation per leg, customer contact, issue reporting, a live
+  location-sharing status chip (with the last successful GPS update time), and
+  OTP completion against the `dropOtp` the console issued — live sessions have
+  no fallback code, and offers without one cannot be completed. The completion
+  can also carry a text recipient name, a short handover note and the last GPS
+  fix in `proof`; no media storage is required. The demo code `4821` exists only
+  in the offline prototype. Completed and cancelled jobs move to history.
 - **GPS tracking** — `usePartnerTracking` wraps `watchPosition` while a
   delivery is active and publishes throttled fixes (≥25 m movement or one
   minute, accuracy ≤150 m) to `currentLocation` on the delivery document.
   Permission denial, GPS loss, background tabs and unsupported devices are
   shown honestly; the watcher is cleared on completion, cancellation and
-  unmount. Separately, `partners/{uid}` keeps `isOnline` and `availability`
+  unmount. A Screen Wake Lock is requested while a delivery is active where the
+  browser supports it; this is not background tracking. Separately,
+  `partners/{uid}` keeps `isOnline` and `availability`
   (`Available` / `On Delivery` / `Offline`) in step: presence publishes
   immediately when the switch changes, even when geolocation is denied or
   unavailable, and `lastLocation` / `lastLocationUpdatedAt` update as fixes
@@ -553,9 +555,14 @@ their service layer is added:
 - **Notifications** — live listeners turn real events into in-app
   notifications: new assigned offers, deliveries the Administrator cancels,
   offers that expire or get reassigned, and account decisions (approved or
-  suspended). The first snapshot after load is a baseline, so reloads never
-  replay events. When the tab is backgrounded and permission is granted, a
-  system notification is shown; closed-app push needs FCM plus a Cloud
+  suspended). A new offer also opens a global Accept/Reject overlay on every
+  screen, plays a generated chime and vibrates where supported; notification
+  rows deep-link to Orders, Profile or Earnings. Live notifications are
+  persisted as text in `notifications/{uid_eventId}`, so the list and read state
+  survive a reload; the Profile alert preference mutes sound/browser alerts but
+  not the visual card. The first snapshot after load is a baseline, so reloads
+  never replay events. When the tab is backgrounded and permission is granted,
+  a system notification is shown; closed-app push needs FCM plus a Cloud
   Function and is not built.
 - **History, earnings, notifications, support, profile** — searchable history,
   read/unread notifications, FAQ + ticket creation, and profile with documents,

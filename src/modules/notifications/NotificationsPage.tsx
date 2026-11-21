@@ -1,5 +1,6 @@
 import { CheckCheck, Package, ShieldCheck, Truck, Wallet } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/common/Button'
 import { EmptyState } from '../../components/common/EmptyState'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
@@ -16,6 +17,7 @@ const typeIcons: Record<NotificationType, LucideIcon> = {
 }
 
 export function NotificationsPage() {
+  const navigate = useNavigate()
   const { t, locale } = useLanguage()
   const {
     notifications,
@@ -60,8 +62,21 @@ export function NotificationsPage() {
                 <li key={notification.id}>
                   <button
                     type="button"
-                    onClick={() => markNotificationRead(notification.id)}
-                    aria-label={`${t(notification.title)}${notification.isRead ? '' : `, ${t('Unread')}`}`}
+                    onClick={() => {
+                      markNotificationRead(notification.id)
+
+                      if (
+                        notification.type === 'request' ||
+                        notification.type === 'delivery'
+                      ) {
+                        navigate('/deliveries')
+                      } else if (notification.type === 'account') {
+                        navigate('/profile')
+                      } else if (notification.type === 'payment') {
+                        navigate('/earnings')
+                      }
+                    }}
+                    aria-label={`${t(notification.title, notification.vars)}${notification.isRead ? '' : `, ${t('Unread')}`}`}
                     className={
                       notification.isRead
                         ? 'w-full rounded-card border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'

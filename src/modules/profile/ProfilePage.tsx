@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   BadgeCheck,
   ChevronRight,
@@ -19,6 +18,7 @@ import { IconTile } from '../../components/common/IconTile'
 import { Select } from '../../components/common/Select'
 import { Toggle } from '../../components/common/Toggle'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
+import { mediaUploadsEnabled } from '../../config/media'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
@@ -29,9 +29,13 @@ import { applicationStatusMeta } from '../../utils/applicationStatus'
 export function ProfilePage() {
   const navigate = useNavigate()
   const { session, signOut } = useAuth()
-  const { onboarding, dashboardStats } = useApp()
+  const {
+    onboarding,
+    dashboardStats,
+    requestAlertsEnabled,
+    setRequestAlertsEnabled,
+  } = useApp()
   const { language, setLanguage, t } = useLanguage()
-  const [jobAlerts, setJobAlerts] = useState(true)
 
   const displayName = onboarding.fullName.trim() || t('Partner')
   const documents = [
@@ -174,12 +178,13 @@ export function ProfilePage() {
           ) : null}
         </Card>
 
-        <Card padding="md">
-          <p className="text-[13px] font-semibold text-ink">
-            {t('Documents')}
-          </p>
+        {mediaUploadsEnabled ? (
+          <Card padding="md">
+            <p className="text-[13px] font-semibold text-ink">
+              {t('Documents')}
+            </p>
 
-          <ul className="mt-2 divide-y divide-line">
+            <ul className="mt-2 divide-y divide-line">
             {documents.map((document) => (
               <li
                 key={document.label}
@@ -198,9 +203,10 @@ export function ProfilePage() {
                   {t(document.fileName ? 'Uploaded' : 'Missing')}
                 </Badge>
               </li>
-            ))}
-          </ul>
-        </Card>
+              ))}
+            </ul>
+          </Card>
+        ) : null}
 
         <Card padding="md">
           <div className="flex items-center gap-2">
@@ -253,16 +259,16 @@ export function ProfilePage() {
           <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-tint px-3.5 py-3">
             <div>
               <p className="text-[12.5px] font-semibold text-ink">
-                {t('Request alerts')}
+                {t('Alert sound & vibration')}
               </p>
               <p className="text-[11px] text-ink-muted">
-                {t('Notify me about new delivery requests')}
+                {t('Play a sound and vibrate for new requests')}
               </p>
             </div>
             <Toggle
-              checked={jobAlerts}
-              onChange={setJobAlerts}
-              label={t('Request alerts')}
+              checked={requestAlertsEnabled}
+              onChange={setRequestAlertsEnabled}
+              label={t('Alert sound & vibration')}
             />
           </div>
         </Card>

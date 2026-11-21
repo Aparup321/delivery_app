@@ -25,6 +25,32 @@ support fixtures remain mock for the offline prototype only.
   one. Home shows the busy state, and the Available list explains that an
   active delivery blocks accepting another offer.
 
+### Added
+
+- **A new offer is now impossible to miss.** The partner app shows a global
+  Accept/Reject card on every screen, plays a short generated chime and vibrates
+  where supported. Notification rows deep-link to Orders, Profile or Earnings.
+  Expired offers leave the list on a one-second clock, and Accept/Reject is
+  disabled while another delivery is active.
+- **Text handover proof.** Closing a delivery with the customer's OTP can also
+  store a recipient name, a short handover note and the last GPS fix in `proof`.
+  This keeps the flow usable without photo, video or audio storage.
+- **Map follow mode.** The partner map fits once per delivery instead of
+  refitting on every GPS fix, and the follow control pans to new fixes while it
+  is enabled.
+- **Persisted notifications.** Live notifications are stored as text in
+  `notifications/{uid_eventId}` and the read state is written back, so the list
+  survives a reload. The Profile preference now persists and mutes the chime and
+  browser alert without hiding the visual request card.
+- **Rejection reasons.** Rejecting an offer now asks for a short reason and
+  stores it in `partnerResponse.reason` for operations.
+- **Text-only onboarding.** Profile-photo and document upload controls are
+  hidden while no media storage is configured; KYC numbers are reviewed
+  manually. The upload code remains behind `src/config/media.ts`.
+- **Wake lock during a delivery.** The app requests a Screen Wake Lock while a
+  delivery is active where supported, reducing screen-sleep interruptions to
+  foreground GPS.
+
 ### Fixed
 
 - **Admin-assigned offers reach the partner app again.** Delivery assignment and

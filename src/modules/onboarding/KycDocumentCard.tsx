@@ -1,5 +1,7 @@
 import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
+import { useLanguage } from '../../context/language'
+import { mediaUploadsEnabled } from '../../config/media'
 import { DocumentUploadTile } from './DocumentUploadTile'
 
 export interface KycDocumentCardProps {
@@ -36,6 +38,7 @@ export function KycDocumentCard({
   onNumberChange,
   onFileChange,
 }: KycDocumentCardProps) {
+  const { t } = useLanguage()
   const hasNumberField = Boolean(numberLabel && onNumberChange)
 
   return (
@@ -61,16 +64,30 @@ export function KycDocumentCard({
           </p>
         )}
 
-        <DocumentUploadTile
-          className={hasNumberField ? 'mt-[26px]' : 'self-center'}
-          documentName={title}
-          fileName={fileName}
-          onFileChange={onFileChange}
-        />
+        {mediaUploadsEnabled ? (
+          <DocumentUploadTile
+            className={hasNumberField ? 'mt-[26px]' : 'self-center'}
+            documentName={title}
+            fileName={fileName}
+            onFileChange={onFileChange}
+          />
+        ) : (
+          <span
+            className={
+              hasNumberField
+                ? 'mt-[26px] grid w-[104px] shrink-0 place-items-center rounded-2xl border border-dashed border-line bg-canvas px-2 py-2.5 text-center text-[10.5px] font-medium text-ink-muted'
+                : 'grid w-[104px] shrink-0 place-items-center self-center rounded-2xl border border-dashed border-line bg-canvas px-2 py-2.5 text-center text-[10.5px] font-medium text-ink-muted'
+            }
+          >
+            {t('Manual review')}
+          </span>
+        )}
       </div>
 
       <p className="mt-2 break-words text-[11px] leading-relaxed text-ink-muted">
-        {fileName || fileHint}
+        {mediaUploadsEnabled
+          ? fileName || fileHint
+          : t('Document number only · manual verification')}
       </p>
 
       {fileError ? (

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   BadgeCheck,
   Bell,
@@ -16,6 +17,7 @@ import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { IconButton } from '../../components/common/IconButton'
 import { IconTile } from '../../components/common/IconTile'
+import { RejectOfferDialog } from '../../components/deliveries/RejectOfferDialog'
 import { SectionHeading } from '../../components/common/SectionHeading'
 import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
@@ -58,6 +60,7 @@ export function HomePage() {
     onboarding,
   } = useApp()
   const { t, locale } = useLanguage()
+  const [showReject, setShowReject] = useState(false)
   const nextRequest = requests[0]
   const displayName = onboarding.fullName.trim() || t('Partner')
   const firstName = displayName.split(' ')[0] ?? displayName
@@ -352,7 +355,7 @@ export function HomePage() {
               </Button>
             }
           />
-          {isOnline && nextRequest ? (
+          {isOnline && nextRequest && !activeDelivery ? (
             <Card padding="md" className="mt-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -408,7 +411,7 @@ export function HomePage() {
                     deliveryActionPending === 'reject' &&
                     deliveryActionPendingId === nextRequest.id
                   }
-                  onClick={() => void rejectRequest(nextRequest.id)}
+                  onClick={() => setShowReject(true)}
                 >
                   {t('Reject')}
                 </Button>
@@ -427,16 +430,32 @@ export function HomePage() {
           ) : (
             <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
               {t(
-                isOnline
-                  ? deliveryRequestsLoading
-                    ? 'Checking for new requests…'
-                    : 'No requests right now. Stay online to get the next job.'
-                  : 'Turn on availability to start receiving nearby grocery and restaurant requests.',
+                activeDelivery
+                  ? 'Finish your active delivery before accepting another request.'
+                  : isOnline
+                    ? deliveryRequestsLoading
+                      ? 'Checking for new requests…'
+                      : 'No requests right now. Stay online to get the next job.'
+                    : 'Turn on availability to start receiving nearby grocery and restaurant requests.',
               )}
             </p>
           )}
         </section>
       </div>
+
+      {showReject && nextRequest ? (
+        <RejectOfferDialog
+          isBusy={
+            deliveryActionPending === 'reject' &&
+            deliveryActionPendingId === nextRequest.id
+          }
+          onCancel={() => setShowReject(false)}
+          onConfirm={(reason) => {
+            setShowReject(false)
+            void rejectRequest(nextRequest.id, reason)
+          }}
+        />
+      ) : null}
     </div>
   )
 }
