@@ -76,6 +76,8 @@ export interface AppContextValue {
   trackingStatus: TrackingStatus
   /** The partner's latest GPS fix on this device, when available. */
   trackingPosition: DeliveryLocation | null
+  /** Requests one immediate GPS fix and publishes it to operations. */
+  shareLocationNow: () => void
 
   notifications: AppNotification[]
   unreadNotifications: number

@@ -1219,6 +1219,38 @@ function AppDataProvider({
       onPublish: handleTrackingPublish,
     })
 
+  const shareLocationNow = useCallback(() => {
+    const delivery = activeDelivery
+    if (!delivery || !uid || uid.startsWith('demo:')) return
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setDeliverySyncError('This device cannot share its location.')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location: PartnerLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null,
+          updatedAt: new Date().toISOString(),
+        }
+        void publishDeliveryLocation(delivery, location)
+          .then(() => setDeliverySyncError(null))
+          .catch((error: unknown) => {
+            setDeliverySyncError(error instanceof Error ? error.message : 'Your location could not be shared. Try again.')
+          })
+      },
+      (error) => {
+        setDeliverySyncError(
+          error.code === error.PERMISSION_DENIED
+            ? 'Allow location permission for this site, then try again.'
+            : 'Your location is unavailable right now. Move to an open area and try again.',
+        )
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
+    )
+  }, [activeDelivery, uid])
+
   // The partner marker prefers this device's GPS fix; when sharing is denied
   // or paused, the last position stored on the delivery document still shows
   // where the partner was last seen.
@@ -1365,6 +1397,7 @@ function AppDataProvider({
       deliveryRequestsLoading: remoteEnabled && !liveLoaded,
       trackingStatus,
       trackingPosition: trackingLocation,
+      shareLocationNow,
       notifications,
       unreadNotifications,
       requestAlertsEnabled,
@@ -1403,6 +1436,7 @@ function AppDataProvider({
       liveLoaded,
       trackingStatus,
       trackingLocation,
+      shareLocationNow,
       notifications,
       unreadNotifications,
       requestAlertsEnabled,

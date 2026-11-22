@@ -69,6 +69,7 @@ export function ActiveDeliveryPage() {
     isLiveSession,
     trackingStatus,
     trackingPosition,
+    shareLocationNow,
   } = useApp()
   const [showIssues, setShowIssues] = useState(false)
   const [otp, setOtp] = useState('')
@@ -291,6 +292,14 @@ export function ActiveDeliveryPage() {
                 </p>
               ) : null}
             </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto shrink-0"
+              onClick={shareLocationNow}
+            >
+              {t('Share location now')}
+            </Button>
           </div>
         </Card>
 
