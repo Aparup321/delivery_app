@@ -223,6 +223,7 @@ export function toDelivery(docId: string, data: unknown): Delivery | null {
 
   return {
     id: displayId || `#${docId}`,
+    documentId: docId,
     category: asCategory(record.category),
     pickup,
     destination,
@@ -324,7 +325,9 @@ export function subscribePartnerDeliveries(
 
 function deliveryRef(delivery: Delivery) {
   const firestore = requireDb()
-  return doc(firestore, 'deliveries', deliveryDocumentId(delivery.id))
+  // Prefer the real document id. The display id can differ for orders created
+  // by another system, and writing by display id would update the wrong doc.
+  return doc(firestore, 'deliveries', delivery.documentId ?? deliveryDocumentId(delivery.id))
 }
 
 function assertAssigned(

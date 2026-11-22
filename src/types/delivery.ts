@@ -51,6 +51,8 @@ export interface DeliveryPartnerResponse {
 /** A delivery job offered to, or handled by, the partner. */
 export interface Delivery {
   id: string
+  /** Actual Firestore document id; `id` may be a display label. */
+  documentId?: string
   category: DeliveryCategory
   pickup: DeliveryStop
   destination: DeliveryStop
