@@ -15,6 +15,7 @@
   --color-brand: #713ce0;
   --color-brand-hover: #6231cf;
   --color-brand-soft: #eee7ff;
+  --color-brand-soft-hover: #e3d8ff;
   --color-brand-tint: #f6f2ff;
 
   /* Surfaces */
@@ -44,4 +45,32 @@
   /* Elevation: neutral and quiet, no coloured glows. */
   --shadow-card: 0 1px 2px rgba(27, 20, 48, 0.04);
   --shadow-float: 0 24px 60px -40px rgba(27, 20, 48, 0.35);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-brand-soft: #2b2144;
+  --color-brand-soft-hover: #382b54;
+  --color-brand-tint: #1e1830;
+
+  --color-canvas: #0f0d17;
+  --color-surface: #171322;
+  --color-line: #2b2439;
+
+  --color-ink: #f5f2ff;
+  --color-ink-muted: #b9b2cc;
+  --color-ink-soft: #8b849e;
+
+  --color-success: #4ade80;
+  --color-success-soft: #123326;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #35280c;
+  --color-danger: #f87171;
+  --color-danger-soft: #3b1c1f;
+  --color-info: #60a5fa;
+  --color-info-soft: #15243d;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 24px 60px -40px rgba(0, 0, 0, 0.7);
 }

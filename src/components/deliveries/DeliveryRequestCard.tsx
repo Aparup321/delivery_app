@@ -82,6 +82,12 @@ export function DeliveryRequestCard({
           <p className="mt-0.5 text-[11.5px] text-ink-muted">
             {t('{count} items', { count: delivery.itemCount })} ·{' '}
             {t(delivery.paymentMode)}
+            {delivery.paymentMode === 'Cash on delivery' &&
+            delivery.collectAmount
+              ? ` · ${t('Collect {amount}', {
+                  amount: formatCurrency(delivery.collectAmount, locale),
+                })}`
+              : null}
           </p>
         </div>
 

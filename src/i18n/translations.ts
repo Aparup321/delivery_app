@@ -33,6 +33,11 @@ const hindi: Record<string, string> = {
   Reject: 'अस्वीकार करें',
   Contact: 'संपर्क करें',
   'Report issue': 'समस्या बताएं',
+  'Customer contact is not available for this delivery.':
+    'इस डिलीवरी के लिए ग्राहक का संपर्क उपलब्ध नहीं है।',
+  'Collect {amount}': '{amount} वसूल करें',
+  'Customer contact is not shared for this delivery. Use support if you need help.':
+    'इस डिलीवरी के लिए ग्राहक का संपर्क साझा नहीं किया गया है। मदद चाहिए तो सहायता का उपयोग करें।',
   'Recipient name (optional)': 'प्राप्तकर्ता का नाम (वैकल्पिक)',
   'Who received the order?': 'ऑर्डर किसने लिया?',
   'Handover note (optional)': 'हैंडओवर नोट (वैकल्पिक)',
@@ -51,6 +56,11 @@ const hindi: Record<string, string> = {
   Reason: 'कारण',
   'Short reason': 'छोटा कारण',
   'Reject request': 'अनुरोध अस्वीकार करें',
+  'Dark mode': 'डार्क मोड',
+  'Switch between the light and dark interface':
+    'लाइट और डार्क इंटरफ़ेस के बीच स्विच करें',
+  'Switch to dark mode': 'डार्क मोड पर स्विच करें',
+  'Switch to light mode': 'लाइट मोड पर स्विच करें',
   'Alert sound & vibration': 'अलर्ट ध्वनि और कंपन',
   'Play a sound and vibrate for new requests': 'नए अनुरोधों पर ध्वनि और कंपन करें',
   'Enter document numbers for manual verification': 'मैन्युअल सत्यापन के लिए दस्तावेज़ संख्याएं दर्ज करें',
@@ -686,6 +696,11 @@ const bengali: Record<string, string> = {
   Reject: 'প্রত্যাখ্যান করুন',
   Contact: 'যোগাযোগ করুন',
   'Report issue': 'সমস্যা জানান',
+  'Customer contact is not available for this delivery.':
+    'এই ডেলিভারির জন্য গ্রাহকের যোগাযোগের তথ্য নেই।',
+  'Collect {amount}': '{amount} সংগ্রহ করুন',
+  'Customer contact is not shared for this delivery. Use support if you need help.':
+    'এই ডেলিভারির জন্য গ্রাহকের যোগাযোগ শেয়ার করা হয়নি। সাহায্য প্রয়োজন হলে সাপোর্ট ব্যবহার করুন।',
   'Recipient name (optional)': 'প্রাপকের নাম (ঐচ্ছিক)',
   'Who received the order?': 'অর্ডারটি কে নিয়েছেন?',
   'Handover note (optional)': 'হ্যান্ডওভার নোট (ঐচ্ছিক)',
@@ -704,6 +719,11 @@ const bengali: Record<string, string> = {
   Reason: 'কারণ',
   'Short reason': 'সংক্ষিপ্ত কারণ',
   'Reject request': 'অনুরোধ প্রত্যাখ্যান করুন',
+  'Dark mode': 'ডার্ক মোড',
+  'Switch between the light and dark interface':
+    'লাইট ও ডার্ক ইন্টারফেসের মধ্যে সুইচ করুন',
+  'Switch to dark mode': 'ডার্ক মোডে যান',
+  'Switch to light mode': 'লাইট মোডে যান',
   'Alert sound & vibration': 'আলার্ট শব্দ ও কম্পন',
   'Play a sound and vibrate for new requests': 'নতুন অনুরোধে শব্দ ও কম্পন করুন',
   'Enter document numbers for manual verification': 'ম্যানুয়াল যাচাইয়ের জন্য নথি নম্বর লিখুন',

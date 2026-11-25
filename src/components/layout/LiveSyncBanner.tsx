@@ -32,7 +32,7 @@ export function LiveSyncBanner() {
       className="shrink-0 border-b border-line bg-warning-soft px-4 py-2.5"
     >
       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-white/70 text-warning">
+        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-surface/70 text-warning">
           <AlertTriangle className="size-4" aria-hidden="true" />
         </span>
 

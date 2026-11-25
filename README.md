@@ -81,14 +81,14 @@ material for the project and are not part of the deployed application.
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline and rejection/suspension reasons; decisions arrive live from `delivery_admin` | Built (Firebase + admin) |
-| Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
+| Home dashboard | Light header with avatar, greeting, top-right light/dark toggle and notifications, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
 | Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept/reject, a global sound/vibration alert, and expired-offer removal | Built (Firebase) |
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
 | Earnings & payments | Today/week/month totals, chart and recent deliveries calculated from completed jobs; month uses 1–6, 7–12, 13–18, 19–24, 25–end buckets; bars show hover amounts and open that bucket’s statements; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
-| Help & support | FAQs, ticket submission and ticket status | Built (empty tickets for live accounts; FAQs are static help content) |
+| Help & support | FAQs, ticket submission, live ticket feed and status updates; delivery issues create a ticket automatically | Built (live tickets persisted; FAQs are static help content) |
 | Profile & settings | Partner details, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
 
 ### Demo access
@@ -230,6 +230,9 @@ shared mock state layer:
   shared component, validation message and the mock notification/FAQ copy uses
   the selected language, and dates, times and rupee amounts follow the matching
   `en-IN`, `hi-IN` or `bn-IN` locale.
+- The **moon/sun button in the Home header’s top-right corner** switches the app
+  between the light and dark token palettes immediately. The choice is saved
+  under `fafo.partner.theme` and is applied before the first paint.
 
 **Remaining:** the rest of Phase 12 (delivery, earnings, notification, support
 and admin integration) and Phase 13 (release QA). Both depend on the open

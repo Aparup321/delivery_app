@@ -441,7 +441,7 @@ export function DeliveryMap({
           className={
             follow
               ? 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-brand/30 bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-              : 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-white/95 text-ink-muted shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+              : 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-white/95 text-[#6E6789] shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
           }
           aria-label={t(
             follow ? 'Stop following my location' : 'Follow my location',
@@ -450,7 +450,7 @@ export function DeliveryMap({
           <Crosshair className="size-4" aria-hidden="true" />
         </button>
 
-        <span className="pointer-events-none absolute bottom-1 right-2 z-[500] rounded bg-white/90 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-muted">
+        <span className="pointer-events-none absolute bottom-1 right-2 z-[500] rounded bg-white/90 px-1.5 py-0.5 text-[10.5px] font-medium text-[#6E6789]">
           © OpenStreetMap contributors
         </span>
       </div>

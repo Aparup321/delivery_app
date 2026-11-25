@@ -236,6 +236,12 @@ export function toDelivery(docId: string, data: unknown): Delivery | null {
     earnings: asNumber(record.earnings),
     itemCount: Math.max(0, Math.round(asNumber(record.itemCount))),
     paymentMode: asPaymentMode(record.paymentMode),
+    orderValue:
+      typeof record.orderValue === 'number' ? record.orderValue : undefined,
+    collectAmount:
+      typeof record.collectAmount === 'number'
+        ? record.collectAmount
+        : undefined,
     customerName: asText(record.customerName) || 'Customer',
     customerPhone: customerPhone || customerPhoneMasked || '',
     note: asText(record.note) || undefined,

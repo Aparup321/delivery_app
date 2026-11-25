@@ -5,7 +5,9 @@ import {
   ChevronRight,
   ClipboardList,
   LifeBuoy,
+  Moon,
   Package,
+  Sun,
   UserRound,
   Wallet,
 } from 'lucide-react'
@@ -22,6 +24,7 @@ import { SectionHeading } from '../../components/common/SectionHeading'
 import { Toggle } from '../../components/common/Toggle'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
+import { useTheme } from '../../context/useTheme'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { deliveryStatusLabels } from '../../utils/delivery'
 import { formatCurrency, formatDate } from '../../utils/format'
@@ -60,6 +63,7 @@ export function HomePage() {
     onboarding,
   } = useApp()
   const { t, locale } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
   const [showReject, setShowReject] = useState(false)
   const nextRequest = requests[0]
   const displayName = onboarding.fullName.trim() || t('Partner')
@@ -98,25 +102,43 @@ export function HomePage() {
             </div>
           </Link>
 
-          <div className="relative shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
+            <div className="relative">
+              <IconButton
+                label={
+                  unreadNotifications > 0
+                    ? t('Notifications, {count} unread', {
+                        count: unreadNotifications,
+                      })
+                    : t('Notifications')
+                }
+                variant="soft"
+                onClick={() => navigate('/notifications')}
+              >
+                <Bell className="size-5" aria-hidden="true" />
+              </IconButton>
+              {unreadNotifications > 0 ? (
+                <span className="absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-white">
+                  {unreadNotifications}
+                </span>
+              ) : null}
+            </div>
+
             <IconButton
               label={
-                unreadNotifications > 0
-                  ? t('Notifications, {count} unread', {
-                      count: unreadNotifications,
-                    })
-                  : t('Notifications')
+                theme === 'dark'
+                  ? t('Switch to light mode')
+                  : t('Switch to dark mode')
               }
               variant="soft"
-              onClick={() => navigate('/notifications')}
+              onClick={toggleTheme}
             >
-              <Bell className="size-5" aria-hidden="true" />
+              {theme === 'dark' ? (
+                <Sun className="size-5" aria-hidden="true" />
+              ) : (
+                <Moon className="size-5" aria-hidden="true" />
+              )}
             </IconButton>
-            {unreadNotifications > 0 ? (
-              <span className="absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-white">
-                {unreadNotifications}
-              </span>
-            ) : null}
           </div>
         </div>
       </header>

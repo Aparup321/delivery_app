@@ -382,7 +382,7 @@ export function EarningsPage() {
                         className="group relative w-full"
                         style={{ height: `${barHeight}px` }}
                       >
-                        <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-1.5 py-0.5 text-[10px] font-semibold text-white group-hover:block">
+                        <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-brand-deep px-1.5 py-0.5 text-[10px] font-semibold text-white group-hover:block">
                           {formatCurrency(point.amount, locale)}
                         </span>
                         <button

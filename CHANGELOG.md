@@ -49,6 +49,15 @@ support fixtures remain mock for the offline prototype only.
 - **Refresh restores Home and presence.** A real page reload returns to Home,
   keeps the signed-in session, and restores the last online/offline state from
   `partners/{uid}`. Explicit sign-out still writes the partner offline.
+- **Live support tickets.** The Support screen now subscribes to
+  `support_tickets`, so tickets and status updates survive a refresh. Reporting
+  a delivery issue creates a ticket automatically.
+- **Contact fallback.** Live deliveries without a usable customer number disable
+  the Contact action and show a support hint instead of opening an empty dialer.
+- **Dark mode.** The moon/sun button in the Home header’s top-right corner
+  switches the entire partner app between the light and dark palettes, persists
+  under `fafo.partner.theme`, and is applied before first paint. Cards, text,
+  borders, status tones, inputs, alerts and map controls all have dark variants.
 - **Map follow mode.** The partner map fits once per delivery instead of
   refitting on every GPS fix, and the follow control pans to new fixes while it
   is enabled.

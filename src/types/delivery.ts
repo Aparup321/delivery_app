@@ -63,6 +63,9 @@ export interface Delivery {
   earnings: number
   itemCount: number
   paymentMode: 'Prepaid' | 'Cash on delivery'
+  /** Order value and cash to collect, when the console sends them. */
+  orderValue?: number
+  collectAmount?: number
   customerName: string
   customerPhone: string
   note?: string

@@ -36,7 +36,7 @@ export function RejectOfferDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/35 p-3"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3"
       role="presentation"
       onClick={onCancel}
     >

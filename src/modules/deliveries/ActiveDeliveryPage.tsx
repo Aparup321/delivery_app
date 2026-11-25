@@ -68,6 +68,7 @@ export function ActiveDeliveryPage() {
     advanceDelivery,
     completeDelivery,
     cancelDelivery,
+    createTicket,
     deliveryActionPending,
     deliveryActionError,
     isLiveSession,
@@ -118,6 +119,8 @@ export function ActiveDeliveryPage() {
       ? 'pickup'
       : 'destination'
   const pendingAction = deliveryActionPending
+  const contactNumber = activeDelivery.customerPhone.replace(/\s/g, '')
+  const canContact = contactNumber.replace(/\D/g, '').length >= 10
 
   async function handleAdvance() {
     setActionError('')
@@ -165,9 +168,22 @@ export function ActiveDeliveryPage() {
   async function handleCancel(reason: string) {
     setActionError('')
 
+    const delivery = activeDelivery
+
+    if (!delivery) {
+      setActionError(
+        'This delivery is no longer active. Return to Orders to refresh.',
+      )
+      return
+    }
+
     const cancelled = await cancelDelivery(reason)
 
     if (cancelled) {
+      createTicket(
+        `Delivery issue · ${delivery.id}`,
+        `${reason}\nPickup: ${delivery.pickup.name}\nDrop: ${delivery.destination.name}`,
+      )
       navigate('/deliveries')
     } else {
       setActionError(
@@ -202,6 +218,15 @@ export function ActiveDeliveryPage() {
             </Badge>
             <span className="text-[11.5px] text-ink-muted">
               {t(activeDelivery.paymentMode)}
+              {activeDelivery.paymentMode === 'Cash on delivery' &&
+              activeDelivery.collectAmount
+                ? ` · ${t('Collect {amount}', {
+                    amount: formatCurrency(
+                      activeDelivery.collectAmount,
+                      locale,
+                    ),
+                  })}`
+                : null}
             </span>
           </div>
 
@@ -430,8 +455,14 @@ export function ActiveDeliveryPage() {
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"
+              disabled={!canContact}
+              title={
+                canContact
+                  ? undefined
+                  : t('Customer contact is not available for this delivery.')
+              }
               onClick={() => {
-                window.location.href = `tel:${activeDelivery.customerPhone.replace(/\s/g, '')}`
+                window.location.href = `tel:${contactNumber}`
               }}
               leftIcon={<Phone className="size-4" aria-hidden="true" />}
             >
@@ -445,6 +476,13 @@ export function ActiveDeliveryPage() {
             >
               {t('Report issue')}
             </Button>
+            {!canContact ? (
+              <p className="col-span-2 rounded-xl bg-canvas px-3 py-2 text-center text-[10.5px] text-ink-muted">
+                {t(
+                  'Customer contact is not shared for this delivery. Use support if you need help.',
+                )}
+              </p>
+            ) : null}
           </div>
         </div>
 

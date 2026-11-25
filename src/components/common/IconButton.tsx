@@ -15,7 +15,7 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 const variantClasses: Record<IconButtonVariant, string> = {
   surface:
     'border border-line bg-surface text-ink hover:border-brand/30 hover:bg-brand-tint',
-  soft: 'bg-brand-soft text-brand-deep hover:bg-[#e3d8ff]',
+  soft: 'bg-brand-soft text-brand-deep hover:bg-brand-soft-hover',
   ghost: 'text-ink-muted hover:bg-brand-soft hover:text-brand-deep',
   onBrand: 'bg-white/15 text-white hover:bg-white/25',
 }

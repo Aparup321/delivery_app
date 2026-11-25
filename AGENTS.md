@@ -570,7 +570,9 @@ their service layer is added:
   Function and is not built.
 - **History, earnings, notifications, support, profile** — searchable history,
   read/unread notifications, FAQ + ticket creation, and profile with documents,
-  language, alerts and sign-out. The Earnings screen calculates live
+  language, alerts and sign-out. Support tickets are read from and written to
+  `support_tickets`, so they survive a refresh; reporting a delivery issue also
+  creates a ticket for operations. The Earnings screen calculates live
   today/week/month totals, chart buckets, average and recent jobs from completed
   deliveries in `history`, so it matches the dashboard. Month bars use the
   calendar buckets 1–6, 7–12, 13–18, 19–24 and 25–end; hovering a bar shows its
@@ -584,6 +586,11 @@ their service layer is added:
   `fafo.partner.language`; dates, times and amounts use the matching `en-IN`,
   `hi-IN` or `bn-IN` locale. User-entered content, names, addresses, IDs and
   delivery data are not translated.
+- **Appearance** — the moon/sun button in the Home header’s top-right corner
+  switches the whole app between the light and dark token palettes. The choice
+  persists under `fafo.partner.theme` and `index.html` applies it before the first
+  paint. Brand headers stay deep purple; surfaces, text, borders, status tones
+  and map controls have dark variants.
 
 ### Intentionally missing (do not fake these)
 

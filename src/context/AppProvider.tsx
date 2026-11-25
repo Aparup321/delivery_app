@@ -55,7 +55,10 @@ import type {
   DeliveryCompletionProof,
   DeliveryLocation,
 } from '../types/delivery'
-import { publishSupportTicket } from '../services/supportTickets'
+import {
+  publishSupportTicket,
+  subscribePartnerSupportTickets,
+} from '../services/supportTickets'
 import {
   markAllPartnerNotificationsRead,
   markPartnerNotificationRead,
@@ -76,6 +79,8 @@ import { useAuth } from './auth'
 
 const ONBOARDING_STORAGE_PREFIX = 'fafo.partner.onboarding'
 const REQUEST_ALERTS_KEY = 'fafo.partner.requestAlerts'
+const PRESENCE_SYNC_ERROR =
+  'Your online status could not be saved to the server. Check your connection and try again.'
 
 /** Each verified mobile number keeps its own onboarding draft. */
 function onboardingKey(phone: string): string {
@@ -221,6 +226,8 @@ function AppDataProvider({
   const [liveLoaded, setLiveLoaded] = useState(false)
   const [isOnline, setOnlineState] = useState(false)
   const [accountPresenceLoaded, setAccountPresenceLoaded] = useState(false)
+  const isOnlineRef = useRef(false)
+  const accountPresenceRestoredRef = useRef(false)
   // Demo fixtures are the offline prototype's content. A live account starts
   // with empty lists so a brand-new number never sees demo data; real records
   // arrive from Firestore.
@@ -309,10 +316,16 @@ function AppDataProvider({
 
   const setOnline = useCallback(
     (online: boolean) => {
-      setOnlineState(online && canGoOnline)
+      const allowed = online && canGoOnline
+      isOnlineRef.current = allowed
+      setOnlineState(allowed)
     },
     [canGoOnline],
   )
+
+  useEffect(() => {
+    isOnlineRef.current = isOnline
+  }, [isOnline])
 
   // Ask once when the partner deliberately goes online. The in-app alert works
   // without this permission; the browser alert covers a background tab.
@@ -570,6 +583,32 @@ function AppDataProvider({
     }
   }, [remoteEnabled, uid, isLoading])
 
+  // Support tickets are stored for the operations console; the same feed keeps
+  // them visible here after a refresh.
+  useEffect(() => {
+    if (!remoteEnabled || !uid || isLoading) {
+      return
+    }
+
+    let active = true
+    const unsubscribe = subscribePartnerSupportTickets(
+      uid,
+      (stored) => {
+        if (active) {
+          setTickets(stored)
+        }
+      },
+      () => {
+        // The locally submitted ticket remains visible if the feed fails.
+      },
+    )
+
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [remoteEnabled, uid, isLoading])
+
   // A ref keeps the stale-snapshot guard without a mutable closure variable.
   const accountWatcherActiveRef = useRef(true)
   const deliveriesWatcherActiveRef = useRef(true)
@@ -656,11 +695,26 @@ function AppDataProvider({
           const onlineAllowed =
             snapshot.applicationStatus === 'approved' &&
             snapshot.accountStatus === 'active'
-          setOnlineState(onlineAllowed && snapshot.isOnline)
+          if (!accountPresenceRestoredRef.current) {
+            accountPresenceRestoredRef.current = true
+            // Do not overwrite a manual online toggle made while the first
+            // snapshot was still loading.
+            if (!isOnlineRef.current) {
+              const restored = onlineAllowed && snapshot.isOnline
+              isOnlineRef.current = restored
+              setOnlineState(restored)
+            }
+          } else if (!onlineAllowed) {
+            isOnlineRef.current = false
+            setOnlineState(false)
+          }
           setAccountPresenceLoaded(true)
         },
         () => {
           if (accountWatcherActiveRef.current) {
+            // Presence publishing must not stay disabled forever when the
+            // account listener fails; the heartbeat below will retry.
+            setAccountPresenceLoaded(true)
             setLiveSyncError(
               'Live Administrator updates are unavailable. Check your connection and retry.',
             )
@@ -671,6 +725,7 @@ function AppDataProvider({
       // Defer the fallback so mounting does not trigger a second render.
       reportTimer = window.setTimeout(() => {
         if (accountWatcherActiveRef.current) {
+          setAccountPresenceLoaded(true)
           setLiveSyncError(
             'Live Administrator updates are unavailable. Check your connection and retry.',
           )
@@ -1104,9 +1159,25 @@ function AppDataProvider({
     hasActiveDeliveryRef.current = activeDelivery !== null
   }, [activeDelivery])
 
-  // Publish presence as soon as the switch changes. This must not depend on a
-  // GPS fix: a denied location permission would otherwise leave isOnline false
-  // and make an online partner look unavailable to the administrator.
+  // A failed or slow account listener must not disable presence forever. After
+  // a short grace period, let the heartbeat try; if the write is rejected the
+  // banner below reports it.
+  useEffect(() => {
+    if (!remoteEnabled || !uid || isLoading || accountPresenceLoaded) {
+      return
+    }
+
+    const timer = window.setTimeout(
+      () => setAccountPresenceLoaded(true),
+      8_000,
+    )
+    return () => window.clearTimeout(timer)
+  }, [remoteEnabled, uid, isLoading, accountPresenceLoaded])
+
+  // Publish presence as soon as the switch changes and then heartbeat every
+  // minute while online. This must not depend on a GPS fix: a denied location
+  // permission would otherwise leave isOnline false and make an online partner
+  // look unavailable to the administrator.
   useEffect(() => {
     if (
       !remoteEnabled ||
@@ -1117,17 +1188,43 @@ function AppDataProvider({
       return
     }
 
-    void publishPartnerStatus(
-      uid,
-      isOnline,
-      isOnline
-        ? activeDelivery !== null
-          ? 'On Delivery'
-          : 'Available'
-        : 'Offline',
-    ).catch(() => {
-      // The next presence tick retries the status.
-    })
+    const availability: 'Available' | 'On Delivery' | 'Offline' = isOnline
+      ? activeDelivery !== null
+        ? 'On Delivery'
+        : 'Available'
+      : 'Offline'
+    let active = true
+
+    const publish = () => {
+      void publishPartnerStatus(uid, isOnline, availability)
+        .then(() => {
+          if (!active) {
+            return
+          }
+          setDeliverySyncError((current) =>
+            current === PRESENCE_SYNC_ERROR ? null : current,
+          )
+        })
+        .catch(() => {
+          if (active) {
+            setDeliverySyncError(PRESENCE_SYNC_ERROR)
+          }
+        })
+    }
+
+    publish()
+
+    if (!isOnline) {
+      return () => {
+        active = false
+      }
+    }
+
+    const timer = window.setInterval(publish, 60_000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
   }, [
     remoteEnabled,
     uid,

@@ -50,7 +50,7 @@ export function ScreenHeader({
               'mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg transition-colors',
               isBrand
                 ? 'bg-white/10 text-white hover:bg-white/20'
-                : 'bg-brand-soft text-brand-deep hover:bg-[#e3d8ff]',
+                : 'bg-brand-soft text-brand-deep hover:bg-brand-soft-hover',
             )}
           >
             <ChevronLeft className="size-5" aria-hidden="true" />

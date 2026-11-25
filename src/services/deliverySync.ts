@@ -63,6 +63,10 @@ export async function publishPartnerLocation(
   await setDoc(
     doc(db, 'partners', uid),
     {
+      // Firestore rules require partnerId == uid for every profile update.
+      // Re-writing it here repairs legacy or manually restored documents whose
+      // partnerId was lost, which otherwise silently blocks presence updates.
+      partnerId: uid,
       isOnline: online,
       availability,
       lastLocation: location,
@@ -81,7 +85,11 @@ export async function publishPartnerAvailability(
     return
   }
 
-  await setDoc(doc(db, 'partners', uid), { availability }, { merge: true })
+  await setDoc(
+    doc(db, 'partners', uid),
+    { partnerId: uid, availability },
+    { merge: true },
+  )
 }
 
 /**
@@ -100,7 +108,7 @@ export async function publishPartnerStatus(
 
   await setDoc(
     doc(db, 'partners', uid),
-    { isOnline: online, availability },
+    { partnerId: uid, isOnline: online, availability },
     { merge: true },
   )
 }

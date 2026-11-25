@@ -20,6 +20,15 @@
   <body>
     <div id="root"></div>
     <div id="recaptcha-container"></div>
+    <script>
+      try {
+        if (window.localStorage.getItem('fafo.partner.theme') === 'dark') {
+          document.documentElement.dataset.theme = 'dark'
+        }
+      } catch {
+        // The app defaults to the light interface when storage is blocked.
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
