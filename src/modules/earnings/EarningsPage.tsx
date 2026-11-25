@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { TrendingUp } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { Card } from '../../components/common/Card'
@@ -15,6 +15,18 @@ import {
 import type { Delivery } from '../../types/delivery'
 import type { EarningsPeriod, EarningsPoint } from '../../types/earnings'
 import { formatCurrency, formatShortDate } from '../../utils/format'
+
+interface ChartPoint extends EarningsPoint {
+  /** Set on live points so the bar can open that bucket's statements. */
+  start?: string
+  end?: string
+}
+
+interface ChartBucket {
+  label: string
+  start: Date
+  end: Date
+}
 
 function startOfToday(): Date {
   const value = new Date()
@@ -36,7 +48,12 @@ function isInPeriod(value: string, period: EarningsPeriod): boolean {
     return date >= start && date <= now
   }
 
-  start.setDate(start.getDate() - (period === 'week' ? 6 : 29))
+  if (period === 'month') {
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    return date >= monthStart && date <= now
+  }
+
+  start.setDate(start.getDate() - 6)
   return date >= start && date <= now
 }
 
@@ -58,68 +75,109 @@ function sumEarnings(deliveries: Delivery[]): number {
   return deliveries.reduce((sum, delivery) => sum + delivery.earnings, 0)
 }
 
+function sumInBucket(
+  deliveries: Delivery[],
+  start: Date,
+  end: Date,
+): number {
+  return deliveries
+    .filter((delivery) => {
+      if (!delivery.completedAt) {
+        return false
+      }
+
+      const date = new Date(delivery.completedAt)
+      return date >= start && date < end
+    })
+    .reduce((sum, delivery) => sum + delivery.earnings, 0)
+}
+
+/** Calendar month split into the requested 1–6, 7–12, 13–18, 19–24, 25–end. */
+function monthBuckets(now: Date): ChartBucket[] {
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const starts = [1, 7, 13, 19, 25]
+
+  return starts.map((startDay, index) => {
+    const start = new Date(year, month, startDay)
+    const end =
+      index === starts.length - 1
+        ? new Date(year, month + 1, 1)
+        : new Date(year, month, starts[index + 1])
+    const endDay =
+      index === starts.length - 1 ? lastDay : starts[index + 1] - 1
+
+    return {
+      label: `${startDay}-${endDay}`,
+      start,
+      end,
+    }
+  })
+}
+
 function liveChart(
   deliveries: Delivery[],
   period: EarningsPeriod,
   locale: string,
-): EarningsPoint[] {
+): ChartPoint[] {
   if (period === 'today') {
     const labels = ['12 AM', '4 AM', '8 AM', '12 PM', '4 PM', '8 PM']
-    const amounts = labels.map(() => 0)
+    const dayStart = startOfToday()
 
-    for (const delivery of deliveries) {
-      if (!delivery.completedAt) {
-        continue
+    return labels.map((label, index) => {
+      const start = new Date(dayStart)
+      start.setHours(index * 4, 0, 0, 0)
+      const end = new Date(start)
+      end.setHours(start.getHours() + 4, 0, 0, 0)
+
+      return {
+        label,
+        amount: sumInBucket(deliveries, start, end),
+        start: start.toISOString(),
+        end: end.toISOString(),
       }
-
-      const hour = new Date(delivery.completedAt).getHours()
-      const index = Math.min(5, Math.max(0, Math.floor(hour / 4)))
-      amounts[index] += delivery.earnings
-    }
-
-    return labels.map((label, index) => ({
-      label,
-      amount: amounts[index],
-    }))
-  }
-
-  const bucketCount = period === 'week' ? 7 : 5
-  const bucketDays = period === 'week' ? 1 : 6
-  const start = startOfToday()
-  start.setDate(start.getDate() - (bucketCount * bucketDays - 1))
-
-  const points: EarningsPoint[] = []
-
-  for (let index = 0; index < bucketCount; index += 1) {
-    const bucketStart = new Date(start)
-    bucketStart.setDate(bucketStart.getDate() + index * bucketDays)
-    const bucketEnd = new Date(bucketStart)
-    bucketEnd.setDate(bucketEnd.getDate() + bucketDays)
-
-    const amount = deliveries
-      .filter((delivery) => {
-        if (!delivery.completedAt) {
-          return false
-        }
-
-        const date = new Date(delivery.completedAt)
-        return date >= bucketStart && date < bucketEnd
-      })
-      .reduce((sum, delivery) => sum + delivery.earnings, 0)
-
-    points.push({
-      label: formatShortDate(bucketStart.toISOString(), locale),
-      amount,
     })
   }
 
-  return points
+  if (period === 'week') {
+    const start = startOfToday()
+    start.setDate(start.getDate() - 6)
+    const points: ChartPoint[] = []
+
+    for (let index = 0; index < 7; index += 1) {
+      const bucketStart = new Date(start)
+      bucketStart.setDate(bucketStart.getDate() + index)
+      const bucketEnd = new Date(bucketStart)
+      bucketEnd.setDate(bucketEnd.getDate() + 1)
+
+      points.push({
+        label: formatShortDate(bucketStart.toISOString(), locale),
+        amount: sumInBucket(deliveries, bucketStart, bucketEnd),
+        start: bucketStart.toISOString(),
+        end: bucketEnd.toISOString(),
+      })
+    }
+
+    return points
+  }
+
+  return monthBuckets(new Date()).map((bucket) => ({
+    label: bucket.label,
+    amount: sumInBucket(deliveries, bucket.start, bucket.end),
+    start: bucket.start.toISOString(),
+    end: bucket.end.toISOString(),
+  }))
 }
 
 export function EarningsPage() {
   const { history, isLiveSession } = useApp()
   const { t, locale } = useLanguage()
   const [period, setPeriod] = useState<EarningsPeriod>('today')
+  const [selectedBucket, setSelectedBucket] = useState<ChartPoint | null>(
+    null,
+  )
+  const statementsRef = useRef<HTMLDivElement>(null)
 
   const liveDeliveries = useMemo(
     () => (isLiveSession ? completedInPeriod(history, period) : []),
@@ -145,7 +203,7 @@ export function EarningsPage() {
         : earningsSummary.deliveriesMonth
 
   const average = deliveries > 0 ? Math.round(amount / deliveries) : 0
-  const chartPoints = useMemo(
+  const chartPoints: ChartPoint[] = useMemo(
     () =>
       isLiveSession
         ? liveChart(liveDeliveries, period, locale)
@@ -156,6 +214,44 @@ export function EarningsPage() {
   const recentDeliveries = isLiveSession
     ? liveDeliveries.slice(0, 4)
     : history.slice(0, 4)
+  const statementDeliveries =
+    selectedBucket?.start && selectedBucket.end
+      ? history
+          .filter((delivery) => {
+            if (
+              delivery.status !== 'delivered' ||
+              !delivery.completedAt
+            ) {
+              return false
+            }
+
+            const at = new Date(delivery.completedAt)
+            return (
+              at >= new Date(selectedBucket.start!) &&
+              at < new Date(selectedBucket.end!)
+            )
+          })
+          .sort((a, b) =>
+            (b.completedAt ?? '').localeCompare(a.completedAt ?? ''),
+          )
+      : recentDeliveries
+  const visibleDeliveries = selectedBucket
+    ? statementDeliveries
+    : recentDeliveries
+
+  function selectBucket(point: ChartPoint) {
+    if (!point.start || !point.end) {
+      return
+    }
+
+    setSelectedBucket(point)
+    window.requestAnimationFrame(() => {
+      statementsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
 
   const periodLabel =
     period === 'today'
@@ -169,7 +265,7 @@ export function EarningsPage() {
       ? t('Today, by time of day')
       : period === 'week'
         ? t('Last 7 days')
-        : t('Last 30 days')
+        : t('This month, by date range')
 
   function payoutPeriodLabel(value: string): string {
     return value.startsWith('Week of ')
@@ -196,7 +292,10 @@ export function EarningsPage() {
         <SegmentedTabs
           label={t('Earnings period')}
           value={period}
-          onChange={(value) => setPeriod(value as EarningsPeriod)}
+          onChange={(value) => {
+            setPeriod(value as EarningsPeriod)
+            setSelectedBucket(null)
+          }}
           items={[
             { id: 'today', label: t('Today') },
             { id: 'week', label: t('Week') },
@@ -256,31 +355,56 @@ export function EarningsPage() {
               {t('No completed deliveries in this period.')}
             </p>
           ) : (
-            <div className="mt-4 flex h-32 items-end gap-2">
+            <div
+              className="mt-4 flex h-40 items-end gap-2"
+              role="group"
+              aria-label={t('Earnings bar chart')}
+            >
               {chartPoints.map((point) => {
-                const height = Math.max(
-                  10,
-                  Math.round((point.amount / maxPoint) * 100),
-                )
-                const isLast = point.amount === maxPoint
+                // Pixel heights are deliberate: percentage heights inside an
+                // auto-height flex column can resolve to zero in some browsers.
+                const barHeight =
+                  point.amount === 0
+                    ? 2
+                    : Math.max(
+                        8,
+                        Math.round((point.amount / maxPoint) * 112),
+                      )
+                const isMax = point.amount === maxPoint
 
                 return (
                   <div
                     key={point.label}
-                    className="flex flex-1 flex-col items-center gap-1.5"
+                    className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
                   >
-                    <div className="flex h-full w-full items-end">
+                    <div className="flex min-h-0 w-full flex-1 items-end">
                       <div
-                        className={
-                          isLast
-                            ? 'w-full rounded-t-md bg-brand-deep'
-                            : 'w-full rounded-t-md bg-brand/35'
-                        }
-                        style={{ height: `${height}%` }}
-                        title={`${point.label}: ${formatCurrency(point.amount, locale)}`}
-                      />
+                        className="group relative w-full"
+                        style={{ height: `${barHeight}px` }}
+                      >
+                        <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-1.5 py-0.5 text-[10px] font-semibold text-white group-hover:block">
+                          {formatCurrency(point.amount, locale)}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={!point.start || point.amount === 0}
+                          onClick={() => selectBucket(point)}
+                          aria-label={`${point.label}: ${formatCurrency(point.amount, locale)}`}
+                          title={`${point.label}: ${formatCurrency(point.amount, locale)}`}
+                          className={[
+                            'h-full w-full origin-bottom rounded-t-md border-0 p-0 transition-all duration-200',
+                            isMax ? 'bg-brand-deep' : 'bg-brand/35',
+                            point.start && point.amount > 0
+                              ? 'cursor-pointer hover:scale-y-[1.03] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+                              : 'cursor-default',
+                            selectedBucket?.label === point.label
+                              ? 'ring-2 ring-brand/35'
+                              : '',
+                          ].join(' ')}
+                        />
+                      </div>
                     </div>
-                    <span className="text-[11px] font-medium text-ink-soft">
+                    <span className="h-4 text-[11px] font-medium text-ink-soft">
                       {point.label}
                     </span>
                   </div>
@@ -290,14 +414,41 @@ export function EarningsPage() {
           )}
         </Card>
 
-        <Card padding="md">
-          <p className="text-[13px] font-bold text-ink">
-            {t('Recent deliveries')}
-          </p>
+        <div
+          ref={statementsRef}
+          id="earnings-statements"
+          className="scroll-mt-4"
+        >
+          <Card padding="md">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-[13px] font-bold text-ink">
+                  {selectedBucket
+                    ? t('Earnings for {range}', {
+                        range: selectedBucket.label,
+                      })
+                    : t('Recent deliveries')}
+                </p>
+                {selectedBucket ? (
+                  <p className="mt-0.5 text-[11px] text-ink-muted">
+                    {t('Completed deliveries in this range')}
+                  </p>
+                ) : null}
+              </div>
+              {selectedBucket ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedBucket(null)}
+                  className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-semibold text-brand transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                >
+                  {t('Clear')}
+                </button>
+              ) : null}
+            </div>
 
-          {recentDeliveries.length > 0 ? (
-            <ul className="mt-2 divide-y divide-line">
-              {recentDeliveries.map((delivery) => (
+            {visibleDeliveries.length > 0 ? (
+              <ul className="mt-2 divide-y divide-line">
+                {visibleDeliveries.map((delivery) => (
                 <li
                   key={delivery.id}
                   className="flex items-center justify-between gap-3 py-2.5"
@@ -335,12 +486,17 @@ export function EarningsPage() {
                 </li>
               ))}
             </ul>
-          ) : (
-            <p className="mt-2 text-[11.5px] text-ink-muted">
-              {t('Completed deliveries in this period will appear here.')}
-            </p>
-          )}
-        </Card>
+            ) : (
+              <p className="mt-2 text-[11.5px] text-ink-muted">
+                {t(
+                  selectedBucket
+                    ? 'No completed deliveries in this range.'
+                    : 'Completed deliveries in this period will appear here.',
+                )}
+              </p>
+            )}
+          </Card>
+        </div>
 
         <Card padding="md">
           <p className="text-[13px] font-bold text-ink">{t('Payouts')}</p>

@@ -86,6 +86,8 @@ export interface PartnerAccountSnapshot {
   adminPartnerId: string | null
   reviewedBy: string | null
   reviewedAt: string | null
+  /** Server-side presence, restored on a page refresh. */
+  isOnline: boolean
 }
 
 interface UploadedFile {
@@ -236,6 +238,7 @@ function accountSnapshotFromPartner(
     adminPartnerId: asStringOrNull(partner.adminPartnerId),
     reviewedBy: asStringOrNull(review.reviewedBy),
     reviewedAt: asStringOrNull(review.reviewedAt),
+    isOnline: partner.isOnline === true,
   }
 }
 

@@ -463,7 +463,8 @@ their service layer is added:
   stale locally approved state cannot reach the dashboard. A fresh tab or app
   launch restores a remembered Firebase session only when Firestore confirms a
   submitted or reviewed application; a sign-in-only or draft account starts at
-  the login screen. Reloading the running tab keeps the session, and a submitted
+  the login screen. Reloading the running tab keeps the session, returns to
+  Home, and restores online/offline presence from `partners/{uid}`; a submitted
   device-only demo session also restores on a fresh launch. App sign-out clears
   the UI session but keeps the device's Firebase account for demo continuity.
   Protected routes return to the requested screen. This demo identity is not
@@ -531,8 +532,9 @@ their service layer is added:
   deliveries stay behind the demo-session check in `AppProvider`.
 - **Active delivery** — accepted → pickup arrived → picked up → on the way → drop
   arrived → delivered, with per-stage primary actions, an interactive
-  Leaflet/OpenStreetMap map (pickup, drop and live partner markers, OSRM route
-  line, follow-my-location control that fits once per delivery), external
+  Leaflet/OpenStreetMap map in a **Current location** section (pickup, drop and
+  live partner markers, OSRM route line, follow-my-location control that fits
+  once per delivery), external
   turn-by-turn navigation per leg, customer contact, issue reporting, a live
   location-sharing status chip (with the last successful GPS update time), and
   OTP completion against the `dropOtp` the console issued. Development builds
@@ -570,9 +572,12 @@ their service layer is added:
   read/unread notifications, FAQ + ticket creation, and profile with documents,
   language, alerts and sign-out. The Earnings screen calculates live
   today/week/month totals, chart buckets, average and recent jobs from completed
-  deliveries in `history`, so it matches the dashboard; payouts and incentives
-  remain labelled demo/empty until settlement is connected. Every section header
-  has a back control with an explicit fallback; Home is the root and has none.
+  deliveries in `history`, so it matches the dashboard. Month bars use the
+  calendar buckets 1–6, 7–12, 13–18, 19–24 and 25–end; hovering a bar shows its
+  amount and clicking it opens that range's statement list. Payouts and
+  incentives remain labelled demo/empty until settlement is connected. Every
+  section header has a back control with an explicit fallback; Home is the root
+  and has none.
 - **Language** — Profile → App language switches every screen, shared component,
   validation message and mock notification/FAQ string immediately between
   English, Hindi and Bengali. The selection persists under

@@ -22,6 +22,7 @@ import { mediaUploadsEnabled } from '../../config/media'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
+import { publishPartnerLocation } from '../../services/deliverySync'
 import { languageOptions } from '../../i18n/translations'
 import type { Language } from '../../i18n/translations'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
@@ -55,11 +56,21 @@ export function ProfilePage() {
           `${onboarding.vehicle.type.charAt(0).toUpperCase()}${onboarding.vehicle.type.slice(1)}`,
         )
 
-  function handleSignOut() {
+  async function handleSignOut() {
+    // A page refresh must keep the online preference, but an explicit sign-out
+    // should release presence for the dispatch console.
+    if (session?.uid && !session.uid.startsWith('demo:')) {
+      await publishPartnerLocation(session.uid, null, false, 'Offline').catch(
+        () => {
+          // Sign-out still proceeds when presence cannot be updated.
+        },
+      )
+    }
+
     // Leave the protected route before the session clears. Otherwise the route
     // guard records /profile as the page to return to after the next sign-in.
     navigate('/login', { replace: true })
-    void signOut()
+    await signOut()
   }
 
   return (

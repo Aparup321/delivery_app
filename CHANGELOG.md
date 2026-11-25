@@ -43,9 +43,18 @@ support fixtures remain mock for the offline prototype only.
   average per delivery, chart buckets and recent jobs from completed deliveries,
   matching the dashboard. Payout and incentive sections stay honest demo/empty
   records until settlement is connected.
+- **Month earnings drill-down.** Month bars now use the calendar buckets 1–6,
+  7–12, 13–18, 19–24 and 25–end. Hovering a bar shows its amount; clicking it
+  opens the completed deliveries for that date range.
+- **Refresh restores Home and presence.** A real page reload returns to Home,
+  keeps the signed-in session, and restores the last online/offline state from
+  `partners/{uid}`. Explicit sign-out still writes the partner offline.
 - **Map follow mode.** The partner map fits once per delivery instead of
   refitting on every GPS fix, and the follow control pans to new fixes while it
   is enabled.
+- **Current location section.** The active-delivery screen now groups the live
+  map, route, follow control and location-sharing status under a clear
+  **Current location** heading.
 - **Persisted notifications.** Live notifications are stored as text in
   `notifications/{uid_eventId}` and the read state is written back, so the list
   survives a reload. The Profile preference now persists and mutes the chime and
@@ -61,6 +70,9 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **The earnings chart now renders live bars.** Bars use fixed pixel heights
+  inside a bounded plot area instead of percentage heights that resolved to
+  zero, and they recompute from completed deliveries as `history` updates.
 - **Admin-assigned offers reach the partner app again.** Delivery assignment and
   cancellation writes now target `deliveries/{deliveryId}` explicitly instead of
   the configured partners collection, so the live listener in the partner app

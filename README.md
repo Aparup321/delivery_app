@@ -86,7 +86,7 @@ material for the project and are not part of the deployed application.
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
-| Earnings & payments | Today/week/month totals, chart and recent deliveries calculated from completed jobs; payouts/incentives remain demo/empty until settlement integration | Built (live earnings; demo payouts) |
+| Earnings & payments | Today/week/month totals, chart and recent deliveries calculated from completed jobs; month uses 1–6, 7–12, 13–18, 19–24, 25–end buckets; bars show hover amounts and open that bucket’s statements; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission and ticket status | Built (empty tickets for live accounts; FAQs are static help content) |
 | Profile & settings | Partner details, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
@@ -167,8 +167,9 @@ shared mock state layer:
 - A fresh app launch or new tab skips the login screen only when Firestore
   confirms the remembered account already has a submitted or reviewed
   application. A sign-in-only or draft account starts at the login screen.
-  Reloading the running tab keeps the signed-in session; signing out returns to
-  the login screen. App sign-out keeps the device's Firebase session so the same
+  Reloading the running tab keeps the signed-in session, returns to Home and
+  restores the last online/offline state from `partners/{uid}`; signing out
+  returns to the login screen. App sign-out keeps the device's Firebase session so the same
   number can resume after OTP; use a different number to switch accounts. The
   stable demo account also makes the same number resolve to the same partner
   record on another device or after browser data is cleared, but this remains a

@@ -220,6 +220,7 @@ function AppDataProvider({
   >({})
   const [liveLoaded, setLiveLoaded] = useState(false)
   const [isOnline, setOnlineState] = useState(false)
+  const [accountPresenceLoaded, setAccountPresenceLoaded] = useState(false)
   // Demo fixtures are the offline prototype's content. A live account starts
   // with empty lists so a brand-new number never sees demo data; real records
   // arrive from Firestore.
@@ -300,7 +301,10 @@ function AppDataProvider({
   const [wasAllowedOnline, setWasAllowedOnline] = useState(canGoOnline)
   if (wasAllowedOnline !== canGoOnline) {
     setWasAllowedOnline(canGoOnline)
-    setOnlineState(false)
+
+    if (!canGoOnline) {
+      setOnlineState(false)
+    }
   }
 
   const setOnline = useCallback(
@@ -648,6 +652,12 @@ function AppDataProvider({
               step: hasSubmittedApplication ? 0 : current.step,
             }
           })
+
+          const onlineAllowed =
+            snapshot.applicationStatus === 'approved' &&
+            snapshot.accountStatus === 'active'
+          setOnlineState(onlineAllowed && snapshot.isOnline)
+          setAccountPresenceLoaded(true)
         },
         () => {
           if (accountWatcherActiveRef.current) {
@@ -1098,7 +1108,12 @@ function AppDataProvider({
   // GPS fix: a denied location permission would otherwise leave isOnline false
   // and make an online partner look unavailable to the administrator.
   useEffect(() => {
-    if (!remoteEnabled || !uid || isLoading) {
+    if (
+      !remoteEnabled ||
+      !uid ||
+      isLoading ||
+      !accountPresenceLoaded
+    ) {
       return
     }
 
@@ -1113,7 +1128,14 @@ function AppDataProvider({
     ).catch(() => {
       // The next presence tick retries the status.
     })
-  }, [remoteEnabled, uid, isLoading, isOnline, activeDelivery])
+  }, [
+    remoteEnabled,
+    uid,
+    isLoading,
+    accountPresenceLoaded,
+    isOnline,
+    activeDelivery,
+  ])
 
   // Share the partner's last known position while they are online. This is
   // best-effort: geolocation may be unavailable or denied, but presence is
@@ -1173,21 +1195,6 @@ function AppDataProvider({
       window.clearInterval(timer)
     }
   }, [remoteEnabled, uid, isOnline, isLoading])
-
-  // Clear the online flag when the session ends. This is intentionally
-  // separate from the presence effect so changing availability or starting a
-  // delivery cannot race an offline write against the online status.
-  useEffect(() => {
-    if (!remoteEnabled || !uid) {
-      return
-    }
-
-    return () => {
-      void publishPartnerLocation(uid, null, false, 'Offline').catch(() => {
-        // The next sign-in can correct a stale online flag.
-      })
-    }
-  }, [remoteEnabled, uid])
 
   // Active-delivery GPS tracking. The hook throttles publishes by time and
   // movement; each accepted fix is written to the shared delivery document so

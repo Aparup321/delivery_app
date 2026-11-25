@@ -269,43 +269,52 @@ export function ActiveDeliveryPage() {
           </div>
         </Card>
 
-        <DeliveryMap
-          pickup={activeDelivery.pickup}
-          destination={activeDelivery.destination}
-          partnerLocation={trackingPosition}
-          focus={focus}
-        />
+        <section aria-label={t('Current location')}>
+          <SectionHeading
+            title={t('Current location')}
+            subtitle={t('Live map, route and your last shared position')}
+          />
 
-        <Card padding="sm">
-          <div className="flex items-center gap-2.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-              <Crosshair className="size-4" aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <Badge
-                tone={trackingStatusTones[trackingStatus]}
-                size="sm"
-              >
-                {t(trackingStatusLabels[trackingStatus])}
-              </Badge>
-              {trackingPosition ? (
-                <p className="mt-1.5 text-[11px] text-ink-muted">
-                  {t('Updated {time}', {
-                    time: formatTime(trackingPosition.updatedAt, locale),
-                  })}
-                </p>
-              ) : null}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="ml-auto shrink-0"
-              onClick={shareLocationNow}
-            >
-              {t('Share location now')}
-            </Button>
+          <div className="mt-2 space-y-2">
+            <DeliveryMap
+              pickup={activeDelivery.pickup}
+              destination={activeDelivery.destination}
+              partnerLocation={trackingPosition}
+              focus={focus}
+            />
+
+            <Card padding="sm">
+              <div className="flex items-center gap-2.5">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+                  <Crosshair className="size-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <Badge
+                    tone={trackingStatusTones[trackingStatus]}
+                    size="sm"
+                  >
+                    {t(trackingStatusLabels[trackingStatus])}
+                  </Badge>
+                  {trackingPosition ? (
+                    <p className="mt-1.5 text-[11px] text-ink-muted">
+                      {t('Updated {time}', {
+                        time: formatTime(trackingPosition.updatedAt, locale),
+                      })}
+                    </p>
+                  ) : null}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto shrink-0"
+                  onClick={shareLocationNow}
+                >
+                  {t('Share location now')}
+                </Button>
+              </div>
+            </Card>
           </div>
-        </Card>
+        </section>
 
         <Card padding="md">
           <SectionHeading title={t('Delivery progress')} />

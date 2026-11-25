@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/app-store'
 import { OfferAlert } from '../deliveries/OfferAlert'
 import { BottomNavigation } from './BottomNavigation'
 import { FirebaseStatusBanner } from './FirebaseStatusBanner'
 import { LiveSyncBanner } from './LiveSyncBanner'
+
+/** One redirect per real document reload; survives React StrictMode mounts. */
+let handledReloadRedirect = false
 
 /**
  * Mobile-first application shell.
@@ -15,6 +18,7 @@ import { LiveSyncBanner } from './LiveSyncBanner'
  */
 export function AppLayout() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const { onboarding } = useApp()
   const isOnboardingForm =
     pathname === '/onboarding' && onboarding.status === 'draft'
@@ -23,6 +27,26 @@ export function AppLayout() {
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0)
   }, [pathname])
+
+  useEffect(() => {
+    if (handledReloadRedirect) {
+      return
+    }
+
+    handledReloadRedirect = true
+
+    const navigation = performance.getEntriesByType(
+      'navigation',
+    )[0] as PerformanceNavigationTiming | undefined
+
+    if (
+      navigation?.type === 'reload' &&
+      pathname !== '/' &&
+      pathname !== '/onboarding'
+    ) {
+      navigate('/', { replace: true })
+    }
+  }, [navigate, pathname])
 
   return (
     <div className="flex h-svh justify-center overflow-hidden bg-canvas">
