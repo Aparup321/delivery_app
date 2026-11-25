@@ -269,4 +269,17 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   the initial Firestore onboarding read. delivery_admin lists a sign-in-only
   partner record as **KYC pending** with approval disabled until onboarding is
   submitted, and refreshes synced records every 60 seconds and on window focus.
+- **2026-11-26 — M23: light/dark appearance and purposeful motion.** The Home
+  header's moon/sun button switches the whole partner app between the light and
+  dark token palettes, persists under `fafo.partner.theme` and is applied before
+  first paint; brand headers stay deep purple. Motion is limited to short,
+  functional feedback: screens settle in, the reject sheet and offer alert slide
+  up, earnings bars grow with a stagger, unread counts pop and the online dot
+  pulses. Every effect is removed under `prefers-reduced-motion`.
+- **2026-11-26 — M24: declined requests filed as cancellations.** A request the
+  partner rejects stays `assigned` on the shared document so the console can
+  reassign it, but the partner's History now files it under **Cancelled** with a
+  red **Cancelled by you** badge, the decline reason and ₹0 earned. Delivered
+  counts, the summary bar and earnings exclude it, and Orders → Completed uses
+  the same outcome instead of labelling every non-cancelled record as delivered.
 

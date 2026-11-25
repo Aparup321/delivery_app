@@ -36,7 +36,7 @@ export function RejectOfferDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3"
+      className="overlay-enter fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3"
       role="presentation"
       onClick={onCancel}
     >
@@ -44,7 +44,7 @@ export function RejectOfferDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="reject-offer-title"
-        className="w-full max-w-[398px] pb-[env(safe-area-inset-bottom)]"
+        className="dialog-enter w-full max-w-[398px] pb-[env(safe-area-inset-bottom)]"
         onClick={(event) => event.stopPropagation()}
       >
         <Card padding="md">

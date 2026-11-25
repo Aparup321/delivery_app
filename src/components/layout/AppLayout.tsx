@@ -57,7 +57,9 @@ export function AppLayout() {
           ref={scrollRef}
           className="app-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
         >
-          <Outlet />
+          <div key={pathname} className="page-enter">
+            <Outlet />
+          </div>
         </main>
         {isOnboardingForm ? null : <BottomNavigation />}
         {isOnboardingForm ? null : <OfferAlert />}

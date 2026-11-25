@@ -40,7 +40,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={cn(
-        'inline-grid shrink-0 place-items-center rounded-full transition-colors duration-200',
+        'inline-grid shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-95',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2',
         variantClasses[variant],
         sizeClasses[size],

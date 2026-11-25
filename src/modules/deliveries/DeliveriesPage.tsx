@@ -11,7 +11,11 @@ import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
-import { deliveryStatusLabels } from '../../utils/delivery'
+import {
+  deliveryOutcome,
+  deliveryStatusLabels,
+  isDeclinedByPartner,
+} from '../../utils/delivery'
 import { formatCurrency, formatShortDate } from '../../utils/format'
 
 type DeliveryTab = 'available' | 'active' | 'completed'
@@ -235,52 +239,71 @@ export function DeliveriesPage() {
         {tab === 'completed' ? (
           history.length > 0 ? (
             <div className="space-y-3">
-              {history.map((delivery) => (
-                <Card key={delivery.id} padding="sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[12.5px] font-bold text-ink">
-                          {delivery.id}
-                        </span>
-                        <Badge
-                          tone={
-                            delivery.status === 'cancelled'
-                              ? 'danger'
-                              : 'success'
-                          }
-                          size="sm"
-                        >
-                          {t(
-                            delivery.status === 'cancelled'
-                              ? 'Cancelled'
-                              : 'Completed',
-                          )}
-                        </Badge>
-                      </div>
-                      <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
-                        {delivery.pickup.name} →{' '}
-                        {delivery.destination.name}
-                      </p>
-                      {delivery.cancellationReason ? (
-                        <p className="mt-0.5 truncate text-[11px] text-ink-soft">
-                          {delivery.cancellationReason}
+              {history.map((delivery) => {
+                const outcome = deliveryOutcome(delivery)
+                const declined = isDeclinedByPartner(delivery)
+
+                return (
+                  <Card key={delivery.id} padding="sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12.5px] font-bold text-ink">
+                            {delivery.id}
+                          </span>
+                          <Badge
+                            tone={outcome === 'cancelled' ? 'danger' : 'success'}
+                            size="sm"
+                          >
+                            {t(
+                              outcome === 'delivered'
+                                ? 'Completed'
+                                : declined
+                                  ? 'Cancelled by you'
+                                  : 'Cancelled',
+                            )}
+                          </Badge>
+                        </div>
+                        <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                          {delivery.pickup.name} →{' '}
+                          {delivery.destination.name}
                         </p>
-                      ) : null}
+                        {outcome === 'cancelled' ? (
+                          <p className="mt-0.5 truncate text-[11px] text-danger">
+                            {declined
+                              ? `${t('You declined this request.')}${
+                                  delivery.partnerResponse?.reason
+                                    ? ` ${t(delivery.partnerResponse.reason)}`
+                                    : ''
+                                }`
+                              : delivery.cancellationReason
+                                ? t(delivery.cancellationReason)
+                                : t('Cancelled by operations.')}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p
+                          className={[
+                            'text-[12.5px] font-bold',
+                            outcome === 'delivered' ? 'text-ink' : 'text-danger',
+                          ].join(' ')}
+                        >
+                          {formatCurrency(
+                            outcome === 'delivered' ? delivery.earnings : 0,
+                            locale,
+                          )}
+                        </p>
+                        <p className="text-[10.5px] text-ink-soft">
+                          {delivery.completedAt
+                            ? formatShortDate(delivery.completedAt, locale)
+                            : '—'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-[12.5px] font-bold text-ink">
-                        {formatCurrency(delivery.earnings, locale)}
-                      </p>
-                      <p className="text-[10.5px] text-ink-soft">
-                        {delivery.completedAt
-                          ? formatShortDate(delivery.completedAt, locale)
-                          : '—'}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                )
+              })}
             </div>
           ) : (
             <EmptyState

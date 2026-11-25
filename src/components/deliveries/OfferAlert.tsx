@@ -92,7 +92,7 @@ export function OfferAlert() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-40 px-3">
       <div className="pointer-events-auto" role="alert" aria-live="assertive">
-        <Card padding="sm" className="border-brand/35">
+        <Card padding="sm" className="offer-enter border-brand/35">
           <div className="flex items-start gap-3">
             <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand text-white">
               <BellRing className="size-4" aria-hidden="true" />

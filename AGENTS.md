@@ -216,7 +216,11 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 - Icon tiles: `rounded-lg`; buttons: `rounded-lg`/`rounded-xl`; badges: `rounded-full`.
 - Headers use solid `bg-brand-deep`. No hue gradients, glows or decorative blobs.
 - Touch targets: at least 40px; primary controls use `h-11` / `size-11`.
-- Transitions: `transition-colors`. No hover lift, glow or decorative motion.
+- Transitions: `transition-colors`/`transition-[transform,background-color,…]`
+  for state changes. Motion is short, functional and purposeful — route settle,
+  overlay slide-up, offer alert, value pop and the online pulse — and every
+  effect is disabled under `prefers-reduced-motion`. No hover lift, glow,
+  parallax or decorative loops.
 
 ### Shared components (`src/components/common/`)
 
@@ -570,7 +574,11 @@ their service layer is added:
   Function and is not built.
 - **History, earnings, notifications, support, profile** — searchable history,
   read/unread notifications, FAQ + ticket creation, and profile with documents,
-  language, alerts and sign-out. Support tickets are read from and written to
+  language, alerts and sign-out. A declined offer stays `assigned` on the shared
+  document so the console can reassign it, but the partner's history treats it
+  as a cancellation: a red **Cancelled by you** badge, the decline reason and ₹0
+  earned, grouped under the Cancelled filter and excluded from delivered counts
+  and earnings. Support tickets are read from and written to
   `support_tickets`, so they survive a refresh; reporting a delivery issue also
   creates a ticket for operations. The Earnings screen calculates live
   today/week/month totals, chart buckets, average and recent jobs from completed

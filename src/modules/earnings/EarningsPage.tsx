@@ -360,7 +360,7 @@ export function EarningsPage() {
               role="group"
               aria-label={t('Earnings bar chart')}
             >
-              {chartPoints.map((point) => {
+              {chartPoints.map((point, index) => {
                 // Pixel heights are deliberate: percentage heights inside an
                 // auto-height flex column can resolve to zero in some browsers.
                 const barHeight =
@@ -391,8 +391,9 @@ export function EarningsPage() {
                           onClick={() => selectBucket(point)}
                           aria-label={`${point.label}: ${formatCurrency(point.amount, locale)}`}
                           title={`${point.label}: ${formatCurrency(point.amount, locale)}`}
+                          style={{ animationDelay: `${index * 55}ms` }}
                           className={[
-                            'h-full w-full origin-bottom rounded-t-md border-0 p-0 transition-all duration-200',
+                            'bar-grow h-full w-full origin-bottom rounded-t-md border-0 p-0 transition-all duration-200',
                             isMax ? 'bg-brand-deep' : 'bg-brand/35',
                             point.start && point.amount > 0
                               ? 'cursor-pointer hover:scale-y-[1.03] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'

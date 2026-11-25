@@ -118,7 +118,10 @@ export function HomePage() {
                 <Bell className="size-5" aria-hidden="true" />
               </IconButton>
               {unreadNotifications > 0 ? (
-                <span className="absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-white">
+                <span
+                  key={unreadNotifications}
+                  className="badge-pop absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-white"
+                >
                   {unreadNotifications}
                 </span>
               ) : null}
@@ -151,7 +154,7 @@ export function HomePage() {
                 aria-hidden="true"
                 className={
                   isOnline
-                    ? 'size-2.5 shrink-0 rounded-full bg-success ring-4 ring-success-soft'
+                    ? 'status-pulse size-2.5 shrink-0 rounded-full bg-success ring-4 ring-success-soft'
                     : 'size-2.5 shrink-0 rounded-full bg-ink-soft ring-4 ring-canvas'
                 }
               />

@@ -9,6 +9,10 @@ import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
 import { formatCurrency, formatDate } from '../../utils/format'
+import {
+  deliveryOutcome,
+  isDeclinedByPartner,
+} from '../../utils/delivery'
 
 type HistoryFilter = 'all' | 'delivered' | 'cancelled'
 
@@ -20,10 +24,8 @@ export function HistoryPage() {
 
   const searchTerm = query.trim().toLowerCase()
   const filtered = history.filter((delivery) => {
-    const matchesFilter =
-      filter === 'all' ||
-      (filter === 'delivered' && delivery.status === 'delivered') ||
-      (filter === 'cancelled' && delivery.status === 'cancelled')
+    const outcome = deliveryOutcome(delivery)
+    const matchesFilter = filter === 'all' || filter === outcome
 
     if (!matchesFilter) {
       return false
@@ -42,10 +44,16 @@ export function HistoryPage() {
   })
 
   const deliveredCount = filtered.filter(
-    (delivery) => delivery.status === 'delivered',
+    (delivery) => deliveryOutcome(delivery) === 'delivered',
   ).length
+  const cancelledCount = filtered.length - deliveredCount
+  // Only completed jobs earn; declined or cancelled offers keep their payout
+  // estimate on the document but it was never earned.
   const totalEarnings = filtered.reduce(
-    (total, delivery) => total + delivery.earnings,
+    (total, delivery) =>
+      deliveryOutcome(delivery) === 'delivered'
+        ? total + delivery.earnings
+        : total,
     0,
   )
 
@@ -78,9 +86,14 @@ export function HistoryPage() {
           ]}
         />
 
-        <div className="flex items-center justify-between rounded-2xl bg-brand-soft/60 px-3.5 py-2.5 text-[12px] font-semibold text-ink">
-          <span>{t('{count} delivered', { count: deliveredCount })}</span>
+        <div className="flex items-center justify-between gap-2 rounded-2xl bg-brand-soft/60 px-3.5 py-2.5 text-[12px] font-semibold text-ink">
           <span>
+            {t('{count} delivered', { count: deliveredCount })}
+            {cancelledCount > 0
+              ? ` · ${t('{count} cancelled', { count: cancelledCount })}`
+              : null}
+          </span>
+          <span className="shrink-0">
             {t('{amount} earned', {
               amount: formatCurrency(totalEarnings, locale),
             })}
@@ -89,50 +102,72 @@ export function HistoryPage() {
 
         {filtered.length > 0 ? (
           <div className="space-y-2.5">
-            {filtered.map((delivery) => (
-              <Card key={delivery.id} padding="sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12.5px] font-bold text-ink">
-                        {delivery.id}
-                      </span>
-                      <Badge
-                        tone={
-                          delivery.status === 'cancelled' ? 'danger' : 'success'
-                        }
-                        size="sm"
-                      >
-                        {t(
-                          delivery.status === 'cancelled'
-                            ? 'Cancelled'
-                            : 'Delivered',
-                        )}
-                      </Badge>
+            {filtered.map((delivery) => {
+              const outcome = deliveryOutcome(delivery)
+              const declined = isDeclinedByPartner(delivery)
+              const reason = declined
+                ? delivery.partnerResponse?.reason
+                : delivery.cancellationReason
+
+              return (
+                <Card key={delivery.id} padding="sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12.5px] font-bold text-ink">
+                          {delivery.id}
+                        </span>
+                        <Badge
+                          tone={outcome === 'cancelled' ? 'danger' : 'success'}
+                          size="sm"
+                        >
+                          {t(
+                            outcome === 'delivered'
+                              ? 'Delivered'
+                              : declined
+                                ? 'Cancelled by you'
+                                : 'Cancelled',
+                          )}
+                        </Badge>
+                      </div>
+                      <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                        {delivery.pickup.name} → {delivery.destination.name}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-ink-soft">
+                        {delivery.completedAt
+                          ? formatDate(delivery.completedAt, locale)
+                          : t('Not completed')}{' '}
+                        · {t('{count} km', { count: delivery.distanceKm })}
+                      </p>
                     </div>
-                    <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
-                      {delivery.pickup.name} → {delivery.destination.name}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-ink-soft">
-                      {delivery.completedAt
-                        ? formatDate(delivery.completedAt, locale)
-                        : t('Not completed')}{' '}
-                      · {t('{count} km', { count: delivery.distanceKm })}
+
+                    <p
+                      className={[
+                        'shrink-0 text-[12.5px] font-bold',
+                        outcome === 'delivered' ? 'text-ink' : 'text-danger',
+                      ].join(' ')}
+                    >
+                      {formatCurrency(
+                        outcome === 'delivered' ? delivery.earnings : 0,
+                        locale,
+                      )}
                     </p>
                   </div>
 
-                  <p className="shrink-0 text-[12.5px] font-bold text-ink">
-                    {formatCurrency(delivery.earnings, locale)}
-                  </p>
-                </div>
-
-                {delivery.cancellationReason ? (
-                  <p className="mt-2 rounded-xl bg-danger-soft px-2.5 py-1.5 text-[11px] text-danger">
-                    {t(delivery.cancellationReason)}
-                  </p>
-                ) : null}
-              </Card>
-            ))}
+                  {outcome === 'cancelled' ? (
+                    <p className="mt-2 rounded-xl bg-danger-soft px-2.5 py-1.5 text-[11px] text-danger">
+                      {declined
+                        ? `${t('You declined this request.')}${
+                            reason ? ` ${t(reason)}` : ''
+                          }`
+                        : reason
+                          ? t(reason)
+                          : t('Cancelled by operations.')}
+                    </p>
+                  ) : null}
+                </Card>
+              )
+            })}
           </div>
         ) : (
           <EmptyState

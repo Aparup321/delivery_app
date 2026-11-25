@@ -247,6 +247,10 @@ const hindi: Record<string, string> = {
   'Filter deliveries': 'डिलीवरी फ़िल्टर करें',
   All: 'सभी',
   '{count} delivered': '{count} डिलीवर हुईं',
+  '{count} cancelled': '{count} रद्द हुईं',
+  'Cancelled by you': 'आपके द्वारा रद्द',
+  'You declined this request.': 'आपने यह अनुरोध अस्वीकार किया।',
+  'Cancelled by operations.': 'संचालन टीम द्वारा रद्द।',
   '{amount} earned': '{amount} कमाए',
   'No deliveries found': 'कोई डिलीवरी नहीं मिली',
   'Try a different search term or status filter.':
@@ -910,6 +914,10 @@ const bengali: Record<string, string> = {
   'Filter deliveries': 'ডেলিভারি ফিল্টার করুন',
   All: 'সব',
   '{count} delivered': '{count}টি ডেলিভারি হয়েছে',
+  '{count} cancelled': '{count}টি বাতিল হয়েছে',
+  'Cancelled by you': 'আপনার দ্বারা বাতিল',
+  'You declined this request.': 'আপনি এই অনুরোধ প্রত্যাখ্যান করেছেন।',
+  'Cancelled by operations.': 'অপারেশনস দ্বারা বাতিল।',
   '{amount} earned': '{amount} আয়',
   'No deliveries found': 'কোনো ডেলিভারি পাওয়া যায়নি',
   'Try a different search term or status filter.':

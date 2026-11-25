@@ -50,3 +50,21 @@ export function nextDeliveryStatus(
 export function isDeliveryActive(delivery: Delivery): boolean {
   return delivery.status !== 'delivered' && delivery.status !== 'cancelled'
 }
+
+/**
+ * The outcome this partner sees in history.
+ *
+ * A declined offer keeps `status: 'assigned'` on the shared document so the
+ * console can reassign it, and an unassigned record leaves this partner's
+ * listener. Until then it is a cancellation for this partner, not a delivery.
+ */
+export function deliveryOutcome(
+  delivery: Delivery,
+): 'delivered' | 'cancelled' {
+  return delivery.status === 'delivered' ? 'delivered' : 'cancelled'
+}
+
+/** True when this partner declined the offer rather than delivering it. */
+export function isDeclinedByPartner(delivery: Delivery): boolean {
+  return delivery.partnerResponse?.decision === 'rejected'
+}

@@ -9,6 +9,17 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Declined offers are filed as cancellations.** Rejecting a request now shows
+  it under History → **Cancelled** with a red **Cancelled by you** badge, the
+  chosen reason and ₹0 earned. Delivered counts and earnings exclude it, and the
+  Orders → Completed tab uses the same outcome. The shared document stays
+  `assigned` so the console can still reassign the job.
+- **Light/dark appearance and purposeful motion.** The Home header’s moon/sun
+  button switches the whole app between light and dark palettes, persists under
+  `fafo.partner.theme` and applies before first paint. Screens now settle in on
+  navigation, the reject sheet and offer alert slide up, earnings bars grow with
+  a short stagger, unread counts pop and the online dot pulses. All motion is
+  disabled under `prefers-reduced-motion`.
 - **Real-event notifications.** Live listeners now turn events the partner did
   not create themselves into in-app notifications: a new assigned offer, a
   delivery the Administrator cancelled, an offer that expired or was

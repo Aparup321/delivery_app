@@ -85,7 +85,7 @@ material for the project and are not part of the deployed application.
 | Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept/reject, a global sound/vibration alert, and expired-offer removal | Built (Firebase) |
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
-| History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
+| History | Search, status filter and delivery-level earnings; declined offers appear under Cancelled with a red badge and ₹0 earned | Built (live + demo fallback) |
 | Earnings & payments | Today/week/month totals, chart and recent deliveries calculated from completed jobs; month uses 1–6, 7–12, 13–18, 19–24, 25–end buckets; bars show hover amounts and open that bucket’s statements; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission, live ticket feed and status updates; delivery issues create a ticket automatically | Built (live tickets persisted; FAQs are static help content) |
@@ -220,7 +220,9 @@ shared mock state layer:
   configured because no verification service is connected.
 - Accepting a request moves it into an active delivery with a live status
   timeline; the job closes only after the demo drop OTP is verified, and
-  completed or cancelled jobs are added to history.
+  completed or cancelled jobs are added to history. A request the partner
+  declines is filed under **Cancelled** with a red **Cancelled by you** badge,
+  its decline reason and ₹0 earned, even while the console can still reassign it.
 - Available requests are only shown while the partner is online; the Orders
   screen offers a "Go online" action when availability is off.
 - Notifications can be read individually or all at once; support tickets can be
@@ -233,6 +235,9 @@ shared mock state layer:
 - The **moon/sun button in the Home header’s top-right corner** switches the app
   between the light and dark token palettes immediately. The choice is saved
   under `fafo.partner.theme` and is applied before the first paint.
+- Motion is short and purposeful: screens settle in on navigation, the reject
+  sheet and offer alert slide up, the earnings bars grow, unread counts pop and
+  the online dot pulses. `prefers-reduced-motion` turns all of it off.
 
 **Remaining:** the rest of Phase 12 (delivery, earnings, notification, support
 and admin integration) and Phase 13 (release QA). Both depend on the open
