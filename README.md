@@ -18,10 +18,10 @@ stays a centered app column instead of stretching into a desktop dashboard.
 > and movement), shown live on the console's tracking map. The active-delivery
 > screen uses an interactive Leaflet + OpenStreetMap map with pickup, drop and
 > partner markers plus OSRM route geometry; both tile and routing providers
-> are configurable. Notifications are now real and persisted; earnings and
-> support remain mock. The demo OTP remains the default sign-in until the OTP
-> API lands, and this test build hides media uploads because Storage is not
-> configured.
+> are configurable. Notifications are real and persisted; earnings are derived
+> from completed deliveries, while payouts/incentives and support remain mock.
+> The demo OTP remains the default sign-in until the OTP API lands, and this test
+> build hides media uploads because Storage is not configured.
 >
 > The product direction is now **PicDrop + HopNgo**, and this repository is its
 > **delivery-partner module**. The PicDrop delivery requirements have been
@@ -83,10 +83,10 @@ material for the project and are not part of the deployed application.
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline and rejection/suspension reasons; decisions arrive live from `delivery_admin` | Built (Firebase + admin) |
 | Home dashboard | Light header with avatar and greeting, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
 | Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept/reject, a global sound/vibration alert, and expired-offer removal | Built (Firebase) |
-| Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting | Built (Firebase) |
+| Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings | Built (live + demo fallback) |
-| Earnings & payments | Today/week/month totals, chart, incentives and payouts | Built (labelled demo; offline prototype only — live accounts see an empty state) |
+| Earnings & payments | Today/week/month totals, chart and recent deliveries calculated from completed jobs; payouts/incentives remain demo/empty until settlement integration | Built (live earnings; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission and ticket status | Built (empty tickets for live accounts; FAQs are static help content) |
 | Profile & settings | Partner details, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
@@ -117,6 +117,14 @@ not be treated as production authentication.
 
 The Firebase phone-SMS code path (`sendPhoneOtp` / `confirmPhoneOtp`) stays in
 `src/services/auth.ts` for when the OTP API integration begins.
+
+**Delivery completion demo code.** Development builds accept **`4821`** in the
+active-delivery OTP field as a test override, even when `delivery_admin` issued
+a different `dropOtp`. The admin code is still checked first, and a completion
+made with the demo code is marked `proof.demoOverride: true`. Production builds
+disable the override unless `VITE_DEMO_DELIVERY_OTP=4821` is set at build time;
+leave it empty for a real deployment. The hint is shown only while the override
+is enabled.
 
 ## 4. Technology stack
 
@@ -374,10 +382,12 @@ fallback when configuration is absent.
 - Live dashboard figures (deliveries today, earnings today) are computed from
   real completed deliveries; the rating cell shows "New" until a rating source
   exists. The offline prototype keeps its labelled demo figures.
-- The Earnings screen shows the labelled demo dataset only for the offline
-  prototype; live accounts see an honest empty state until payout recording is
-  connected.
-- Every figure shown on the earnings screen is demo data and labelled as such.
+- The Earnings screen uses the same completed-delivery source as the dashboard
+  for live accounts: today/week/month totals, per-delivery average, chart and
+  recent jobs are derived from `history`. Payout history and incentives stay
+  labelled demo/empty until settlement is connected.
+- Demo earnings figures exist only in the offline prototype; live earnings are
+  not mock numbers.
 
 Screens read state from the context hooks (`useApp`, `useAuth`) and render typed
 models from `src/types/`. The old `src/mock/partner.ts` fixture was removed:
@@ -622,12 +632,12 @@ explored offline; live accounts never receive mock deliveries.
 
 ### Still mock
 
-Earnings, payouts and ratings remain demo data for the offline prototype only —
-a signed-in Firebase account starts with empty lists and no demo figures
-anywhere (the old `src/mock/partner.ts` fixture was removed; Profile renders
-the onboarding record and the session). Notifications for live accounts are
-real events; the labelled mock notification/support fixtures exist only for the
-prototype.
+Payouts, incentives and ratings remain demo data for the offline prototype only.
+Live earnings are calculated from completed deliveries, but no payout settlement
+exists yet. Notifications for live accounts are real persisted events; the
+labelled mock notification/support fixtures exist only for the prototype. The
+old `src/mock/partner.ts` fixture was removed; Profile renders the onboarding
+record and the session.
 Distance and ETA for console-assigned deliveries are the estimates the console
 computes from service-area coordinates (approximate, not routing-engine
 figures). The delivery drop code is whatever the console issued — there is no
@@ -665,9 +675,9 @@ is written by this integration.
 | 7 | Delivery requests with countdown | ✅ Accept or reject |
 | 8 | Active delivery timeline and completion | ✅ End-to-end flow |
 | 9 | Maps, location permission and routes | OpenStreetMap preview 🟡 |
-| 10 | History, earnings and payments | ✅ Mock records |
+| 10 | History, earnings and payments | ✅ Live history and earnings; payouts pending |
 | 11 | Notifications, support and profile settings | ✅ Complete feature set |
-| 12 | Admin and existing-platform integration | 🟡 Admin decisions, assigned delivery offers, lifecycle and live location sharing connected; earnings, notifications and support pending |
+| 12 | Admin and existing-platform integration | 🟡 Admin decisions, assigned offers, lifecycle, notifications and live earnings connected; payout settlement and support remain pending |
 | 13 | Quality checks and release preparation | ⏳ Pending |
 
 ## Decisions still open

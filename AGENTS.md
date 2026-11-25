@@ -510,10 +510,10 @@ their service layer is added:
   application-status card is shown only until approval. For live sessions the
   stats are computed from real deliveries completed today (rating shows "New"
   until a rating source exists); the offline prototype keeps its labelled demo
-  figures. Demo fixtures never seed a live account: notifications, support
-  tickets and earnings datasets stay empty until real records exist, and the
-  `src/mock/partner.ts` fixture was removed — Profile and Home render the
-  onboarding record and the Firebase session.
+  figures. Demo fixtures never seed a live account: support tickets and payout
+  datasets stay empty until real records exist, while live earnings are derived
+  from completed deliveries. The `src/mock/partner.ts` fixture was removed —
+  Profile and Home render the onboarding record and the Firebase session.
 - **Orders** — Available / Active / Completed tabs. Available requests are gated
   behind availability and the empty state offers a "Go online" action. Offers
   past their `expiresAt` are removed on a one-second clock, and Accept/Reject is
@@ -535,11 +535,13 @@ their service layer is added:
   line, follow-my-location control that fits once per delivery), external
   turn-by-turn navigation per leg, customer contact, issue reporting, a live
   location-sharing status chip (with the last successful GPS update time), and
-  OTP completion against the `dropOtp` the console issued — live sessions have
-  no fallback code, and offers without one cannot be completed. The completion
-  can also carry a text recipient name, a short handover note and the last GPS
-  fix in `proof`; no media storage is required. The demo code `4821` exists only
-  in the offline prototype. Completed and cancelled jobs move to history.
+  OTP completion against the `dropOtp` the console issued. Development builds
+  also accept the test-only delivery code `4821` (configurable with
+  `VITE_DEMO_DELIVERY_OTP`); production builds disable it unless the variable is
+  set explicitly, and the administrator code remains the primary check.
+  Completion can also carry a text recipient name, a short handover note and the
+  last GPS fix in `proof`; no media storage is required. Completed and cancelled
+  jobs move to history.
 - **GPS tracking** — `usePartnerTracking` wraps `watchPosition` while a
   delivery is active and publishes throttled fixes (≥25 m movement or one
   minute, accuracy ≤150 m) to `currentLocation` on the delivery document.
@@ -566,10 +568,11 @@ their service layer is added:
   Function and is not built.
 - **History, earnings, notifications, support, profile** — searchable history,
   read/unread notifications, FAQ + ticket creation, and profile with documents,
-  language, alerts and sign-out. The Earnings screen shows the labelled demo
-  dataset only for the offline prototype; live accounts see an honest empty
-  state until payout recording is connected. Every section header has a back
-  control with an explicit fallback; Home is the root and has none.
+  language, alerts and sign-out. The Earnings screen calculates live
+  today/week/month totals, chart buckets, average and recent jobs from completed
+  deliveries in `history`, so it matches the dashboard; payouts and incentives
+  remain labelled demo/empty until settlement is connected. Every section header
+  has a back control with an explicit fallback; Home is the root and has none.
 - **Language** — Profile → App language switches every screen, shared component,
   validation message and mock notification/FAQ string immediately between
   English, Hindi and Bengali. The selection persists under

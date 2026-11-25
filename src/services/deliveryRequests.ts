@@ -23,6 +23,10 @@ import type {
   DeliveryStatus,
 } from '../types/delivery'
 import { nextDeliveryStatus } from '../utils/delivery'
+import {
+  demoDeliveryOtp,
+  demoDeliveryOtpEnabled,
+} from '../config/demoDelivery'
 
 /** Stable codes the UI can turn into an actionable message. */
 export type DeliveryActionCode =
@@ -563,23 +567,31 @@ export async function completeDeliveryWithOtp(
       }
 
       const expected = asText(data.dropOtp)
+      const entered = otp.trim()
+      const codeMatches = Boolean(expected) && entered === expected
+      const demoMatches =
+        demoDeliveryOtpEnabled && entered === demoDeliveryOtp
+      const usedDemoCode = demoMatches && !codeMatches
 
-      if (!expected) {
-        // No code was issued (an offer created before the console started
-        // generating codes). Refuse to close the job without verification.
-        throw new DeliveryActionError(
-          'delivery/no-otp',
-          'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.',
-        )
-      }
+      if (!codeMatches && !demoMatches) {
+        if (!expected) {
+          // No code was issued (an offer created before the console started
+          // generating codes). Refuse to close the job without verification.
+          throw new DeliveryActionError(
+            'delivery/no-otp',
+            demoDeliveryOtpEnabled
+              ? 'No delivery code was issued for this delivery. Use the demo test code shown above or contact operations.'
+              : 'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.',
+          )
+        }
 
-      if (otp.trim() !== expected) {
         return false
       }
 
       const handover: DeliveryProof = {
         method: 'otp',
         verifiedAt: now,
+        ...(usedDemoCode ? { demoOverride: true } : {}),
       }
       const recipientName = proof.recipientName?.trim()
       const note = proof.note?.trim()

@@ -35,6 +35,14 @@ support fixtures remain mock for the offline prototype only.
 - **Text handover proof.** Closing a delivery with the customer's OTP can also
   store a recipient name, a short handover note and the last GPS fix in `proof`.
   This keeps the flow usable without photo, video or audio storage.
+- **Test delivery code.** Development builds accept `4821` in the delivery OTP
+  field as a test override, configurable with `VITE_DEMO_DELIVERY_OTP` and
+  disabled in production unless explicitly set. The administrator-issued
+  `dropOtp` remains the primary check, and overrides are marked in `proof`.
+- **Live earnings.** The Earnings screen now derives today/week/month totals,
+  average per delivery, chart buckets and recent jobs from completed deliveries,
+  matching the dashboard. Payout and incentive sections stay honest demo/empty
+  records until settlement is connected.
 - **Map follow mode.** The partner map fits once per delivery instead of
   refitting on every GPS fix, and the follow control pans to new fixes while it
   is enabled.

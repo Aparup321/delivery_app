@@ -17,6 +17,10 @@ import { SectionHeading } from '../../components/common/SectionHeading'
 import { DeliveryMap } from '../../components/deliveries/DeliveryMap'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
+import {
+  demoDeliveryOtp,
+  demoDeliveryOtpEnabled,
+} from '../../config/demoDelivery'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
 import type { TrackingStatus } from '../../hooks/usePartnerTracking'
@@ -352,9 +356,12 @@ export function ActiveDeliveryPage() {
                   value={otp}
                   error={otpError ? t(otpError) : undefined}
                   hint={
-                    isLiveSession
-                      ? undefined
-                      : t('Demo build: use 4821 to complete the delivery.')
+                    demoDeliveryOtpEnabled
+                      ? t(
+                          'Demo build: use {code} to complete the delivery.',
+                          { code: demoDeliveryOtp },
+                        )
+                      : undefined
                   }
                   onChange={(event) => {
                     setOtp(event.target.value.replace(/\D/g, ''))
@@ -384,7 +391,9 @@ export function ActiveDeliveryPage() {
                   className="mt-2 rounded-xl bg-warning-soft px-3 py-2 text-[11.5px] font-medium text-warning"
                 >
                   {t(
-                    'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.',
+                    demoDeliveryOtpEnabled
+                      ? 'No delivery code was issued. Use the demo code shown above for testing, or contact operations.'
+                      : 'No delivery code was issued for this delivery. Contact operations to verify the drop and complete it.',
                   )}
                 </p>
               ) : null}

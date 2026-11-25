@@ -32,6 +32,8 @@ export interface DeliveryProof {
   latitude?: number
   longitude?: number
   accuracy?: number | null
+  /** True when the test-only delivery code was used instead of dropOtp. */
+  demoOverride?: boolean
 }
 
 /** Text-only handover details supplied when the partner closes a delivery. */

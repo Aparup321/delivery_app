@@ -72,6 +72,17 @@ const hindi: Record<string, string> = {
   Open: 'खुला',
   Paid: 'भुगतान हुआ',
   Processing: 'प्रक्रिया में',
+  Recorded: 'दर्ज',
+  Earned: 'कमाया',
+  'Based on completed deliveries': 'पूरी हुई डिलीवरी के आधार पर',
+  'Last 7 days': 'पिछले 7 दिन',
+  'Last 30 days': 'पिछले 30 दिन',
+  'No completed deliveries in this period.': 'इस अवधि में कोई पूरी डिलीवरी नहीं है।',
+  'Completed deliveries in this period will appear here.': 'इस अवधि की पूरी डिलीवरी यहां दिखाई देंगी।',
+  'No payouts recorded yet. Earnings are tracked from completed deliveries; payout settlement is not connected.':
+    'अभी कोई भुगतान दर्ज नहीं है। कमाई पूरी डिलीवरी से दर्ज होती है; भुगतान निपटान अभी जुड़ा नहीं है।',
+  'Earnings are calculated from completed deliveries in this app. Payout settlement and incentives are separate integrations.':
+    'कमाई इस ऐप में पूरी हुई डिलीवरी से निकाली जाती है। भुगतान निपटान और प्रोत्साहन अलग इंटीग्रेशन हैं।',
   Expired: 'समाप्त',
   'Not available': 'उपलब्ध नहीं',
   'Not added': 'जोड़ा नहीं गया',
@@ -186,6 +197,10 @@ const hindi: Record<string, string> = {
   '4-digit code': '4 अंकों का कोड',
   'Demo build: use 4821 to complete the delivery.':
     'डेमो बिल्ड: डिलीवरी पूरी करने के लिए 4821 इस्तेमाल करें।',
+  'Demo build: use {code} to complete the delivery.':
+    'डेमो बिल्ड: डिलीवरी पूरी करने के लिए {code} इस्तेमाल करें।',
+  'No delivery code was issued. Use the demo code shown above for testing, or contact operations.':
+    'कोई डिलीवरी कोड जारी नहीं हुआ। परीक्षण के लिए ऊपर दिखाया गया डेमो कोड इस्तेमाल करें या संचालन टीम से संपर्क करें।',
   'Complete delivery': 'डिलीवरी पूरी करें',
   'Delivery completed': 'डिलीवरी पूरी हुई',
   'What went wrong?': 'क्या गलत हुआ?',
@@ -701,6 +716,17 @@ const bengali: Record<string, string> = {
   Open: 'খোলা',
   Paid: 'পরিশোধিত',
   Processing: 'প্রক্রিয়াধীন',
+  Recorded: 'রেকর্ড করা',
+  Earned: 'অর্জিত',
+  'Based on completed deliveries': 'সম্পন্ন ডেলিভারির ভিত্তিতে',
+  'Last 7 days': 'শেষ ৭ দিন',
+  'Last 30 days': 'শেষ ৩০ দিন',
+  'No completed deliveries in this period.': 'এই সময়ে কোনো সম্পন্ন ডেলিভারি নেই।',
+  'Completed deliveries in this period will appear here.': 'এই সময়ের সম্পন্ন ডেলিভারি এখানে দেখা যাবে।',
+  'No payouts recorded yet. Earnings are tracked from completed deliveries; payout settlement is not connected.':
+    'এখনও কোনো পেআউট রেকর্ড নেই। আয় সম্পন্ন ডেলিভারি থেকে গণনা হয়; পেআউট নিষ্পত্তি এখনও সংযুক্ত নয়।',
+  'Earnings are calculated from completed deliveries in this app. Payout settlement and incentives are separate integrations.':
+    'আয় এই অ্যাপে সম্পন্ন ডেলিভারি থেকে গণনা করা হয়। পেআউট নিষ্পত্তি ও ইনসেনটিভ আলাদা ইন্টিগ্রেশন।',
   Expired: 'মেয়াদ শেষ',
   'Not available': 'উপলব্ধ নয়',
   'Not added': 'যোগ করা হয়নি',
@@ -815,6 +841,10 @@ const bengali: Record<string, string> = {
   '4-digit code': '৪ সংখ্যার কোড',
   'Demo build: use 4821 to complete the delivery.':
     'ডেমো বিল্ড: ডেলিভারি শেষ করতে 4821 ব্যবহার করুন।',
+  'Demo build: use {code} to complete the delivery.':
+    'ডেমো বিল্ড: ডেলিভারি শেষ করতে {code} ব্যবহার করুন।',
+  'No delivery code was issued. Use the demo code shown above for testing, or contact operations.':
+    'কোনো ডেলিভারি কোড জারি হয়নি। পরীক্ষার জন্য উপরে দেখানো ডেমো কোড ব্যবহার করুন অথবা অপারেশনস দলের সাথে যোগাযোগ করুন।',
   'Complete delivery': 'ডেলিভারি সম্পন্ন করুন',
   'Delivery completed': 'ডেলিভারি সম্পন্ন',
   'What went wrong?': 'কী সমস্যা হয়েছে?',
