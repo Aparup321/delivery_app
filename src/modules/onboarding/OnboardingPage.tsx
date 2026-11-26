@@ -6,6 +6,7 @@ import {
   Bike,
   Camera,
   Check,
+  ChevronDown,
   ClipboardCheck,
   Clock3,
   Footprints,
@@ -19,6 +20,7 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
+import { ProgressBar } from '../../components/common/ProgressBar'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
@@ -109,6 +111,7 @@ export function OnboardingPage() {
   const [documentErrors, setDocumentErrors] = useState<
     Partial<Record<DocumentKey, string>>
   >({})
+  const [openTopic, setOpenTopic] = useState<string | null>(null)
   const uploadFiles = useRef<OnboardingFiles>({ documents: {} })
 
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
@@ -892,52 +895,133 @@ export function OnboardingPage() {
               )}
             />
 
+            <ProgressBar
+              value={onboarding.training.filter(Boolean).length}
+              max={trainingTopics.length}
+              label={t('Training progress')}
+              hint={t('{completed} of {total} completed', {
+                completed: onboarding.training.filter(Boolean).length,
+                total: trainingTopics.length,
+              })}
+            />
+
+            <p className="text-[12px] leading-relaxed text-ink-muted">
+              {t('Read each short module, then mark it complete.')}
+            </p>
+
             <div className="space-y-2.5">
               {trainingTopics.map((topic, index) => {
                 const isComplete = Boolean(onboarding.training[index])
+                const isOpen = openTopic === topic.id
 
                 return (
-                  <button
-                    key={topic.title}
-                    type="button"
-                    role="checkbox"
-                    aria-checked={isComplete}
-                    onClick={() => {
-                      const next = [...onboarding.training]
-                      next[index] = !next[index]
-                      updateOnboarding({ training: next })
-                    }}
-                    className="flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                  <div
+                    key={topic.id}
+                    className={cn(
+                      'overflow-hidden rounded-xl border bg-surface transition-colors',
+                      isComplete ? 'border-success/35' : 'border-line',
+                    )}
                   >
-                    <span
-                      className={cn(
-                        'grid size-9 shrink-0 place-items-center rounded-full',
-                        isComplete
-                          ? 'bg-brand-soft text-brand-deep'
-                          : 'bg-brand-tint text-brand',
-                      )}
+                    <button
+                      type="button"
+                      aria-expanded={isOpen}
+                      onClick={() =>
+                        setOpenTopic(isOpen ? null : topic.id)
+                      }
+                      className="flex w-full items-center gap-3 p-3.5 text-left transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                     >
-                      <Play className="size-3.5" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[12.5px] font-semibold text-ink">
-                        {t(topic.title)}
+                      <span
+                        className={cn(
+                          'grid size-9 shrink-0 place-items-center rounded-full',
+                          isComplete
+                            ? 'bg-brand-soft text-brand-deep'
+                            : 'bg-brand-tint text-brand',
+                        )}
+                      >
+                        {isComplete ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Play className="size-3.5" aria-hidden="true" />
+                        )}
                       </span>
-                      <span className="block text-[11px] text-ink-muted">
-                        {t(topic.duration)}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[12.5px] font-semibold text-ink">
+                          {t(topic.title)}
+                        </span>
+                        <span className="block text-[11px] text-ink-muted">
+                          {t(topic.duration)} ·{' '}
+                          {isComplete
+                            ? t('Completed')
+                            : t('Tap to read')}
+                        </span>
                       </span>
-                    </span>
-                    <span
-                      className={cn(
-                        'grid size-6 shrink-0 place-items-center rounded-full',
-                        isComplete
-                          ? 'bg-success text-white'
-                          : 'border-2 border-line text-transparent',
-                      )}
-                    >
-                      <Check className="size-3.5" aria-hidden="true" />
-                    </span>
-                  </button>
+                      <ChevronDown
+                        className={cn(
+                          'size-4 shrink-0 text-ink-soft transition-transform duration-200',
+                          isOpen && 'rotate-180',
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+
+                    {isOpen ? (
+                      <div className="border-t border-line px-3.5 pb-3.5 pt-3">
+                        <p className="text-[12px] leading-relaxed text-ink-muted">
+                          {t(topic.summary)}
+                        </p>
+
+                        <p className="mt-3 text-[11.5px] font-semibold text-ink">
+                          {t('Key points')}
+                        </p>
+                        <ul className="mt-1.5 space-y-1.5">
+                          {topic.points.map((point) => (
+                            <li
+                              key={point}
+                              className="flex gap-2 text-[12px] leading-relaxed text-ink-muted"
+                            >
+                              <Check
+                                className="mt-0.5 size-3.5 shrink-0 text-success"
+                                aria-hidden="true"
+                              />
+                              <span>{t(point)}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <Button
+                          size="sm"
+                          fullWidth
+                          variant={isComplete ? 'outline' : 'primary'}
+                          className="mt-3"
+                          onClick={() => {
+                            const next = [...onboarding.training]
+                            next[index] = !next[index]
+                            updateOnboarding({ training: next })
+
+                            if (next[index]) {
+                              const nextIncomplete = next.findIndex(
+                                (done, position) =>
+                                  position > index && !done,
+                              )
+
+                              setOpenTopic(
+                                nextIncomplete >= 0
+                                  ? trainingTopics[nextIncomplete]?.id ??
+                                      null
+                                  : null,
+                              )
+                            }
+                          }}
+                        >
+                          {t(
+                            isComplete
+                              ? 'Mark as not complete'
+                              : 'Mark as complete',
+                          )}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
                 )
               })}
             </div>

@@ -498,6 +498,54 @@ const hindi: Record<string, string> = {
   'Pickup & Delivery Process': 'पिकअप और डिलीवरी प्रक्रिया',
   'Customer Interaction Guidelines': 'ग्राहक बातचीत दिशानिर्देश',
   'Delivery Safety & Best Practices': 'डिलीवरी सुरक्षा और सर्वोत्तम प्रथाएं',
+  'Training progress': 'प्रशिक्षण प्रगति',
+  '{completed} of {total} completed': '{completed} में से {total} पूरे',
+  'Read each short module, then mark it complete.':
+    'हर छोटा मॉड्यूल पढ़ें, फिर उसे पूरा चिह्नित करें।',
+  'Tap to read': 'पढ़ने के लिए टैप करें',
+  'Key points': 'मुख्य बातें',
+  'Mark as complete': 'पूरा हुआ चिह्नित करें',
+  'Mark as not complete': 'पूरा नहीं चिह्नित करें',
+  'How the partner app fits into your working day.':
+    'पार्टनर ऐप आपके कार्यदिन में कैसे फिट होता है।',
+  'Go online only when you are ready to take requests.':
+    'अनुरोध लेने के लिए तैयार होने पर ही ऑनलाइन जाएं।',
+  'Each request shows the pickup, drop, distance and your earnings.':
+    'हर अनुरोध में पिकअप, ड्रॉप, दूरी और आपकी कमाई दिखती है।',
+  'Your application, earnings and history stay in this app.':
+    'आपका आवेदन, कमाई और इतिहास इसी ऐप में रहता है।',
+  'What to check before you accept a request.':
+    'अनुरोध स्वीकार करने से पहले क्या जांचें।',
+  'Check the pickup distance, drop location and offer time limit.':
+    'पिकअप की दूरी, ड्रॉप का स्थान और ऑफर की समय सीमा देखें।',
+  'Accept only when you can reach the pickup on time.':
+    'तभी स्वीकार करें जब आप समय पर पिकअप पहुंच सकें।',
+  'Decline with a reason when the job does not suit you.':
+    'जब काम आपके अनुकूल न हो तो कारण के साथ अस्वीकार करें।',
+  'The six steps from pickup to handover.':
+    'पिकअप से हैंडओवर तक के छह चरण।',
+  'Mark your arrival at the pickup and confirm the item count.':
+    'पिकअप पर पहुंचने पर आगमन दर्ज करें और वस्तुओं की संख्या पुष्टि करें।',
+  'Update every stage so the customer can follow the progress.':
+    'हर चरण अपडेट करें ताकि ग्राहक प्रगति देख सके।',
+  'Close the delivery with the customer code at the drop.':
+    'ड्रॉप पर ग्राहक कोड से डिलीवरी पूरी करें।',
+  'Simple habits that keep customers informed and calm.':
+    'आसान आदतें जो ग्राहक को जानकारी और भरोसा देती हैं।',
+  "Use the app's contact action instead of sharing your number.":
+    'अपना नंबर साझा करने के बजाय ऐप के संपर्क विकल्प का उपयोग करें।',
+  'Keep the package sealed and handle it carefully.':
+    'पैकेज सील रखें और संभलकर संभालें।',
+  'Stay polite, and contact support instead of arguing.':
+    'विनम्र रहें और बहस करने के बजाय सहायता से संपर्क करें।',
+  'Ride safe and protect the order in every weather.':
+    'हर मौसम में सुरक्षित चलें और ऑर्डर की रक्षा करें।',
+  'Wear a helmet and follow traffic rules at all times.':
+    'हमेशा हेलमेट पहनें और ट्रैफिक नियमों का पालन करें।',
+  'Keep cash collections separate from your own money.':
+    'नकद वसूली को अपने पैसों से अलग रखें।',
+  'Report accidents or unsafe situations through Support.':
+    'दुर्घटना या असुरक्षित स्थिति की सूचना सहायता के जरिए दें।',
   '{count} items': '{count} वस्तुएं',
   '{count} min': '{count} मिनट',
   '{count} km': '{count} किमी',
@@ -1167,6 +1215,54 @@ const bengali: Record<string, string> = {
   'Pickup & Delivery Process': 'পিকআপ ও ডেলিভারি প্রক্রিয়া',
   'Customer Interaction Guidelines': 'গ্রাহক যোগাযোগ নির্দেশিকা',
   'Delivery Safety & Best Practices': 'ডেলিভারি নিরাপত্তা ও সেরা অনুশীলন',
+  'Training progress': 'প্রশিক্ষণ অগ্রগতি',
+  '{completed} of {total} completed': '{total}-এর মধ্যে {completed}টি সম্পূর্ণ',
+  'Read each short module, then mark it complete.':
+    'প্রতিটি ছোট মডিউল পড়ুন, তারপর সম্পূর্ণ চিহ্নিত করুন।',
+  'Tap to read': 'পড়ার জন্য ট্যাপ করুন',
+  'Key points': 'মূল বিষয়',
+  'Mark as complete': 'সম্পূর্ণ হিসেবে চিহ্নিত করুন',
+  'Mark as not complete': 'অসম্পূর্ণ হিসেবে চিহ্নিত করুন',
+  'How the partner app fits into your working day.':
+    'পার্টনার অ্যাপ আপনার কাজের দিনে কীভাবে যুক্ত হয়।',
+  'Go online only when you are ready to take requests.':
+    'অনুরোধ নিতে প্রস্তুত হলে তবেই অনলাইনে যান।',
+  'Each request shows the pickup, drop, distance and your earnings.':
+    'প্রতিটি অনুরোধে পিকআপ, ড্রপ, দূরত্ব ও আপনার আয় দেখায়।',
+  'Your application, earnings and history stay in this app.':
+    'আপনার আবেদন, আয় ও ইতিহাস এই অ্যাপেই থাকে।',
+  'What to check before you accept a request.':
+    'অনুরোধ গ্রহণের আগে কী পরীক্ষা করবেন।',
+  'Check the pickup distance, drop location and offer time limit.':
+    'পিকআপের দূরত্ব, ড্রপের স্থান ও অফারের সময়সীমা দেখুন।',
+  'Accept only when you can reach the pickup on time.':
+    'সময়মতো পিকআপে পৌঁছাতে পারলে তবেই গ্রহণ করুন।',
+  'Decline with a reason when the job does not suit you.':
+    'কাজটি আপনার জন্য উপযুক্ত না হলে কারণসহ প্রত্যাখ্যান করুন।',
+  'The six steps from pickup to handover.':
+    'পিকআপ থেকে হস্তান্তর পর্যন্ত ছয়টি ধাপ।',
+  'Mark your arrival at the pickup and confirm the item count.':
+    'পিকআপে পৌঁছে আগমন নিশ্চিত করুন এবং আইটেম সংখ্যা মিলিয়ে নিন।',
+  'Update every stage so the customer can follow the progress.':
+    'প্রতিটি ধাপ হালনাগাদ করুন যাতে গ্রাহক অগ্রগতি দেখতে পান।',
+  'Close the delivery with the customer code at the drop.':
+    'ড্রপে গ্রাহকের কোড দিয়ে ডেলিভারি সম্পূর্ণ করুন।',
+  'Simple habits that keep customers informed and calm.':
+    'সহজ অভ্যাস যা গ্রাহককে তথ্য ও আস্থা দেয়।',
+  "Use the app's contact action instead of sharing your number.":
+    'নিজের নম্বর শেয়ার না করে অ্যাপের যোগাযোগ বিকল্প ব্যবহার করুন।',
+  'Keep the package sealed and handle it carefully.':
+    'প্যাকেজ সিল করে রাখুন এবং সাবধানে বহন করুন।',
+  'Stay polite, and contact support instead of arguing.':
+    'ভদ্র থাকুন এবং তর্ক না করে সহায়তার সঙ্গে যোগাযোগ করুন।',
+  'Ride safe and protect the order in every weather.':
+    'সব আবহাওয়ায় নিরাপদে চলুন এবং অর্ডার সুরক্ষিত রাখুন।',
+  'Wear a helmet and follow traffic rules at all times.':
+    'সবসময় হেলমেট পরুন এবং ট্রাফিক নিয়ম মানুন।',
+  'Keep cash collections separate from your own money.':
+    'নগদ সংগ্রহ নিজের টাকা থেকে আলাদা রাখুন।',
+  'Report accidents or unsafe situations through Support.':
+    'দুর্ঘটনা বা অনিরাপদ পরিস্থিতি সহায়তার মাধ্যমে জানান।',
   '{count} items': '{count}টি আইটেম',
   '{count} min': '{count} মিনিট',
   '{count} km': '{count} কিমি',

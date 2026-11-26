@@ -497,7 +497,10 @@ their service layer is added:
   manual review. Vehicle tiles (bike, scooter, bicycle, on foot), licence and
   registration fields are shared with the vehicle step. Draft progress is
   stored under `fafo.partner.onboarding.<phone>`, one draft per verified number.
-  All required text fields are validated. Submission writes `partners`,
+  The Training step lists five short modules with a key-point lesson, a progress
+  bar and an explicit **Mark as complete** action; completing one opens the next
+  unfinished module. All required text fields are validated. Submission writes
+  `partners`,
   `partner_documents`, `vehicles` and `training_progress` documents in
   Firestore. The upload code remains for when Storage is provisioned; set
   `mediaUploadsEnabled` to `true` only after re-testing uploads. Draft partners

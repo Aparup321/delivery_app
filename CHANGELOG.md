@@ -9,6 +9,11 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Training modules with real content.** The onboarding Training step now opens
+  five short lessons with a summary and key points, shows a progress bar, and
+  uses an explicit **Mark as complete** action instead of a bare checklist row.
+  Completing a module opens the next unfinished one; the existing draft and
+  `training_progress` completion state is unchanged.
 - **Declined offers are filed as cancellations.** Rejecting a request now shows
   it under History → **Cancelled** with a red **Cancelled by you** badge, the
   chosen reason and ₹0 earned. Delivered counts and earnings exclude it, and the

@@ -282,4 +282,11 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   red **Cancelled by you** badge, the decline reason and ₹0 earned. Delivered
   counts, the summary bar and earnings exclude it, and Orders → Completed uses
   the same outcome instead of labelling every non-cancelled record as delivered.
+- **2026-11-26 — M25: training modules with real content.** The Training step no
+  longer shows bare checklist rows. Each of the five modules opens into a short
+  summary, three key points and a **Mark as complete** action; a progress bar
+  tracks completion, a completed module shows a green check, and finishing one
+  opens the next unfinished module. Completion still persists per number in the
+  draft and `training_progress` document. Lesson copy is translated into Hindi
+  and Bengali.
 

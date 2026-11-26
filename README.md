@@ -76,7 +76,7 @@ material for the project and are not part of the deployed application.
 | Module | What it does | Status |
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
-| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. This test build is text-only: profile-photo and document uploads are hidden | Built (Firebase) |
+| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. Training has five short lesson modules, a progress bar and explicit completion. This test build is text-only: profile-photo and document uploads are hidden | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
