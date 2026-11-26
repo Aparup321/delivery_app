@@ -9,6 +9,28 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Language choice at the start of onboarding.** The first step now opens with
+  an English / हिन्दी / বাংলা selector, defaulting to English. The choice applies
+  immediately — step labels, headings, hints and validation messages switch at
+  once — persists under `fafo.partner.language`, and carries into Home, Orders
+  and Profile.
+- **Video lessons for all five training modules.** Each module in Training &
+  Onboarding now opens with a 37–39 second portrait video (1080×1920): welcome,
+  accepting orders, pickup and delivery, customer interaction and safety. The
+  lesson shows a poster thumbnail with a play control; tapping it opens a
+  full-screen player with native controls (portalled to `document.body` so the
+  route transform cannot trap it). Videos and posters live in
+  `public/training/`, and `TrainingTopic` gained optional `video`/`poster`
+  fields so any module can opt in.
+- **Every training video is narrated.** All five modules carry a five-part Hindi
+  voice-over in a natural, lightly code-mixed Indian tone (Sarvam `bulbul:v4-flash`,
+  persona `ritu_hi_customer_warm`), plus a shared original ambient bed — five
+  cross-faded chords with a soft echo, mixed at −14 dB and ducked under the
+  narration. Integrated loudness is −15.1 to −15.8 LUFS with peaks under
+  −2.3 dBTP and no clipping. The clips are served as `public/training/*.bin`,
+  XOR-scrambled, and rebuilt into a `video/mp4` blob by the player — no `.mp4`
+  URL, `video/*` response or `ftyp` signature exists for IDM or another download
+  manager to intercept.
 - **Training modules with real content.** The onboarding Training step now opens
   five short lessons with a summary and key points, shows a progress bar, and
   uses an explicit **Mark as complete** action instead of a bare checklist row.
@@ -40,6 +62,15 @@ support fixtures remain mock for the offline prototype only.
   back when it ends, so the console can tell an online partner from a busy
   one. Home shows the busy state, and the Available list explains that an
   active delivery blocks accepting another offer.
+
+### Fixed
+
+- **Training videos play instead of downloading.** The full-screen player now
+  fetches the clip into a blob URL before playback, so a server that answers
+  with `Content-Disposition: attachment` or a generic MIME type can no longer
+  make Chrome download the file. The modal shows a loading state and an inline
+  error if the fetch fails. This also fixed a source-encoding slip that turned
+  `·`, `₹` and `—` into mojibake in the welcome video.
 
 ### Added
 

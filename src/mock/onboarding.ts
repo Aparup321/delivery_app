@@ -54,6 +54,12 @@ export interface TrainingTopic {
   duration: string
   summary: string
   points: string[]
+  /** Optional module video served from `public/training/`. The `.bin` files
+   * are XOR-scrambled so download managers cannot detect a media stream; the
+   * player fetches and decodes them into a `video/mp4` blob. */
+  video?: string
+  /** Poster frame shown before the video starts. */
+  poster?: string
 }
 
 export const trainingTopics: TrainingTopic[] = [
@@ -67,6 +73,8 @@ export const trainingTopics: TrainingTopic[] = [
       'Each request shows the pickup, drop, distance and your earnings.',
       'Your application, earnings and history stay in this app.',
     ],
+    video: '/training/welcome-picdrop-hopngo.bin',
+    poster: '/training/welcome-picdrop-hopngo-poster.png',
   },
   {
     id: 'accepting',
@@ -78,6 +86,8 @@ export const trainingTopics: TrainingTopic[] = [
       'Accept only when you can reach the pickup on time.',
       'Decline with a reason when the job does not suit you.',
     ],
+    video: '/training/accept-orders.bin',
+    poster: '/training/accept-orders-poster.png',
   },
   {
     id: 'process',
@@ -89,6 +99,8 @@ export const trainingTopics: TrainingTopic[] = [
       'Update every stage so the customer can follow the progress.',
       'Close the delivery with the customer code at the drop.',
     ],
+    video: '/training/pickup-delivery.bin',
+    poster: '/training/pickup-delivery-poster.png',
   },
   {
     id: 'customer',
@@ -100,6 +112,8 @@ export const trainingTopics: TrainingTopic[] = [
       'Keep the package sealed and handle it carefully.',
       'Stay polite, and contact support instead of arguing.',
     ],
+    video: '/training/customer-guidelines.bin',
+    poster: '/training/customer-guidelines-poster.png',
   },
   {
     id: 'safety',
@@ -111,6 +125,8 @@ export const trainingTopics: TrainingTopic[] = [
       'Keep cash collections separate from your own money.',
       'Report accidents or unsafe situations through Support.',
     ],
+    video: '/training/safety-practices.bin',
+    poster: '/training/safety-practices-poster.png',
   },
 ]
 

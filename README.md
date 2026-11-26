@@ -76,7 +76,7 @@ material for the project and are not part of the deployed application.
 | Module | What it does | Status |
 | --- | --- | --- |
 | Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
-| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. Training has five short lesson modules, a progress bar and explicit completion. This test build is text-only: profile-photo and document uploads are hidden | Built (Firebase) |
+| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. The first step starts with an English/Hindi/Bengali language selector; training has five short lesson modules, each with a 37-39 s portrait video (thumbnail opens a full-screen player; every module is narrated in Hindi with a music bed), a progress bar and explicit completion. This test build is text-only for documents: profile-photo and document uploads are hidden | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
@@ -228,7 +228,9 @@ shared mock state layer:
 - Notifications can be read individually or all at once; support tickets can be
   raised and tracked.
 - Profile → App language switches the whole interface immediately between
-  English, Hindi and Bengali. The choice is saved in `localStorage`, every screen,
+  English, Hindi and Bengali. The first onboarding step offers the same three
+  choices up front, so new partners can start in their preferred language. The
+  choice is saved in `localStorage`, every screen,
   shared component, validation message and the mock notification/FAQ copy uses
   the selected language, and dates, times and rupee amounts follow the matching
   `en-IN`, `hi-IN` or `bn-IN` locale.

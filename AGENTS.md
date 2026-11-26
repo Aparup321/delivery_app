@@ -497,9 +497,13 @@ their service layer is added:
   manual review. Vehicle tiles (bike, scooter, bicycle, on foot), licence and
   registration fields are shared with the vehicle step. Draft progress is
   stored under `fafo.partner.onboarding.<phone>`, one draft per verified number.
-  The Training step lists five short modules with a key-point lesson, a progress
-  bar and an explicit **Mark as complete** action; completing one opens the next
-  unfinished module. All required text fields are validated. Submission writes
+  The Training step lists five short modules, each with a 37–39 s portrait
+  lesson video (thumbnail opens a full-screen player; every module is narrated
+  in Hindi with a music bed), a key-point lesson, a
+  progress bar and an explicit **Mark as complete** action; completing one opens
+  the next unfinished module. The first step opens with a three-option language
+  selector (English, Hindi, Bengali; English default) that applies immediately.
+  All required text fields are validated. Submission writes
   `partners`,
   `partner_documents`, `vehicles` and `training_progress` documents in
   Firestore. The upload code remains for when Storage is provisioned; set
@@ -593,7 +597,10 @@ their service layer is added:
   and has none.
 - **Language** — Profile → App language switches every screen, shared component,
   validation message and mock notification/FAQ string immediately between
-  English, Hindi and Bengali. The selection persists under
+  English, Hindi and Bengali. The first onboarding step also offers the same
+  three choices, so a new partner can choose before entering any details; the
+  choice applies immediately and carries into every later screen. The selection
+  persists under
   `fafo.partner.language`; dates, times and amounts use the matching `en-IN`,
   `hi-IN` or `bn-IN` locale. User-entered content, names, addresses, IDs and
   delivery data are not translated.

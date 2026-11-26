@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -10,15 +11,18 @@ import {
   ClipboardCheck,
   Clock3,
   Footprints,
+  Loader2,
   Play,
   ShieldCheck,
   UserRound,
+  X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
+import { IconButton } from '../../components/common/IconButton'
 import { Input } from '../../components/common/Input'
 import { ProgressBar } from '../../components/common/ProgressBar'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
@@ -26,6 +30,7 @@ import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
 import { onboardingSteps, trainingTopics } from '../../mock/onboarding'
+import type { TrainingTopic } from '../../mock/onboarding'
 import type {
   DocumentKey,
   OnboardingFiles,
@@ -33,7 +38,9 @@ import type {
 } from '../../types/onboarding'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { cn } from '../../utils/cn'
+import { decodeTrainingClip } from '../../utils/videoClip'
 import { OnboardingStepHeading } from './OnboardingStepHeading'
+import { OnboardingLanguagePicker } from './OnboardingLanguagePicker'
 import {
   getFirebaseErrorCode,
   getFirebaseWriteErrorKey,
@@ -112,7 +119,49 @@ export function OnboardingPage() {
     Partial<Record<DocumentKey, string>>
   >({})
   const [openTopic, setOpenTopic] = useState<string | null>(null)
+  const [videoTopic, setVideoTopic] = useState<TrainingTopic | null>(null)
+  const [videoSrc, setVideoSrc] = useState<string | null>(null)
+  const [videoFailed, setVideoFailed] = useState(false)
   const uploadFiles = useRef<OnboardingFiles>({ documents: {} })
+
+  // Load the clip into a blob before giving it to the player. Playing the file
+  // URL directly lets a server that answers with Content-Disposition or a
+  // generic MIME type make Chrome download it instead of playing it.
+  useEffect(() => {
+    if (!videoTopic?.video) {
+      return
+    }
+
+    let cancelled = false
+    let objectUrl: string | null = null
+
+    fetch(videoTopic.video)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Video request failed: ${response.status}`)
+        }
+        return response.arrayBuffer()
+      })
+      .then((buffer) => {
+        if (cancelled) {
+          return
+        }
+        objectUrl = URL.createObjectURL(decodeTrainingClip(buffer))
+        setVideoSrc(objectUrl)
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setVideoFailed(true)
+        }
+      })
+
+    return () => {
+      cancelled = true
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [videoTopic])
 
   const step = Math.min(onboarding.step, onboardingSteps.length - 1)
   const isSubmitted = onboarding.status !== 'draft'
@@ -385,6 +434,8 @@ export function OnboardingPage() {
       <div className="space-y-4 px-4 pt-5">
         {step === 0 ? (
           <>
+            <OnboardingLanguagePicker />
+
             <OnboardingStepHeading
               icon={UserRound}
               title={t('Personal Details')}
@@ -925,9 +976,9 @@ export function OnboardingPage() {
                     <button
                       type="button"
                       aria-expanded={isOpen}
-                      onClick={() =>
+                      onClick={() => {
                         setOpenTopic(isOpen ? null : topic.id)
-                      }
+                      }}
                       className="flex w-full items-center gap-3 p-3.5 text-left transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                     >
                       <span
@@ -966,6 +1017,35 @@ export function OnboardingPage() {
 
                     {isOpen ? (
                       <div className="border-t border-line px-3.5 pb-3.5 pt-3">
+                        {topic.video ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVideoSrc(null)
+                              setVideoFailed(false)
+                              setVideoTopic(topic)
+                            }}
+                            aria-label={t('Play module video')}
+                            className="group relative mb-3 block w-full overflow-hidden rounded-xl border border-line bg-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2"
+                          >
+                            <img
+                              src={topic.poster}
+                              alt=""
+                              loading="lazy"
+                              className="block aspect-[4/3] w-full object-cover object-[50%_41%]"
+                            />
+                            <span className="absolute inset-0 grid place-items-center bg-ink/25 transition-colors group-hover:bg-ink/35">
+                              <span className="grid size-16 place-items-center rounded-full bg-brand text-white shadow-float">
+                                <Play
+                                  className="size-7 translate-x-0.5"
+                                  fill="currentColor"
+                                  aria-hidden="true"
+                                />
+                              </span>
+                            </span>
+                          </button>
+                        ) : null}
+
                         <p className="text-[12px] leading-relaxed text-ink-muted">
                           {t(topic.summary)}
                         </p>
@@ -1234,6 +1314,76 @@ export function OnboardingPage() {
           </Button>
         </div>
       </div>
+
+      {videoTopic
+        ? createPortal(
+            <div
+              className="overlay-enter fixed inset-0 z-50 flex flex-col bg-black"
+              role="presentation"
+              onClick={() => setVideoTopic(null)}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label={t(videoTopic.title)}
+                className="flex h-full min-h-0 flex-col px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-[calc(env(safe-area-inset-top)+16px)]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="min-w-0 truncate text-[13px] font-semibold text-white">
+                    {t(videoTopic.title)}
+                  </p>
+                  <IconButton
+                    label={t('Close')}
+                    variant="onBrand"
+                    size="sm"
+                    onClick={() => setVideoTopic(null)}
+                  >
+                    <X className="size-4" aria-hidden="true" />
+                  </IconButton>
+                </div>
+
+                <div className="flex min-h-0 flex-1 items-center justify-center py-3">
+                  {videoSrc ? (
+                    <video
+                      key={videoSrc}
+                      className="max-h-full max-w-full rounded-xl bg-black"
+                      controls
+                      controlsList="nodownload"
+                      autoPlay
+                      playsInline
+                      poster={videoTopic.poster}
+                      aria-label={t(videoTopic.title)}
+                      src={videoSrc}
+                    />
+                  ) : videoFailed ? (
+                    <div className="w-full max-w-[360px] rounded-2xl bg-white/10 p-5 text-center">
+                      <p className="text-[13px] font-semibold text-white">
+                        {t('Video could not be loaded')}
+                      </p>
+                      <p className="mt-1 text-[11.5px] leading-relaxed text-white/70">
+                        {t('Close the player and try again.')}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <img
+                        src={videoTopic.poster}
+                        alt=""
+                        className="max-h-[60vh] max-w-full rounded-xl opacity-60"
+                      />
+                      <span className="flex items-center gap-2 text-[12px] font-medium text-white/80">
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        {t('Loading video…')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

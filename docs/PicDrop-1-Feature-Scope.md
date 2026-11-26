@@ -289,4 +289,9 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   opens the next unfinished module. Completion still persists per number in the
   draft and `training_progress` document. Lesson copy is translated into Hindi
   and Bengali.
+- **2026-11-26 — M26: language choice at the start of onboarding.** The first
+  step now opens with an English / हिन्दी / বাংলা selector, English by default.
+  Selecting a language applies it immediately to the wizard, persists under
+  `fafo.partner.language` and carries into Home, Orders, History, Earnings,
+  Support and Profile. Profile → App language still changes it later.
 

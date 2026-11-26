@@ -503,6 +503,15 @@ const hindi: Record<string, string> = {
   'Read each short module, then mark it complete.':
     'हर छोटा मॉड्यूल पढ़ें, फिर उसे पूरा चिह्नित करें।',
   'Tap to read': 'पढ़ने के लिए टैप करें',
+  'Choose your language': 'अपनी भाषा चुनें',
+  'You can change this later in Profile.':
+    'आप इसे बाद में प्रोफ़ाइल में बदल सकते हैं।',
+  'Preferred language': 'पसंदीदा भाषा',
+  'Play module video': 'मॉड्यूल वीडियो चलाएँ',
+  'Loading video…': 'वीडियो लोड हो रहा है…',
+  'Video could not be loaded': 'वीडियो लोड नहीं हो सका',
+  'Close the player and try again.': 'प्लेयर बंद करके फिर कोशिश करें।',
+  'Close': 'बंद करें',
   'Key points': 'मुख्य बातें',
   'Mark as complete': 'पूरा हुआ चिह्नित करें',
   'Mark as not complete': 'पूरा नहीं चिह्नित करें',
@@ -1220,6 +1229,15 @@ const bengali: Record<string, string> = {
   'Read each short module, then mark it complete.':
     'প্রতিটি ছোট মডিউল পড়ুন, তারপর সম্পূর্ণ চিহ্নিত করুন।',
   'Tap to read': 'পড়ার জন্য ট্যাপ করুন',
+  'Choose your language': 'আপনার ভাষা বাছাই করুন',
+  'You can change this later in Profile.':
+    'আপনি এটি পরে প্রোফাইলে বদলাতে পারেন।',
+  'Preferred language': 'পছন্দের ভাষা',
+  'Play module video': 'মডিউল ভিডিও চালান',
+  'Loading video…': 'ভিডিও লোড হচ্ছে…',
+  'Video could not be loaded': 'ভিডিও লোড করা যায়নি',
+  'Close the player and try again.': 'প্লেয়ার বন্ধ করে আবার চেষ্টা করুন।',
+  'Close': 'বন্ধ করুন',
   'Key points': 'মূল বিষয়',
   'Mark as complete': 'সম্পূর্ণ হিসেবে চিহ্নিত করুন',
   'Mark as not complete': 'অসম্পূর্ণ হিসেবে চিহ্নিত করুন',
