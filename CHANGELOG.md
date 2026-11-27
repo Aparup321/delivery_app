@@ -9,6 +9,13 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Security hardening.** Firestore rules now bound profile, ticket,
+  notification and partner-authored delivery fields; the partner can no longer
+  attach a proof before a job is delivered. Oxlint rejects HTML/eval injection
+  sinks, outbound links use `noopener noreferrer`, phone and navigation URLs are
+  sanitised, and support text is capped. Optional Firebase App Check starts when
+  `VITE_RECAPTCHA_SITE_KEY` is configured. Full threat model and production
+  checklist: `SECURITY.md`.
 - **Language choice at the start of onboarding.** The first step now opens with
   an English / हिन्दी / বাংলা selector, defaulting to English. The choice applies
   immediately — step labels, headings, hints and validation messages switch at
@@ -65,6 +72,14 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **Premium motion layer, still reduced-motion safe.** Lists and cards settle in
+  with a capped 45 ms stagger (`Reveal` / `revealStyle`), totals count up to
+  their live value (`AnimatedNumber`), the earnings/home figures animate without
+  layout shift, `SegmentedTabs` gained a sliding active pill, `ProgressBar`
+  fills from the left on mount, the active bottom-nav icon pops, unread dots
+  pop, and training/support panels ease in. Every effect is disabled under
+  `prefers-reduced-motion`, and no hover lift, glow, parallax or decorative loop
+  was added.
 - **Training videos play instead of downloading.** The full-screen player now
   fetches the clip into a blob URL before playback, so a server that answers
   with `Content-Disposition: attachment` or a generic MIME type can no longer

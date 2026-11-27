@@ -13,6 +13,107 @@ service cloud.firestore {
         && request.auth.uid == 'Xa09IjoJrhPBvuJVWALOuCCHcvZ2';
     }
 
+    // Shared string guard. Keeps a malicious or buggy client from writing an
+    // unbounded document and every reader from rendering an enormous value.
+    function maxText(value, limit) {
+      return value is string && value.size() <= limit;
+    }
+
+    function validPartnerBank(bank) {
+      return bank is map
+        && bank.keys().hasOnly(['accountHolder', 'accountNumber', 'ifsc'])
+        && maxText(bank.get('accountHolder', ''), 120)
+        && maxText(bank.get('accountNumber', ''), 30)
+        && maxText(bank.get('ifsc', ''), 11);
+    }
+
+    function validPartnerLatitude(value) {
+      return value is number && value >= -90 && value <= 90;
+    }
+
+    function validPartnerLongitude(value) {
+      return value is number && value >= -180 && value <= 180;
+    }
+
+    // Presence coordinates are the only nested partner-writable object on the
+    // profile. Bound every member so a modified client cannot store large
+    // blobs that the administrator console later renders.
+    function validPartnerLocation(value) {
+      return value == null || (
+        value is map
+        && value.keys().hasOnly([
+          'latitude', 'longitude', 'accuracy', 'updatedAt'
+        ])
+        && validPartnerLatitude(value.get('latitude', 0))
+        && validPartnerLongitude(value.get('longitude', 0))
+        && (value.get('accuracy', null) == null
+          || (value.get('accuracy', 0) is number
+            && value.get('accuracy', 0) >= 0))
+        && maxText(value.get('updatedAt', ''), 40)
+      );
+    }
+
+    // Bounds the profile text a partner can write. A legitimate onboarding form
+    // is far below these limits; the guard exists to stop storage abuse.
+    function validPartnerData(data) {
+      return (!data.keys().hasAny(['fullName'])
+          || maxText(data.fullName, 120))
+        && (!data.keys().hasAny(['email'])
+          || maxText(data.email, 160))
+        && (!data.keys().hasAny(['city'])
+          || maxText(data.city, 80))
+        && (!data.keys().hasAny(['addressLine'])
+          || maxText(data.addressLine, 300))
+        && (!data.keys().hasAny(['phone'])
+          || maxText(data.phone, 20))
+        && (!data.keys().hasAny(['authProvider'])
+          || maxText(data.authProvider, 40))
+        && (!data.keys().hasAny(['lastSignInAt'])
+          || maxText(data.lastSignInAt, 40))
+        && (!data.keys().hasAny(['profilePhotoUrl'])
+          || data.profilePhotoUrl == null
+          || maxText(data.profilePhotoUrl, 400000))
+        && (!data.keys().hasAny(['profilePhotoPath'])
+          || data.profilePhotoPath == null
+          || maxText(data.profilePhotoPath, 512))
+        && (!data.keys().hasAny(['pincode'])
+          || (data.pincode is string
+            && data.pincode.matches('^[0-9]{6}$')))
+        && (!data.keys().hasAny(['dateOfBirth'])
+          || data.dateOfBirth == null
+          || maxText(data.dateOfBirth, 20))
+        && (!data.keys().hasAny(['vehicleType'])
+          || data.vehicleType == null
+          || maxText(data.vehicleType, 20))
+        && (!data.keys().hasAny(['joinedOn'])
+          || data.joinedOn == null
+          || maxText(data.joinedOn, 20))
+        && (!data.keys().hasAny(['submittedAt'])
+          || data.submittedAt == null
+          || maxText(data.submittedAt, 40))
+        && (!data.keys().hasAny(['updatedAt'])
+          || data.updatedAt == null
+          || maxText(data.updatedAt, 40))
+        && (!data.keys().hasAny(['isOnline'])
+          || data.isOnline is bool)
+        && (!data.keys().hasAny(['availability'])
+          || data.availability == null
+          || maxText(data.availability, 20))
+        && (!data.keys().hasAny(['lastLocationUpdatedAt'])
+          || data.lastLocationUpdatedAt == null
+          || maxText(data.lastLocationUpdatedAt, 40))
+        && (!data.keys().hasAny(['lastLocation'])
+          || validPartnerLocation(data.lastLocation))
+        && (!data.keys().hasAny(['rating'])
+          || data.rating == null
+          || (data.rating is number
+            && data.rating >= 0
+            && data.rating <= 5))
+        && (!data.keys().hasAny(['bank'])
+          || data.bank == null
+          || validPartnerBank(data.bank));
+    }
+
     // Fields the partner app owns. Administrator decisions are deliberately
     // absent: status, applicationStatus, statusUpdatedAt, adminPartnerId,
     // adminReview and adminSuspension can only be written by delivery_admin.
@@ -20,7 +121,7 @@ service cloud.firestore {
       return [
         'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
-        'city', 'addressLine', 'pincode', 'vehicleType', 'rating', 'joinedOn',
+        'city', 'addressLine', 'pincode', 'vehicleType', 'joinedOn',
         'submittedAt', 'updatedAt', 'bank', 'lastLocation',
         'lastLocationUpdatedAt', 'isOnline', 'availability'
       ];
@@ -32,8 +133,8 @@ service cloud.firestore {
       return [
         'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
-        'city', 'addressLine', 'pincode', 'vehicleType', 'rating', 'joinedOn',
-        'submittedAt', 'updatedAt', 'bank', 'lastLocation',
+        'city', 'addressLine', 'pincode', 'vehicleType', 'rating',
+        'joinedOn', 'submittedAt', 'updatedAt', 'bank', 'lastLocation',
         'lastLocationUpdatedAt', 'isOnline', 'status', 'applicationStatus',
         'statusUpdatedAt'
       ];
@@ -41,17 +142,21 @@ service cloud.firestore {
 
     function isOwnerCreate(uid) {
       return request.resource.data.partnerId == uid
+        && validPartnerData(request.resource.data)
         && request.resource.data.keys().hasOnly(submissionFields())
         && (!request.resource.data.keys().hasAny(['status'])
           || request.resource.data.status == 'pending')
         && (!request.resource.data.keys().hasAny(['applicationStatus'])
           || request.resource.data.applicationStatus == 'submitted')
+        && (!request.resource.data.keys().hasAny(['statusUpdatedAt'])
+          || maxText(request.resource.data.statusUpdatedAt, 40))
         && !request.resource.data.keys().hasAny(
           ['adminReview', 'adminSuspension', 'adminPartnerId']);
     }
 
     function isProfileUpdate(uid) {
       return request.resource.data.partnerId == uid
+        && validPartnerData(request.resource.data)
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(partnerAppFields());
     }
@@ -65,11 +170,12 @@ service cloud.firestore {
         || resource.data.adminSuspension.active != true;
 
       return request.resource.data.partnerId == uid
+        && validPartnerData(request.resource.data)
         && (hasNoPreviousApplication || wasDraft || wasRejected)
         && isNotSuspended
         && request.resource.data.applicationStatus == 'submitted'
         && request.resource.data.status == 'pending'
-        && request.resource.data.statusUpdatedAt is string
+        && maxText(request.resource.data.statusUpdatedAt, 40)
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(submissionFields());
     }
@@ -99,21 +205,135 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    function partnerDocumentFields() {
+      return ['partnerId', 'documentNumbers', 'documents', 'updatedAt'];
+    }
+
+    function validDocumentNumbers(value) {
+      return value is map
+        && value.keys().hasOnly([
+          'aadhaar', 'pan', 'licence', 'registration', 'passbook'
+        ])
+        && maxText(value.get('aadhaar', ''), 40)
+        && maxText(value.get('pan', ''), 40)
+        && maxText(value.get('licence', ''), 40)
+        && maxText(value.get('registration', ''), 40)
+        && maxText(value.get('passbook', ''), 40);
+    }
+
+    function validStoredFile(value) {
+      return value == null || (
+        value is map
+        && value.keys().hasOnly([
+          'fileName', 'storagePath', 'downloadUrl', 'uploadedAt'
+        ])
+        && maxText(value.get('fileName', ''), 255)
+        && (value.get('storagePath', null) == null
+          || maxText(value.get('storagePath', ''), 512))
+        && (value.get('downloadUrl', null) == null
+          || maxText(value.get('downloadUrl', ''), 400000))
+        && (value.get('uploadedAt', null) == null
+          || maxText(value.get('uploadedAt', ''), 40))
+      );
+    }
+
+    function validDocumentFiles(value) {
+      return value is map
+        && value.keys().hasOnly([
+          'aadhaar', 'pan', 'licence', 'registration', 'passbook'
+        ])
+        && validStoredFile(value.get('aadhaar', null))
+        && validStoredFile(value.get('pan', null))
+        && validStoredFile(value.get('licence', null))
+        && validStoredFile(value.get('registration', null))
+        && validStoredFile(value.get('passbook', null));
+    }
+
+    function partnerDocumentPayload(data) {
+      return data.partnerId is string
+        && data.partnerId.size() <= 160
+        && validDocumentNumbers(data.documentNumbers)
+        && validDocumentFiles(data.documents)
+        && maxText(data.updatedAt, 40);
+    }
+
+    // Partners own only the uploaded metadata. Administrator verification
+    // lives under adminDocuments and must never be writable by the partner.
     match /partner_documents/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      // Administrators write their verification decision under adminDocuments;
-      // the partner still owns the uploaded file metadata.
-      allow write: if isAdmin() || (isOwner(uid) && applicationOpen(uid));
+      allow write: if isAdmin();
+      allow create: if isOwner(uid)
+        && applicationOpen(uid)
+        && request.resource.data.partnerId == uid
+        && request.resource.data.keys().hasOnly(partnerDocumentFields())
+        && partnerDocumentPayload(request.resource.data);
+      allow update: if isOwner(uid)
+        && applicationOpen(uid)
+        && request.resource.data.partnerId == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(partnerDocumentFields())
+        && partnerDocumentPayload(request.resource.data);
+    }
+
+    function vehiclePayload(data) {
+      return data.partnerId is string
+        && data.partnerId.size() <= 160
+        && data.type in ['bike', 'scooter', 'bicycle', 'foot']
+        && maxText(data.model, 120)
+        && maxText(data.colour, 60)
+        && maxText(data.registrationNumber, 40)
+        && maxText(data.licenceNumber, 60)
+        && maxText(data.updatedAt, 40);
     }
 
     match /vehicles/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid) && applicationOpen(uid);
+      allow write: if isAdmin();
+      allow create: if isOwner(uid)
+        && applicationOpen(uid)
+        && request.resource.data.partnerId == uid
+        && request.resource.data.keys().hasOnly([
+          'partnerId', 'type', 'model', 'colour', 'registrationNumber',
+          'licenceNumber', 'updatedAt'
+        ])
+        && vehiclePayload(request.resource.data);
+      allow update: if isOwner(uid)
+        && applicationOpen(uid)
+        && request.resource.data.partnerId == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'partnerId', 'type', 'model', 'colour', 'registrationNumber',
+            'licenceNumber', 'updatedAt'
+          ])
+        && vehiclePayload(request.resource.data);
     }
 
     match /training_progress/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid) && applicationOpen(uid);
+      allow write: if isAdmin();
+      allow create: if isOwner(uid)
+        && applicationOpen(uid)
+        && request.resource.data.keys().hasOnly([
+          'partnerId', 'completed', 'completedCount', 'updatedAt'
+        ])
+        && request.resource.data.partnerId == uid
+        && request.resource.data.completed is list
+        && request.resource.data.completed.size() <= 20
+        && request.resource.data.completedCount is int
+        && request.resource.data.completedCount >= 0
+        && request.resource.data.completedCount <= 20
+        && maxText(request.resource.data.updatedAt, 40);
+      allow update: if isOwner(uid)
+        && applicationOpen(uid)
+        && request.resource.data.partnerId == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['completed', 'completedCount', 'updatedAt'])
+        && request.resource.data.completed is list
+        && request.resource.data.completed.size() <= 20
+        && request.resource.data.completedCount is int
+        && request.resource.data.completedCount >= 0
+        && request.resource.data.completedCount <= 20
+        && maxText(request.resource.data.updatedAt, 40);
     }
 
     // Text-only in-app notification feed. The partner app writes the events it
@@ -132,15 +352,23 @@ service cloud.firestore {
         && request.resource.data.type in [
           'request', 'account', 'delivery', 'payment'
         ]
-        && request.resource.data.notificationId is string
-        && request.resource.data.title is string
-        && request.resource.data.body is string
-        && request.resource.data.createdAt is string;
+        && maxText(request.resource.data.notificationId, 160)
+        && maxText(request.resource.data.title, 160)
+        && maxText(request.resource.data.body, 1000)
+        && request.resource.data.vars is map
+        && request.resource.data.vars.size() <= 20
+        && maxText(request.resource.data.createdAt, 40)
+        && (request.resource.data.readAt == null
+          || maxText(request.resource.data.readAt, 40))
+        && maxText(request.resource.data.updatedAt, 40);
       allow update: if request.auth != null
         && resource.data.partnerUid == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'readAt', 'updatedAt'
-        ]);
+        ])
+        && (request.resource.data.readAt == null
+          || maxText(request.resource.data.readAt, 40))
+        && maxText(request.resource.data.updatedAt, 40);
       allow delete: if isAdmin()
         || (request.auth != null
           && resource.data.partnerUid == request.auth.uid);
@@ -155,13 +383,31 @@ service cloud.firestore {
         && request.resource.data.partnerUid == request.auth.uid
         && request.resource.data.keys().hasOnly([
           'partnerUid', 'id', 'subject', 'message', 'status', 'createdAt', 'updatedAt'
-        ]);
+        ])
+        && request.resource.data.status == 'Open'
+        && request.resource.data.id is string
+        && request.resource.data.id.size() <= 160
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() >= 4
+        && request.resource.data.subject.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 12
+        && request.resource.data.message.size() <= 2000
+        && maxText(request.resource.data.createdAt, 40)
+        && maxText(request.resource.data.updatedAt, 40);
       allow update: if isAdmin()
         || (request.auth != null
           && resource.data.partnerUid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'subject', 'message', 'updatedAt'
-          ]));
+          ])
+          && request.resource.data.subject is string
+          && request.resource.data.subject.size() >= 4
+          && request.resource.data.subject.size() <= 120
+          && request.resource.data.message is string
+          && request.resource.data.message.size() >= 12
+          && request.resource.data.message.size() <= 2000
+          && maxText(request.resource.data.updatedAt, 40));
       allow delete: if isAdmin();
     }
 
@@ -192,6 +438,95 @@ service cloud.firestore {
       ];
     }
 
+    // Bounds the data the partner adds to a delivery. Route, customer data,
+    // payout and the drop code stay Administrator-owned and are not here.
+    function validLatitude(value) {
+      return value is number && value >= -90 && value <= 90;
+    }
+
+    function validLongitude(value) {
+      return value is number && value >= -180 && value <= 180;
+    }
+
+    function validDeliveryLocation(value) {
+      return value == null || (
+        value is map
+        && value.keys().hasOnly([
+          'latitude', 'longitude', 'accuracy', 'updatedAt'
+        ])
+        && validLatitude(value.get('latitude', 0))
+        && validLongitude(value.get('longitude', 0))
+        && (value.get('accuracy', null) == null
+          || (value.get('accuracy', 0) is number
+            && value.get('accuracy', 0) >= 0))
+        && maxText(value.get('updatedAt', ''), 40)
+      );
+    }
+
+    function validDeliveryProof(value) {
+      return value == null || (
+        value is map
+        && value.keys().hasOnly([
+          'method', 'verifiedAt', 'recipientName', 'note',
+          'latitude', 'longitude', 'accuracy', 'demoOverride'
+        ])
+        && value.get('method', '') == 'otp'
+        && maxText(value.get('verifiedAt', ''), 40)
+        && (!value.keys().hasAny(['recipientName'])
+          || maxText(value.recipientName, 80))
+        && (!value.keys().hasAny(['note'])
+          || maxText(value.note, 280))
+        && (!value.keys().hasAny(['demoOverride'])
+          || value.demoOverride is bool)
+        && (!value.keys().hasAny(['latitude'])
+          || validLatitude(value.latitude))
+        && (!value.keys().hasAny(['longitude'])
+          || validLongitude(value.longitude))
+        && (!value.keys().hasAny(['accuracy'])
+          || value.accuracy == null
+          || (value.accuracy is number && value.accuracy >= 0))
+      );
+    }
+
+    function validPartnerResponse(value) {
+      return value == null || (
+        value is map
+        && value.keys().hasOnly(['decision', 'at', 'reason'])
+        && value.get('decision', '') == 'rejected'
+        && maxText(value.get('at', ''), 40)
+        && (!value.keys().hasAny(['reason'])
+          || maxText(value.reason, 160))
+      );
+    }
+
+    function validPartnerDeliveryData(data) {
+      return (!data.keys().hasAny(['cancellationReason'])
+          || data.cancellationReason == null
+          || maxText(data.cancellationReason, 200))
+        && (!data.keys().hasAny(['partnerResponse'])
+          || validPartnerResponse(data.partnerResponse))
+        && (!data.keys().hasAny(['proof'])
+          || validDeliveryProof(data.proof))
+        && (!data.keys().hasAny(['currentLocation'])
+          || validDeliveryLocation(data.currentLocation))
+        && (!data.keys().hasAny(['events'])
+          || data.events == null
+          || (data.events is list && data.events.size() <= 40))
+        && (!data.keys().hasAny(['acceptedAt'])
+          || data.acceptedAt == null
+          || maxText(data.acceptedAt, 40))
+        && (!data.keys().hasAny(['completedAt'])
+          || data.completedAt == null
+          || maxText(data.completedAt, 40))
+        && (!data.keys().hasAny(['updatedAt'])
+          || data.updatedAt == null
+          || maxText(data.updatedAt, 40))
+        && (!data.keys().hasAny(['adminStatus'])
+          || data.adminStatus == null
+          || maxText(data.adminStatus, 40))
+        && (data.get('proof', null) == null || data.status == 'delivered');
+    }
+
     // Offers are created by the Administrator console (status 'assigned', with
     // partnerUid set to the intended partner). The assigned partner reads and
     // advances their own delivery; a partner can never create, reassign or
@@ -204,6 +539,10 @@ service cloud.firestore {
       allow update: if isAdmin()
         || (request.auth != null
           && resource.data.partnerUid == request.auth.uid
+          // Delivered/cancelled evidence is immutable to the partner.
+          && resource.data.status != 'delivered'
+          && resource.data.status != 'cancelled'
+          && validPartnerDeliveryData(request.resource.data)
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(partnerDeliveryFields())
           && validDeliveryTransition(

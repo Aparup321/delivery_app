@@ -4,6 +4,7 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
+import { Reveal } from '../../components/common/Reveal'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
@@ -53,11 +54,16 @@ export function SupportPage() {
           </p>
 
           <ul className="mt-2 divide-y divide-line">
-            {faqs.map((faq) => {
+            {faqs.map((faq, index) => {
               const isOpen = openFaq === faq.id
 
               return (
-                <li key={faq.id} className="py-2.5">
+                <Reveal
+                  as="li"
+                  key={faq.id}
+                  index={index}
+                  className="py-2.5"
+                >
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : faq.id)}
@@ -78,11 +84,11 @@ export function SupportPage() {
                   </button>
 
                   {isOpen ? (
-                    <p className="mt-1.5 pr-6 text-[11.5px] leading-relaxed text-ink-muted">
+                    <p className="reveal-up mt-1.5 pr-6 text-[11.5px] leading-relaxed text-ink-muted">
                       {t(faq.answer)}
                     </p>
                   ) : null}
-                </li>
+                </Reveal>
               )
             })}
           </ul>
@@ -99,6 +105,7 @@ export function SupportPage() {
           <Input
             label={t('Subject')}
             value={subject}
+            maxLength={120}
             placeholder={t('Short summary of the issue')}
             onChange={(event) => {
               setSubject(event.target.value)
@@ -122,6 +129,7 @@ export function SupportPage() {
               id="ticket-message"
               rows={4}
               value={message}
+              maxLength={2000}
               placeholder={t('What happened, and when?')}
               onChange={(event) => {
                 setMessage(event.target.value)
@@ -162,8 +170,13 @@ export function SupportPage() {
 
           {tickets.length > 0 ? (
             <ul className="mt-2 divide-y divide-line">
-              {tickets.map((ticket) => (
-                <li key={ticket.id} className="py-2.5">
+              {tickets.map((ticket, index) => (
+                <Reveal
+                  as="li"
+                  key={ticket.id}
+                  index={index}
+                  className="py-2.5"
+                >
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-[12.5px] font-semibold text-ink">
                       {ticket.subject}
@@ -181,7 +194,7 @@ export function SupportPage() {
                   <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
                     {ticket.message}
                   </p>
-                </li>
+                </Reveal>
               ))}
             </ul>
           ) : (

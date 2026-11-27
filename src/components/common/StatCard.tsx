@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import { cn } from '../../utils/cn'
 
 export interface StatCardProps {
-  value: string
+  value: ReactNode
   label: string
   hint?: string
   /** Turns the card into a link to this route. */

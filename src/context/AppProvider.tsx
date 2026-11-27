@@ -1393,8 +1393,8 @@ function AppDataProvider({
   const createTicket = useCallback((subject: string, message: string) => {
     const ticket: SupportTicket = {
       id: `#SUP-${Date.now().toString().slice(-4)}`,
-      subject,
-      message,
+      subject: subject.trim().slice(0, 120),
+      message: message.trim().slice(0, 2000),
       status: 'Open',
       createdAt: new Date().toISOString(),
     }

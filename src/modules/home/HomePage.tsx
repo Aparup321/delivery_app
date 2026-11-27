@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../components/common/Avatar'
+import { AnimatedNumber } from '../../components/common/AnimatedNumber'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
@@ -28,6 +29,7 @@ import { useTheme } from '../../context/useTheme'
 import { applicationStatusMeta } from '../../utils/applicationStatus'
 import { deliveryStatusLabels } from '../../utils/delivery'
 import { formatCurrency, formatDate } from '../../utils/format'
+import { revealStyle } from '../../utils/reveal'
 
 interface QuickAction {
   label: string
@@ -303,37 +305,48 @@ export function HomePage() {
         <div className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <Link
             to="/deliveries"
-            className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="reveal-up px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            style={revealStyle(0)}
           >
             <p className="text-[11px] font-medium text-ink-muted">
               {t('Deliveries')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {dashboardStats.deliveriesToday}
+              <AnimatedNumber value={dashboardStats.deliveriesToday} />
             </p>
           </Link>
           <Link
             to="/earnings"
-            className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="reveal-up px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            style={revealStyle(1)}
           >
             <p className="text-[11px] font-medium text-ink-muted">
               {t('Earnings')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {formatCurrency(dashboardStats.earningsToday, locale)}
+              <AnimatedNumber
+                value={dashboardStats.earningsToday}
+                format={(next) => formatCurrency(Math.round(next), locale)}
+              />
             </p>
           </Link>
           <Link
             to="/profile"
-            className="px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="reveal-up px-3 py-3 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            style={revealStyle(2)}
           >
             <p className="text-[11px] font-medium text-ink-muted">
               {t('Rating')}
             </p>
             <p className="mt-1 text-[18px] font-semibold tabular-nums leading-none text-ink">
-              {dashboardStats.rating === null
-                ? t('New')
-                : dashboardStats.rating.toFixed(1)}
+              {dashboardStats.rating === null ? (
+                t('New')
+              ) : (
+                <AnimatedNumber
+                  value={dashboardStats.rating}
+                  format={(next) => next.toFixed(1)}
+                />
+              )}
             </p>
           </Link>
         </div>
@@ -341,11 +354,12 @@ export function HomePage() {
         <section>
           <SectionHeading title={t('Quick actions')} />
           <div className="mt-2 grid grid-cols-2 gap-x-2">
-            {quickActions.map(({ label, to, icon: Icon }) => (
+            {quickActions.map(({ label, to, icon: Icon }, index) => (
               <Link
                 key={label}
                 to={to}
-                className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                className="reveal-up flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                style={revealStyle(index + 2)}
               >
                 <IconTile size="sm">
                   <Icon

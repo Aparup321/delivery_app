@@ -13,6 +13,7 @@ import {
   deliveryOutcome,
   isDeclinedByPartner,
 } from '../../utils/delivery'
+import { revealStyle } from '../../utils/reveal'
 
 type HistoryFilter = 'all' | 'delivered' | 'cancelled'
 
@@ -102,7 +103,7 @@ export function HistoryPage() {
 
         {filtered.length > 0 ? (
           <div className="space-y-2.5">
-            {filtered.map((delivery) => {
+            {filtered.map((delivery, index) => {
               const outcome = deliveryOutcome(delivery)
               const declined = isDeclinedByPartner(delivery)
               const reason = declined
@@ -110,7 +111,12 @@ export function HistoryPage() {
                 : delivery.cancellationReason
 
               return (
-                <Card key={delivery.id} padding="sm">
+                <Card
+                  key={delivery.id}
+                  padding="sm"
+                  className="reveal-up"
+                  style={revealStyle(index)}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">

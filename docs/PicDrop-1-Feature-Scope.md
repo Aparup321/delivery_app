@@ -294,4 +294,13 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   Selecting a language applies it immediately to the wizard, persists under
   `fafo.partner.language` and carries into Home, Orders, History, Earnings,
   Support and Profile. Profile → App language still changes it later.
+- **2026-11-27 — M27: security review and hardening.** Confirmed there are no
+  HTML/eval injection sinks and no SQL layer. Added lint guards against future
+  XSS, bounded partner, ticket, notification and delivery writes in
+  `firestore.rules`, prevented proof before delivery, sanitised `tel:` and
+  navigation URLs, capped support text, and added `noopener noreferrer` to
+  external links. Added optional App Check via `VITE_RECAPTCHA_SITE_KEY` and a
+  dependency override for the patched `@grpc/grpc-js`. `SECURITY.md` records the
+  remaining production work: real OTP, server-side drop-code verification,
+  App Check enforcement, quotas/budgets, API-key restrictions and headers/CSP.
 

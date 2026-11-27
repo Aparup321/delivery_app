@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/common/Button'
 import { EmptyState } from '../../components/common/EmptyState'
+import { Reveal } from '../../components/common/Reveal'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
@@ -55,11 +56,11 @@ export function NotificationsPage() {
 
         {notifications.length > 0 ? (
           <ul className="space-y-2.5">
-            {notifications.map((notification) => {
+            {notifications.map((notification, index) => {
               const Icon = typeIcons[notification.type]
 
               return (
-                <li key={notification.id}>
+                <Reveal as="li" key={notification.id} index={index}>
                   <button
                     type="button"
                     onClick={() => {
@@ -95,7 +96,7 @@ export function NotificationsPage() {
                           </p>
                           {!notification.isRead ? (
                             <span
-                              className="mt-1 size-2 shrink-0 rounded-full bg-brand"
+                              className="badge-pop mt-1 size-2 shrink-0 rounded-full bg-brand"
                               aria-hidden="true"
                             />
                           ) : null}
@@ -109,7 +110,7 @@ export function NotificationsPage() {
                       </div>
                     </div>
                   </button>
-                </li>
+                </Reveal>
               )
             })}
           </ul>

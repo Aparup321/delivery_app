@@ -157,6 +157,7 @@ delivery_app/
 │   └── main.tsx
 ├── AGENTS.md
 ├── README.md
+├── SECURITY.md
 ├── index.html
 ├── package.json
 ├── tsconfig*.json
@@ -217,10 +218,11 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 - Headers use solid `bg-brand-deep`. No hue gradients, glows or decorative blobs.
 - Touch targets: at least 40px; primary controls use `h-11` / `size-11`.
 - Transitions: `transition-colors`/`transition-[transform,background-color,…]`
-  for state changes. Motion is short, functional and purposeful — route settle,
-  overlay slide-up, offer alert, value pop and the online pulse — and every
-  effect is disabled under `prefers-reduced-motion`. No hover lift, glow,
-  parallax or decorative loops.
+  for state changes. Motion is short, functional and purposeful - route settle,
+  overlay slide-up, offer alert, value pop, the online pulse, staggered list
+  reveals, count-up totals, the sliding segmented-tab pill, progress fill and
+  the nav icon pop - and every effect is disabled under
+  `prefers-reduced-motion`. No hover lift, glow, parallax or decorative loops.
 
 ### Shared components (`src/components/common/`)
 
@@ -430,6 +432,19 @@ their service layer is added:
 - Authenticate, then restrict reads/writes with Firebase Security Rules so a
   partner can only access their own records; trusted state changes belong in
   Cloud Functions.
+- Never render user or Firestore text as HTML. No `dangerouslySetInnerHTML`,
+  `innerHTML`, `eval` or `javascript:` URLs; Oxlint enforces this. External links
+  use `rel="noopener noreferrer"`, and user values placed in URLs are encoded.
+- Treat `SECURITY.md` as the security contract. Rule changes live in
+  `firestore.rules`/`storage.rules`, are size- and type-bounded, and must be
+  deployed (`firebase deploy --only firestore:rules,storage:rules`) — editing the
+  file alone changes nothing in production.
+- App Check is optional and enabled only when `VITE_RECAPTCHA_SITE_KEY` is set
+  (`src/firebase/index.ts`); production must register the key and turn on
+  enforcement for Auth, Firestore and Storage. Never describe client timers or
+  UI checks as DDoS protection; quota, budget alerts and the CDN do that job.
+- The demo OTP and demo Email/Password bridge are public and not production
+  authentication. Replace them before exposing real partner data.
 - Authentication changes must keep protected routes and session handling
   consistent with the roadmap (logout, expired OTP errors, account status
   gating).

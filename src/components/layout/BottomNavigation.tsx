@@ -32,7 +32,7 @@ export function BottomNavigation() {
                     className={cn(
                       'grid size-9 place-items-center rounded-lg transition-colors',
                       isActive
-                        ? 'bg-brand-soft text-brand-deep'
+                        ? 'nav-pop bg-brand-soft text-brand-deep'
                         : 'bg-transparent group-hover:bg-brand-tint',
                     )}
                   >

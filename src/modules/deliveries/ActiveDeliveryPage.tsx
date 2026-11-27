@@ -119,7 +119,7 @@ export function ActiveDeliveryPage() {
       ? 'pickup'
       : 'destination'
   const pendingAction = deliveryActionPending
-  const contactNumber = activeDelivery.customerPhone.replace(/\s/g, '')
+  const contactNumber = activeDelivery.customerPhone.replace(/[^\d+]/g, '')
   const canContact = contactNumber.replace(/\D/g, '').length >= 10
 
   async function handleAdvance() {
@@ -249,7 +249,7 @@ export function ActiveDeliveryPage() {
               <a
                 href={navigationUrl(activeDelivery.pickup)}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                 aria-label={t('Navigate to pickup')}
               >
@@ -275,7 +275,7 @@ export function ActiveDeliveryPage() {
               <a
                 href={navigationUrl(activeDelivery.destination)}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                 aria-label={t('Navigate to drop')}
               >

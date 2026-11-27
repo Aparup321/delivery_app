@@ -1,4 +1,9 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
+import {
+  initializeAppCheck,
+  ReCaptchaV3Provider,
+} from 'firebase/app-check'
+import type { AppCheck } from 'firebase/app-check'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
@@ -10,6 +15,44 @@ import { firebaseConfig, isFirebaseConfigured } from './config'
  */
 export const app =
   getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+
+/**
+ * Optional App Check. It is only enabled when a reCAPTCHA site key is provided,
+ * so the demo keeps working without it. Once the key is registered in Firebase
+ * Console → App Check and enforcement is turned on for Auth, Firestore and
+ * Storage, it rejects traffic that does not come from this app — the closest
+ * practical layer to abuse/DDoS protection for a static client.
+ */
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+
+if (import.meta.env.DEV) {
+  const debugToken = import.meta.env.VITE_APP_CHECK_DEBUG_TOKEN
+
+  if (debugToken) {
+    ;(
+      globalThis as typeof globalThis & {
+        FIREBASE_APPCHECK_DEBUG_TOKEN?: string
+      }
+    ).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken
+  }
+}
+
+let appCheckInstance: AppCheck | null = null
+
+if (isFirebaseConfigured && recaptchaSiteKey) {
+  try {
+    appCheckInstance = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    })
+  } catch {
+    // A duplicate init during hot reload, or a rejected key, must not stop the
+    // app from starting; Firebase still enforces Auth and Security Rules.
+    appCheckInstance = null
+  }
+}
+
+export const appCheck = appCheckInstance
 
 /**
  * Services are null until the Firebase Web App configuration is present. The

@@ -1016,7 +1016,7 @@ export function OnboardingPage() {
                     </button>
 
                     {isOpen ? (
-                      <div className="border-t border-line px-3.5 pb-3.5 pt-3">
+                      <div className="reveal-up border-t border-line px-3.5 pb-3.5 pt-3">
                         {topic.video ? (
                           <button
                             type="button"

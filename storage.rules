@@ -2,13 +2,33 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /partners/{uid}/{allPaths=**} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null
-        && request.auth.uid == uid
-        && request.resource.size < 2 * 1024 * 1024
-        && (request.resource.contentType.matches('image/.*')
-          || request.resource.contentType == 'application/pdf');
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validUpload(maxBytes) {
+      return request.resource.size < maxBytes
+        // SVG is an image container for script and markup; opening one from
+        // Storage must not become a script-execution surface.
+        && !request.resource.contentType.lower().matches('image/svg.*')
+        && (request.resource.contentType.lower().matches('image/.*')
+          || request.resource.contentType.lower() == 'application/pdf');
+    }
+
+    // Profile image only.
+    match /partners/{uid}/profile/{fileName} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validUpload(2 * 1024 * 1024);
+      allow delete: if isOwner(uid);
+    }
+
+    // KYC document uploads are limited to the documented document keys.
+    match /partners/{uid}/documents/{documentKey}/{fileName} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && documentKey in ['aadhaar', 'pan', 'licence', 'registration', 'passbook']
+        && validUpload(2 * 1024 * 1024);
+      allow delete: if isOwner(uid);
     }
   }
 }

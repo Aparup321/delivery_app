@@ -289,6 +289,7 @@ delivery_app/
 │   └── main.tsx
 ├── AGENTS.md                 # Rules for AI coding agents
 ├── README.md
+├── SECURITY.md               # Threat model, rules and production checklist
 ├── firebase.json             # Firestore and Storage rules deployment config
 ├── firestore.rules           # Owner + delivery_admin access rules
 ├── storage.rules             # Owner-only uploads, 2 MB and image/PDF limits
@@ -662,6 +663,12 @@ is written by this integration.
 > Firestore/Storage Security Rules, authorized domains and API key
 > restrictions. Never put service-account credentials, private keys or admin SDK
 > secrets in a `VITE_*` variable.
+>
+> The full review — XSS and injection surface, rule boundaries, demo-auth
+> limitations, App Check, DDoS/quotas and recommended headers — is in
+> [`SECURITY.md`](SECURITY.md). Enable App Check with
+> `VITE_RECAPTCHA_SITE_KEY` before public traffic, and never expose this demo's
+> fixed OTP/password as production authentication.
 
 ## 13. Git workflow
 

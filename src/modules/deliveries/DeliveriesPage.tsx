@@ -5,6 +5,7 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { EmptyState } from '../../components/common/EmptyState'
+import { Reveal } from '../../components/common/Reveal'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { DeliveryRequestCard } from '../../components/deliveries/DeliveryRequestCard'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
@@ -17,6 +18,7 @@ import {
   isDeclinedByPartner,
 } from '../../utils/delivery'
 import { formatCurrency, formatShortDate } from '../../utils/format'
+import { revealStyle } from '../../utils/reveal'
 
 type DeliveryTab = 'available' | 'active' | 'completed'
 
@@ -147,28 +149,29 @@ export function DeliveriesPage() {
               ) : null}
               {requests.length > 0 ? (
                 <div className="space-y-3">
-                  {requests.map((delivery) => (
-                    <DeliveryRequestCard
-                      key={delivery.id}
-                      delivery={delivery}
-                      isAccepting={
-                        deliveryActionPending === 'accept' &&
-                        deliveryActionPendingId === delivery.id
-                      }
-                      isRejecting={
-                        deliveryActionPending === 'reject' &&
-                        deliveryActionPendingId === delivery.id
-                      }
-                      isBusy={
-                        Boolean(activeDelivery) ||
-                        (deliveryActionPending !== null &&
-                          deliveryActionPendingId !== delivery.id)
-                      }
-                      onAccept={() => void handleAccept(delivery.id)}
-                      onReject={(reason) =>
-                        void rejectRequest(delivery.id, reason)
-                      }
-                    />
+                  {requests.map((delivery, index) => (
+                    <Reveal key={delivery.id} index={index}>
+                      <DeliveryRequestCard
+                        delivery={delivery}
+                        isAccepting={
+                          deliveryActionPending === 'accept' &&
+                          deliveryActionPendingId === delivery.id
+                        }
+                        isRejecting={
+                          deliveryActionPending === 'reject' &&
+                          deliveryActionPendingId === delivery.id
+                        }
+                        isBusy={
+                          Boolean(activeDelivery) ||
+                          (deliveryActionPending !== null &&
+                            deliveryActionPendingId !== delivery.id)
+                        }
+                        onAccept={() => void handleAccept(delivery.id)}
+                        onReject={(reason) =>
+                          void rejectRequest(delivery.id, reason)
+                        }
+                      />
+                    </Reveal>
                   ))}
                 </div>
               ) : (
@@ -239,12 +242,17 @@ export function DeliveriesPage() {
         {tab === 'completed' ? (
           history.length > 0 ? (
             <div className="space-y-3">
-              {history.map((delivery) => {
+              {history.map((delivery, index) => {
                 const outcome = deliveryOutcome(delivery)
                 const declined = isDeclinedByPartner(delivery)
 
                 return (
-                  <Card key={delivery.id} padding="sm">
+                  <Card
+                    key={delivery.id}
+                    padding="sm"
+                    className="reveal-up"
+                    style={revealStyle(index)}
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">

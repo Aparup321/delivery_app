@@ -1,7 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
 import { TrendingUp } from 'lucide-react'
+import { AnimatedNumber } from '../../components/common/AnimatedNumber'
 import { Badge } from '../../components/common/Badge'
 import { Card } from '../../components/common/Card'
+import { Reveal } from '../../components/common/Reveal'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { StatCard } from '../../components/common/StatCard'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
@@ -310,7 +312,10 @@ export function EarningsPage() {
 
           <div className="mt-1 flex items-end justify-between gap-3">
             <p className="text-[28px] font-bold leading-none tracking-tight text-ink">
-              {formatCurrency(amount, locale)}
+              <AnimatedNumber
+                value={amount}
+                format={(next) => formatCurrency(Math.round(next), locale)}
+              />
             </p>
             {isLiveSession ? (
               <Badge tone="success" size="sm">
@@ -335,12 +340,17 @@ export function EarningsPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
-            value={String(deliveries)}
+            value={<AnimatedNumber value={deliveries} />}
             label={t('Deliveries')}
             hint={period === 'today' ? t('Today') : t('This period')}
           />
           <StatCard
-            value={formatCurrency(average, locale)}
+            value={
+              <AnimatedNumber
+                value={average}
+                format={(next) => formatCurrency(Math.round(next), locale)}
+              />
+            }
             label={t('Avg. per delivery')}
             hint={isLiveSession ? t('Earned') : t('After incentives')}
           />
@@ -449,9 +459,11 @@ export function EarningsPage() {
 
             {visibleDeliveries.length > 0 ? (
               <ul className="mt-2 divide-y divide-line">
-                {visibleDeliveries.map((delivery) => (
-                <li
+                {visibleDeliveries.map((delivery, index) => (
+                <Reveal
+                  as="li"
                   key={delivery.id}
+                  index={index}
                   className="flex items-center justify-between gap-3 py-2.5"
                 >
                   <div className="min-w-0">
@@ -484,7 +496,7 @@ export function EarningsPage() {
                       )}
                     </Badge>
                   </div>
-                </li>
+                </Reveal>
               ))}
             </ul>
             ) : (
@@ -510,9 +522,11 @@ export function EarningsPage() {
             </p>
           ) : (
             <ul className="mt-2 divide-y divide-line">
-              {payouts.map((payout) => (
-                <li
+              {payouts.map((payout, index) => (
+                <Reveal
+                  as="li"
                   key={payout.id}
+                  index={index}
                   className="flex items-center justify-between gap-3 py-2.5"
                 >
                   <div>
@@ -534,7 +548,7 @@ export function EarningsPage() {
                       {t(payout.status)}
                     </Badge>
                   </div>
-                </li>
+                </Reveal>
               ))}
             </ul>
           )}

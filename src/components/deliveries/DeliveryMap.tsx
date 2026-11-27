@@ -368,7 +368,7 @@ export function DeliveryMap({
         >
           <TileLayer
             url={TILE_URL}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
           />
 
           {pickupPoint ? (

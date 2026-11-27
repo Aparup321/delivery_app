@@ -125,6 +125,38 @@
   }
 }
 
+@keyframes progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nav-pop {
+  0% {
+    transform: scale(0.86);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @layer utilities {
   .page-enter {
     animation: page-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -153,6 +185,22 @@
   .bar-grow {
     animation: bar-grow 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
+
+  .progress-fill {
+    transform-origin: left center;
+    animation: progress-fill 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Lists and cards settle in one after another. Set --reveal-delay via the
+     Reveal component or revealStyle(). */
+  .reveal-up {
+    animation: reveal-up 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  .nav-pop {
+    animation: nav-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -162,7 +210,10 @@
   .offer-enter,
   .badge-pop,
   .status-pulse,
-  .bar-grow {
+  .bar-grow,
+  .progress-fill,
+  .reveal-up,
+  .nav-pop {
     animation: none;
   }
 
