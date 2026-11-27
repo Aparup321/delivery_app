@@ -98,6 +98,13 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **Auth screens on phones.** The sign-in/OTP sheet now sizes against
+  `100dvh`, enters with a 300 ms transform-only rise, and only runs the
+  focus-lift transition on pointer-fine devices, so the smooth entrance no longer
+  fights the keyboard resize on touch. The OTP field is six boxes over one real
+  input: backspace deletes natively on Android/iOS keyboards that send no
+  `keydown`, and focus no longer jumps box to box, which removes the scroll
+  shake while typing a digit.
 - **Onboarding submission no longer fails with "Missing or insufficient
   permissions".** The partner update rule ran the full profile validator twice —
   once for a profile update and again for the submission transition — so a

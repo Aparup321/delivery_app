@@ -223,8 +223,9 @@ Do these in the Firebase/Google Cloud console (not in the client):
 5. **Monitor Auth sign-ups** for bursts from one IP/ASN. Real OTP delivery plus
    App Check is the effective mitigation; client-side timers are not.
 6. **Keep polling bounded.** The console refreshes full partner records every
-   minute, partner presence fields every 15 seconds, the tracking page every
-   10 seconds only while visible, and pauses until the next Pacific reset after
+   five minutes, runs an online-only presence query every 15 seconds, refreshes
+   support tickets every 30 seconds on that page, and polls tracking every
+   10 seconds only while visible. It pauses until the next Pacific reset after
    a Firestore quota error. Do not lower those intervals without checking the
    project's daily document-read quota.
 

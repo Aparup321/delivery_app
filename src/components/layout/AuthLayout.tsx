@@ -16,8 +16,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useLanguage()
 
   return (
-    <div className="flex h-svh justify-center overflow-hidden bg-brand-deep">
-      <div className="relative flex h-svh w-full max-w-[430px] flex-col overflow-hidden bg-brand-deep">
+    <div className="flex h-[100dvh] justify-center overflow-hidden bg-brand-deep">
+      <div className="relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden bg-brand-deep">
         <header className="relative z-10 flex items-center justify-between px-5 pt-5">
           <div className="flex items-center gap-2.5">
             <span className="grid size-9 place-items-center rounded-xl bg-white/12 text-white">
@@ -46,7 +46,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         </div>
 
         <div className="auth-sheet relative z-10 -mt-5 shrink-0">
-          <main className="sheet-enter app-scrollbar max-h-[calc(100svh-72px)] overflow-y-auto rounded-t-[30px] bg-surface px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6 shadow-float">
+          <main className="sheet-enter app-scrollbar max-h-[calc(100dvh-64px)] overflow-y-auto overscroll-contain rounded-t-[30px] bg-surface px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6 shadow-float">
             {children}
           </main>
         </div>

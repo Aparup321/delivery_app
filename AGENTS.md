@@ -244,14 +244,19 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 Layout components: `AppLayout`, `AuthLayout`, `BottomNavigation`, `ScreenHeader`,
 `ModulePlaceholder`. `AuthLayout` is the sign-in/OTP shell: a solid brand hero
 with a faint street grid and route, and the form in a white bottom sheet. The
-hero is top-anchored and `overflow-hidden`, so the keyboard shrinking the
-viewport (`interactive-widget=resizes-content`) raises the sheet without moving
-the artwork. Focusing a field lifts the sheet smoothly toward the middle with a
-transform-only transition (no layout or scale changes, so text stays sharp);
-a surface tail keeps its bottom edge flush. `AppLayout` owns the vertical scroll area
-(`main.app-scrollbar`) so the slim scrollbar sits on the app column, not the
-browser edge; route changes reset it to the top. Auth screens use the same
-scrollbar treatment.
+shell and sheet size against `100dvh`. The hero is top-anchored and
+`overflow-hidden`, so the keyboard shrinking the viewport
+(`interactive-widget=resizes-content`) raises the sheet without moving the
+artwork. On pointer-fine devices, focusing a field lifts the sheet toward the
+middle with a transform-only transition; touch devices skip that lift so it does
+not compete with the keyboard resize. The sheet entrance is a 300 ms
+transform-only rise, and a surface tail keeps its bottom edge flush. `AppLayout`
+owns the vertical scroll area (`main.app-scrollbar`) so the slim scrollbar sits
+on the app column, not the browser edge; route changes reset it to the top. Auth
+screens use the same scrollbar treatment. `OtpInput` renders six boxes over one
+real input: backspace deletes natively on mobile keyboards that send no
+`keydown`, and focus never jumps between boxes, so typing does not scroll the
+sheet.
 
 **Do not duplicate these primitives inside a screen.** If a variant is missing,
 extend the shared component with a typed prop instead of copying its classes.

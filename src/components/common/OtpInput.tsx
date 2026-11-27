@@ -1,8 +1,4 @@
-import { useRef } from 'react'
-import type {
-  ClipboardEvent,
-  KeyboardEvent,
-} from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useLanguage } from '../../context/language'
 import { cn } from '../../utils/cn'
 
@@ -16,6 +12,17 @@ export interface OtpInputProps {
   disabled?: boolean
 }
 
+/**
+ * Six digit boxes backed by one real input.
+ *
+ * The previous implementation rendered six separate inputs and moved focus on
+ * every digit. On a phone that produced two problems: each focus move made the
+ * browser scroll the sheet, which read as the screen shaking, and Android/iOS
+ * keyboards often fire no `keydown` for backspace, so the delete never reached
+ * the controlled value. A single transparent input over the boxes deletes
+ * natively, keeps focus in one place, and lets the platform's one-time-code
+ * autofill work.
+ */
 export function OtpInput({
   value,
   onChange,
@@ -26,113 +33,84 @@ export function OtpInput({
   disabled = false,
 }: OtpInputProps) {
   const { t } = useLanguage()
-  const inputsRef = useRef<Array<HTMLInputElement | null>>([])
-  const characters = Array.from({ length }, (_, index) => value[index] ?? '')
+  const inputId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
   const labelText = t(label)
+  const characters = Array.from({ length }, (_, index) => value[index] ?? '')
+  // The box that shows the caret treatment: the next empty slot, or the last
+  // slot once the code is complete.
+  const activeIndex = Math.min(value.length, length - 1)
 
-  function focusAt(index: number) {
-    inputsRef.current[Math.min(Math.max(index, 0), length - 1)]?.focus()
-  }
-
-  function commit(next: string[]) {
-    onChange(next.join('').replace(/\s+/g, ''))
-  }
-
-  function handleChange(index: number, raw: string) {
-    const digit = raw.replace(/\D/g, '').slice(-1)
-
-    if (!digit) {
+  // Focus without letting the browser scroll the sheet to the field; the field
+  // is already on screen and that scroll is what made the page jump.
+  useEffect(() => {
+    if (!autoFocus || disabled) {
       return
     }
 
-    const next = [...characters]
-    next[index] = digit
-    commit(next)
-    focusAt(index + 1)
-  }
-
-  function handleKeyDown(index: number, event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Backspace') {
-      event.preventDefault()
-      const next = [...characters]
-
-      if (next[index]) {
-        next[index] = ''
-        commit(next)
-        return
-      }
-
-      if (index > 0) {
-        next[index - 1] = ''
-        commit(next)
-        focusAt(index - 1)
-      }
-    }
-
-    if (event.key === 'ArrowLeft') {
-      focusAt(index - 1)
-    }
-
-    if (event.key === 'ArrowRight') {
-      focusAt(index + 1)
-    }
-  }
-
-  function handlePaste(event: ClipboardEvent<HTMLInputElement>) {
-    event.preventDefault()
-    const pasted = event.clipboardData
-      .getData('text')
-      .replace(/\D/g, '')
-      .slice(0, length)
-
-    if (!pasted) {
-      return
-    }
-
-    onChange(pasted)
-    focusAt(pasted.length)
-  }
+    inputRef.current?.focus({ preventScroll: true })
+  }, [autoFocus, disabled])
 
   return (
     <div>
-      <p className="mb-1.5 text-[13px] font-semibold text-ink">{labelText}</p>
-      <div
-        className="flex items-center justify-between gap-2"
-        role="group"
-        aria-label={labelText}
+      <label
+        htmlFor={inputId}
+        className="mb-1.5 block text-[13px] font-semibold text-ink"
       >
-        {characters.map((character, index) => (
-          <input
-            key={index}
-            ref={(element) => {
-              inputsRef.current[index] = element
-            }}
-            value={character}
-            onChange={(event) => handleChange(index, event.target.value)}
-            onKeyDown={(event) => handleKeyDown(index, event)}
-            onPaste={handlePaste}
-            onFocus={(event) => event.target.select()}
-            type="text"
-            inputMode="numeric"
-            autoComplete={index === 0 ? 'one-time-code' : 'off'}
-            maxLength={1}
-            disabled={disabled}
-            autoFocus={autoFocus && index === 0}
-            aria-label={t('{label} digit {number}', {
-              label: labelText,
-              number: index + 1,
-            })}
-            aria-invalid={hasError || undefined}
-            className={cn(
-              'h-13 w-full min-w-0 rounded-2xl border bg-surface text-center text-lg font-bold text-ink transition-colors',
-              'focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10',
-              hasError
-                ? 'border-danger/60'
-                : 'border-line hover:border-brand/30',
-              disabled && 'opacity-60',
-            )}
-          />
-        ))}
+        {labelText}
+      </label>
+
+      <div className="relative">
+        <div
+          className="flex items-center justify-between gap-2"
+          aria-hidden="true"
+        >
+          {characters.map((character, index) => {
+            const isActive = isFocused && index === activeIndex
+
+            return (
+              <span
+                key={index}
+                className={cn(
+                  'grid h-13 w-full min-w-0 place-items-center rounded-2xl border bg-surface text-center text-lg font-bold text-ink transition-colors',
+                  hasError ? 'border-danger/60' : 'border-line',
+                  isActive && 'ring-4',
+                  isActive && (hasError ? 'ring-danger/10' : 'ring-brand/10'),
+                  isActive && !hasError && 'border-brand',
+                  disabled && 'opacity-60',
+                )}
+              >
+                {character}
+              </span>
+            )
+          })}
+        </div>
+
+        <input
+          ref={inputRef}
+          id={inputId}
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value.replace(/\D/g, '').slice(0, length))
+          }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="done"
+          disabled={disabled}
+          aria-label={labelText}
+          aria-invalid={hasError || undefined}
+          // Transparent but fully interactive: tapping anywhere on the boxes
+          // opens the numeric keyboard and focuses this single input. 16px text
+          // stops iOS Safari from zooming the page when the field is focused.
+          className="absolute inset-0 h-full w-full cursor-text bg-transparent text-[16px] opacity-0 outline-none"
+        />
       </div>
     </div>
   )
