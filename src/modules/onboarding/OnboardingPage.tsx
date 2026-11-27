@@ -531,7 +531,7 @@ export function OnboardingPage() {
                 label={t('City')}
                 required
                 value={onboarding.city}
-                placeholder="Kolkata"
+                placeholder={t('Your city')}
                 onChange={(event) =>
                   updateOnboarding({ city: event.target.value })
                 }

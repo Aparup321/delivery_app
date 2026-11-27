@@ -4,7 +4,6 @@ import { ArrowRight, ShieldCheck } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
-import { Card } from '../../components/common/Card'
 import { IconTile } from '../../components/common/IconTile'
 import { OtpInput } from '../../components/common/OtpInput'
 import { AuthLayout } from '../../components/layout/AuthLayout'
@@ -94,90 +93,89 @@ export function VerifyOtpPage() {
 
   return (
     <AuthLayout>
-      <Card padding="lg">
-        <IconTile size="lg">
-          <ShieldCheck className="size-6" aria-hidden="true" />
+      <div className="flex items-center gap-3">
+        <IconTile size="md">
+          <ShieldCheck className="size-5" aria-hidden="true" />
         </IconTile>
+        <div className="min-w-0">
+          <h1 className="text-[20px] font-bold tracking-tight text-ink">
+            {t('Verify your number')}
+          </h1>
+        </div>
+      </div>
 
-        <h1 className="mt-4 text-[21px] font-semibold tracking-tight text-ink">
-          {t('Verify your number')}
-        </h1>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
-          {t('We sent a {length}-digit code to {phone}.', {
-            length: OTP_LENGTH,
-            phone: maskedPhone,
-          })}
-        </p>
+      <p className="mt-3 text-[12.5px] leading-relaxed text-ink-muted">
+        {t('We sent a {length}-digit code to {phone}.', {
+          length: OTP_LENGTH,
+          phone: maskedPhone,
+        })}
+      </p>
 
-        <form className="mt-5 space-y-4" onSubmit={handleVerify} noValidate>
-          <div>
-            <OtpInput
-              value={otp}
-              onChange={(value) => {
-                setOtp(value)
-                if (error) {
-                  setError('')
-                }
-              }}
-              length={OTP_LENGTH}
-              hasError={Boolean(error)}
-              autoFocus
-            />
-            {errorMessage ? (
-              <p
-                role="alert"
-                className="mt-2 text-xs font-medium text-danger"
-              >
-                {errorMessage}
-              </p>
-            ) : null}
-          </div>
+      <form className="mt-4 space-y-3" onSubmit={handleVerify} noValidate>
+        <div>
+          <OtpInput
+            value={otp}
+            onChange={(value) => {
+              setOtp(value)
+              if (error) {
+                setError('')
+              }
+            }}
+            length={OTP_LENGTH}
+            hasError={Boolean(error)}
+            autoFocus
+          />
+          {errorMessage ? (
+            <p role="alert" className="mt-2 text-xs font-medium text-danger">
+              {errorMessage}
+            </p>
+          ) : null}
+        </div>
 
-          <Button
-            type="submit"
-            fullWidth
-            size="lg"
-            isLoading={isVerifying}
-            rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
-          >
-            {t('Verify and continue')}
-          </Button>
-        </form>
+        <Button
+          type="submit"
+          fullWidth
+          size="lg"
+          isLoading={isVerifying}
+          rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+        >
+          {t('Verify and continue')}
+        </Button>
+      </form>
 
-        <div className="mt-4 flex items-center justify-between gap-3 text-[12.5px]">
-          <Link
-            to="/login"
+      <div className="mt-4 flex items-center justify-between gap-3 text-[12.5px]">
+        <Link
+          to="/login"
+          className="font-semibold text-brand-deep hover:underline"
+        >
+          {t('Change number')}
+        </Link>
+
+        {secondsLeft > 0 ? (
+          <span className="text-ink-muted">
+            {t('Resend in {seconds}s', { seconds: secondsLeft })}
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={handleResend}
             className="font-semibold text-brand-deep hover:underline"
           >
-            {t('Change number')}
-          </Link>
+            {t('Resend code')}
+          </button>
+        )}
+      </div>
 
-          {secondsLeft > 0 ? (
-            <span className="text-ink-muted">
-              {t('Resend in {seconds}s', { seconds: secondsLeft })}
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={handleResend}
-              className="font-semibold text-brand-deep hover:underline"
-            >
-              {t('Resend code')}
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4 flex items-start gap-2 rounded-2xl bg-brand-tint p-3 text-[11.5px] leading-relaxed text-ink-muted">
-          <Badge tone="brand" size="sm">
-            {t('Demo')}
-          </Badge>
-          <span>
-            {t('No SMS is sent in this prototype. Use the code {code}.', {
-              code: DEMO_OTP,
-            })}
-          </span>
-        </div>
-      </Card>
+      <div className="mt-4 flex items-start gap-2 rounded-2xl bg-brand-tint p-3 text-[11.5px] leading-relaxed text-ink-muted">
+        <Badge tone="brand" size="sm">
+          {t('Demo')}
+        </Badge>
+        <span>
+          {t('No SMS is sent in this prototype. Use the code {code}.', {
+            code: DEMO_OTP,
+          })}
+        </span>
+      </div>
     </AuthLayout>
   )
 }

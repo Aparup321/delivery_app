@@ -9,6 +9,32 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Location-neutral branding and a focused sign-in sheet.** Removed the Kolkata
+  badge, tagline and city placeholder; demo delivery addresses no longer name a
+  city, and the mock-data guidance no longer ties the product to one location.
+  Focusing the mobile-number or OTP field now lifts the auth sheet smoothly
+  toward the middle with a transform-only 380 ms transition, a surface tail that
+  keeps the bottom edge flush, and no scale so text stays sharp. Disabled under
+  `prefers-reduced-motion`.
+- **Hero-and-sheet sign-in.** Login and OTP now use a full-bleed brand hero
+  (wordmark, street grid, route) with the form in a white sheet pinned to the
+  bottom. The hero is top-anchored and clipped, so the on-screen keyboard raises
+  the sheet over the artwork instead of scrolling the page; the viewport meta
+  uses `interactive-widget=resizes-content` for that. The phone field gained a
+  `+91` prefix, and the OTP sheet dropped its duplicated masked number.
+- **Post-onboarding detail editing.** Profile → **Edit details** opens an
+  English/Hindi/Bengali form for email, address, city, PIN code and vehicle
+  (type, model, colour, registration). Saving writes `partners/{uid}` and
+  `vehicles/{uid}` in one batch, updates the app immediately and shows a success
+  banner. Name, mobile number, KYC numbers and bank details stay read-only;
+  after approval the verified licence number stays locked. Firestore rules allow
+  operational vehicle edits post-approval without permitting a licence change.
+- **Recharts earnings chart.** The earnings trend is now a responsive Recharts
+  bar chart: a 780 ms grow-in, theme-aware gradient bars, a custom hover/tap
+  tooltip with the bucket amount, keyboard chart navigation, and click-to-open
+  for that range's statements. Animation is disabled under
+  `prefers-reduced-motion`, and the previous CSS bar chart and `bar-grow`
+  utility were removed.
 - **Security hardening.** Firestore rules now bound profile, ticket,
   notification and partner-authored delivery fields; the partner can no longer
   attach a proof before a job is delivered. Oxlint rejects HTML/eval injection
@@ -72,6 +98,11 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **Edit Details no longer asks for the date of birth.** The page validated its
+  own fields and then re-ran the wizard's vehicle-step validator against the full
+  application. It now checks only email, address, city, PIN code and the edited
+  vehicle fields, so an identity field the form does not touch can never block a
+  profile save.
 - **Premium motion layer, still reduced-motion safe.** Lists and cards settle in
   with a capped 45 ms stagger (`Reveal` / `revealStyle`), totals count up to
   their live value (`AnimatedNumber`), the earnings/home figures animate without

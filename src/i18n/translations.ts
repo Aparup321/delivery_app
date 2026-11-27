@@ -107,8 +107,8 @@ const hindi: Record<string, string> = {
   Demo: 'डेमो',
   'Next step': 'अगला चरण',
   'Delivery partner app': 'डिलीवरी पार्टनर ऐप',
-  'Grocery and restaurant deliveries across Kolkata.':
-    'कोलकाता में किराना और रेस्टोरेंट डिलीवरी।',
+  'On demand': 'ऑन डिमांड',
+  'Your city': 'आपका शहर',
   'Sign in': 'साइन इन',
   'Use the mobile number linked to your partner account.':
     'अपने पार्टनर खाते से जुड़ा मोबाइल नंबर इस्तेमाल करें।',
@@ -441,6 +441,27 @@ const hindi: Record<string, string> = {
     'साइकिल के लिए लाइसेंस या पंजीकरण संख्या नहीं चाहिए।',
   'Vehicle model': 'वाहन मॉडल',
   'Vehicle colour': 'वाहन का रंग',
+  'Edit details': 'विवरण संपादित करें',
+  'Update your email, address and vehicle':
+    'अपना ईमेल, पता और वाहन अपडेट करें',
+  'Contact details': 'संपर्क विवरण',
+  'Used for delivery updates and account notices.':
+    'डिलीवरी अपडेट और खाता सूचनाओं के लिए उपयोग किया जाता है।',
+  'Your verified mobile number and name cannot be changed here. Contact support to correct verified KYC details.':
+    'आपका सत्यापित मोबाइल नंबर और नाम यहां नहीं बदला जा सकता। सत्यापित KYC विवरण सुधारने के लिए सहायता से संपर्क करें।',
+  'Vehicle details': 'वाहन विवरण',
+  'Keep this up to date so dispatch assigns suitable jobs.':
+    'इसे अपडेट रखें ताकि डिस्पैच उपयुक्त काम सौंप सके।',
+  'Driving licence (verified): {number}':
+    'ड्राइविंग लाइसेंस (सत्यापित): {number}',
+  'Your driving licence is missing. Contact support before switching to a bike or scooter.':
+    'आपका ड्राइविंग लाइसेंस मौजूद नहीं है। बाइक या स्कूटर चुनने से पहले सहायता से संपर्क करें।',
+  'Your driving licence is missing or invalid. Contact support before switching to a bike or scooter.':
+    'आपका ड्राइविंग लाइसेंस मौजूद नहीं है या अमान्य है। बाइक या स्कूटर चुनने से पहले सहायता से संपर्क करें।',
+  'Save changes': 'बदलाव सहेजें',
+  'Your details were updated.': 'आपका विवरण अपडेट हो गया।',
+  'Could not save your details. Check your connection and try again.':
+    'आपका विवरण सहेजा नहीं जा सका। कनेक्शन जांचें और फिर कोशिश करें।',
   'Training & Onboarding': 'प्रशिक्षण और ऑनबोर्डिंग',
   'Complete every module before your account is approved':
     'खाता स्वीकृत होने से पहले हर मॉड्यूल पूरा करें',
@@ -508,10 +529,14 @@ const hindi: Record<string, string> = {
     'आप इसे बाद में प्रोफ़ाइल में बदल सकते हैं।',
   'Preferred language': 'पसंदीदा भाषा',
   'Play module video': 'मॉड्यूल वीडियो चलाएँ',
+  'Tap to open this range': 'यह रेंज खोलने के लिए टैप करें',
   'Loading video…': 'वीडियो लोड हो रहा है…',
   'Video could not be loaded': 'वीडियो लोड नहीं हो सका',
   'Close the player and try again.': 'प्लेयर बंद करके फिर कोशिश करें।',
   'Close': 'बंद करें',
+  'Partner app': 'पार्टनर ऐप',
+  'Deliver on your terms.': 'अपनी शर्तों पर डिलीवर करें।',
+  'Enter mobile number': 'मोबाइल नंबर दर्ज करें',
   'Key points': 'मुख्य बातें',
   'Mark as complete': 'पूरा हुआ चिह्नित करें',
   'Mark as not complete': 'पूरा नहीं चिह्नित करें',
@@ -831,8 +856,8 @@ const bengali: Record<string, string> = {
   Demo: 'ডেমো',
   'Next step': 'পরবর্তী ধাপ',
   'Delivery partner app': 'ডেলিভারি পার্টনার অ্যাপ',
-  'Grocery and restaurant deliveries across Kolkata.':
-    'কলকাতায় মুদি ও রেস্টুরেন্ট ডেলিভারি।',
+  'On demand': 'অন ডিমান্ড',
+  'Your city': 'আপনার শহর',
   'Sign in': 'সাইন ইন',
   'Use the mobile number linked to your partner account.':
     'আপনার পার্টনার অ্যাকাউন্টের সঙ্গে যুক্ত মোবাইল নম্বর ব্যবহার করুন।',
@@ -1165,6 +1190,27 @@ const bengali: Record<string, string> = {
     'সাইকেলের জন্য লাইসেন্স বা নিবন্ধন নম্বর লাগে না।',
   'Vehicle model': 'যানবাহনের মডেল',
   'Vehicle colour': 'যানবাহনের রঙ',
+  'Edit details': 'বিবরণ সম্পাদনা করুন',
+  'Update your email, address and vehicle':
+    'আপনার ইমেল, ঠিকানা ও যানবাহন হালনাগাদ করুন',
+  'Contact details': 'যোগাযোগের বিবরণ',
+  'Used for delivery updates and account notices.':
+    'ডেলিভারি আপডেট ও অ্যাকাউন্ট বিজ্ঞপ্তির জন্য ব্যবহৃত হয়।',
+  'Your verified mobile number and name cannot be changed here. Contact support to correct verified KYC details.':
+    'আপনার যাচাই করা মোবাইল নম্বর ও নাম এখানে বদলানো যায় না। যাচাই করা KYC বিবরণ সংশোধনের জন্য সহায়তার সঙ্গে যোগাযোগ করুন।',
+  'Vehicle details': 'যানবাহনের বিবরণ',
+  'Keep this up to date so dispatch assigns suitable jobs.':
+    'এটি হালনাগাদ রাখুন যাতে ডিসপ্যাচ উপযুক্ত কাজ দিতে পারে।',
+  'Driving licence (verified): {number}':
+    'ড্রাইভিং লাইসেন্স (যাচাইকৃত): {number}',
+  'Your driving licence is missing. Contact support before switching to a bike or scooter.':
+    'আপনার ড্রাইভিং লাইসেন্স নেই। বাইক বা স্কুটার বাছাই করার আগে সহায়তার সঙ্গে যোগাযোগ করুন।',
+  'Your driving licence is missing or invalid. Contact support before switching to a bike or scooter.':
+    'আপনার ড্রাইভিং লাইসেন্স নেই বা অবৈধ। বাইক বা স্কুটার বাছাই করার আগে সহায়তার সঙ্গে যোগাযোগ করুন।',
+  'Save changes': 'পরিবর্তন সংরক্ষণ করুন',
+  'Your details were updated.': 'আপনার বিবরণ হালনাগাদ হয়েছে।',
+  'Could not save your details. Check your connection and try again.':
+    'আপনার বিবরণ সংরক্ষণ করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
   'Training & Onboarding': 'প্রশিক্ষণ ও অনবোর্ডিং',
   'Complete every module before your account is approved':
     'অ্যাকাউন্ট অনুমোদনের আগে প্রতিটি মডিউল সম্পূর্ণ করুন',
@@ -1234,10 +1280,14 @@ const bengali: Record<string, string> = {
     'আপনি এটি পরে প্রোফাইলে বদলাতে পারেন।',
   'Preferred language': 'পছন্দের ভাষা',
   'Play module video': 'মডিউল ভিডিও চালান',
+  'Tap to open this range': 'এই রেঞ্জ খুলতে ট্যাপ করুন',
   'Loading video…': 'ভিডিও লোড হচ্ছে…',
   'Video could not be loaded': 'ভিডিও লোড করা যায়নি',
   'Close the player and try again.': 'প্লেয়ার বন্ধ করে আবার চেষ্টা করুন।',
   'Close': 'বন্ধ করুন',
+  'Partner app': 'পার্টনার অ্যাপ',
+  'Deliver on your terms.': 'নিজের শর্তে ডেলিভারি করুন।',
+  'Enter mobile number': 'মোবাইল নম্বর লিখুন',
   'Key points': 'মূল বিষয়',
   'Mark as complete': 'সম্পূর্ণ হিসেবে চিহ্নিত করুন',
   'Mark as not complete': 'অসম্পূর্ণ হিসেবে চিহ্নিত করুন',

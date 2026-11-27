@@ -75,7 +75,7 @@ material for the project and are not part of the deployed application.
 
 | Module | What it does | Status |
 | --- | --- | --- |
-| Authentication | Mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
+| Authentication | Hero-and-sheet sign-in and OTP screens with a steady brand artwork, mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
 | Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. The first step starts with an English/Hindi/Bengali language selector; training has five short lesson modules, each with a 37-39 s portrait video (thumbnail opens a full-screen player; every module is narrated in Hindi with a music bed), a progress bar and explicit completion. This test build is text-only for documents: profile-photo and document uploads are hidden | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
@@ -86,10 +86,10 @@ material for the project and are not part of the deployed application.
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings; declined offers appear under Cancelled with a red badge and ₹0 earned | Built (live + demo fallback) |
-| Earnings & payments | Today/week/month totals, chart and recent deliveries calculated from completed jobs; month uses 1–6, 7–12, 13–18, 19–24, 25–end buckets; bars show hover amounts and open that bucket’s statements; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
+| Earnings & payments | Today/week/month totals, an animated Recharts trend and recent deliveries calculated from completed jobs; month uses 1-6, 7-12, 13-18, 19-24, 25-end buckets; bars show hover amounts and open that bucket's statements; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission, live ticket feed and status updates; delivery issues create a ticket automatically | Built (live tickets persisted; FAQs are static help content) |
-| Profile & settings | Partner details, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
+| Profile & settings | Partner details, post-onboarding email/address/vehicle editing, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
 
 ### Demo access
 
@@ -138,6 +138,7 @@ is enabled.
 | [Firebase](https://firebase.google.com/docs/web/setup) | 13 | Auth, Firestore and Storage SDK foundation |
 | [Leaflet](https://leafletjs.com/) + [React Leaflet](https://react-leaflet.dev/) | 1.9 / 5 | Interactive delivery map on OpenStreetMap tiles |
 | [Lucide React](https://lucide.dev/) | latest | Icons |
+| [Recharts](https://recharts.org/) | latest | Interactive earnings chart |
 | [OpenStreetMap](https://www.openstreetmap.org/) | — | Map tiles (no key); OSRM for route geometry |
 | [Oxlint](https://oxc.rs/) | latest | Code linting |
 
@@ -374,7 +375,7 @@ screens use the same treatment and pull their card over the brand header.
 
 Demo fixtures are the **offline prototype's** content and are shown only when
 Firebase is not configured (or the connection failed and the app fell back to
-the device-only demo session). `src/mock/` holds realistic Kolkata-based data
+the device-only demo session). `src/mock/` holds realistic India-based data
 for delivery requests, completed deliveries, earnings, payouts, notifications,
 onboarding defaults and support FAQs. A signed-in Firebase account — including
 a brand-new number — never receives any of it: its requests, active delivery,

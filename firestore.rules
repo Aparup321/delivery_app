@@ -102,6 +102,9 @@ service cloud.firestore {
         && (!data.keys().hasAny(['lastLocationUpdatedAt'])
           || data.lastLocationUpdatedAt == null
           || maxText(data.lastLocationUpdatedAt, 40))
+        && (!data.keys().hasAny(['presenceUpdatedAt'])
+          || data.presenceUpdatedAt == null
+          || maxText(data.presenceUpdatedAt, 40))
         && (!data.keys().hasAny(['lastLocation'])
           || validPartnerLocation(data.lastLocation))
         && (!data.keys().hasAny(['rating'])
@@ -123,7 +126,7 @@ service cloud.firestore {
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
         'city', 'addressLine', 'pincode', 'vehicleType', 'joinedOn',
         'submittedAt', 'updatedAt', 'bank', 'lastLocation',
-        'lastLocationUpdatedAt', 'isOnline', 'availability'
+        'lastLocationUpdatedAt', 'presenceUpdatedAt', 'isOnline', 'availability'
       ];
     }
 
@@ -298,14 +301,18 @@ service cloud.firestore {
         ])
         && vehiclePayload(request.resource.data);
       allow update: if isOwner(uid)
-        && applicationOpen(uid)
         && request.resource.data.partnerId == uid
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly([
             'partnerId', 'type', 'model', 'colour', 'registrationNumber',
             'licenceNumber', 'updatedAt'
           ])
-        && vehiclePayload(request.resource.data);
+        && vehiclePayload(request.resource.data)
+        // After approval the partner may correct operational details, but the
+        // verified licence number stays locked to its reviewed value.
+        && (applicationOpen(uid)
+          || !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['licenceNumber']));
     }
 
     match /training_progress/{uid} {

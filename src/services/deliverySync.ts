@@ -1,6 +1,7 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import type { DeliveryStatus } from '../types/delivery'
+import { getFirebaseErrorCode } from '../utils/firebaseError'
 
 /** Status values delivery_admin already uses on its delivery records. */
 export type AdminDeliveryStatus =
@@ -49,6 +50,27 @@ export function deliveryDocumentId(deliveryId: string): string {
  */
 export type PartnerAvailability = 'Available' | 'On Delivery' | 'Offline'
 
+/**
+ * Writes the presence projection to `partners/{uid}`. The heartbeat field lets
+ * delivery_admin distinguish a live app from a stale Online flag. Older
+ * deployed rules may not allow that new field yet; retry without it so the
+ * online/offline switch still reaches the console during the rules rollout.
+ */
+async function writePartnerPresence(uid: string, fields: Record<string, unknown>): Promise<void> {
+  if (!db) return
+  const ref = doc(db, 'partners', uid)
+  try {
+    await setDoc(ref, {
+      partnerId: uid,
+      ...fields,
+      presenceUpdatedAt: new Date().toISOString(),
+    }, { merge: true })
+  } catch (error) {
+    if (getFirebaseErrorCode(error) !== 'permission-denied') throw error
+    await setDoc(ref, { partnerId: uid, ...fields }, { merge: true })
+  }
+}
+
 /** Publishes the partner's availability and last known position. */
 export async function publishPartnerLocation(
   uid: string,
@@ -60,20 +82,15 @@ export async function publishPartnerLocation(
     return
   }
 
-  await setDoc(
-    doc(db, 'partners', uid),
-    {
-      // Firestore rules require partnerId == uid for every profile update.
-      // Re-writing it here repairs legacy or manually restored documents whose
-      // partnerId was lost, which otherwise silently blocks presence updates.
-      partnerId: uid,
-      isOnline: online,
-      availability,
-      lastLocation: location,
-      lastLocationUpdatedAt: new Date().toISOString(),
-    },
-    { merge: true },
-  )
+  await writePartnerPresence(uid, {
+    // Firestore rules require partnerId == uid for every profile update.
+    // Re-writing it here repairs legacy or manually restored documents whose
+    // partnerId was lost, which otherwise silently blocks presence updates.
+    isOnline: online,
+    availability,
+    lastLocation: location,
+    lastLocationUpdatedAt: new Date().toISOString(),
+  })
 }
 
 /** Updates only the availability flag, leaving the last position untouched. */
@@ -85,11 +102,7 @@ export async function publishPartnerAvailability(
     return
   }
 
-  await setDoc(
-    doc(db, 'partners', uid),
-    { partnerId: uid, availability },
-    { merge: true },
-  )
+  await writePartnerPresence(uid, { availability })
 }
 
 /**
@@ -106,9 +119,5 @@ export async function publishPartnerStatus(
     return
   }
 
-  await setDoc(
-    doc(db, 'partners', uid),
-    { partnerId: uid, isOnline: online, availability },
-    { merge: true },
-  )
+  await writePartnerPresence(uid, { isOnline: online, availability })
 }

@@ -57,7 +57,8 @@ UI is treated as a security control.
 - `partners/{uid}` — read/write only by the owner or the administrator UID.
   Partners may update profile and presence fields only; status, review,
   suspension and partner IDs stay administrator-owned. Profile text, pincode,
-  bank, presence coordinates and timestamps are length/format/type bounded.
+  bank, presence coordinates, heartbeat timestamps and online/availability
+  flags are length/format/type bounded.
 - `deliveries/{id}` — only the assigned partner or the administrator can read.
   Partners cannot create, delete or reassign a delivery. They may update only
   lifecycle fields, and only along the allowed status transitions. The data they
@@ -68,10 +69,12 @@ UI is treated as a security control.
   translation variables and timestamps are capped.
 - `support_tickets/{id}` — only the owner or administrator reads. Creation must
   be `Open`, with bounded subject/message; the partner cannot close a ticket.
-- `partner_documents`, `vehicles`, `training_progress` — owner or administrator,
-  and only while the application is open. Partners cannot write the
-  administrator's `adminDocuments` review map, and every nested document/file
-  value is bounded.
+- `partner_documents`, `vehicles`, `training_progress` — owner or administrator.
+  KYC documents and training stay writable only while the application is open.
+  Vehicles allow post-approval corrections to type, model, colour and
+  registration, while the verified licence number remains locked. Partners
+  cannot write the administrator's `adminDocuments` review map, and every nested
+  document/file value is bounded.
 - `admin_state` — administrator only.
 
 Deploy after any rule change:
@@ -212,10 +215,11 @@ Do these in the Firebase/Google Cloud console (not in the client):
    a single origin server.
 5. **Monitor Auth sign-ups** for bursts from one IP/ASN. Real OTP delivery plus
    App Check is the effective mitigation; client-side timers are not.
-6. **Keep polling bounded.** The console refreshes every minute, the tracking
-   page every 10 seconds only while visible, and pauses until the next Pacific
-   reset after a Firestore quota error. Do not lower those intervals without
-   checking the project's daily read quota.
+6. **Keep polling bounded.** The console refreshes full partner records every
+   minute, partner presence fields every 15 seconds, the tracking page every
+   10 seconds only while visible, and pauses until the next Pacific reset after
+   a Firestore quota error. Do not lower those intervals without checking the
+   project's daily document-read quota.
 
 ## 8. Security headers and CSP
 

@@ -3,12 +3,14 @@ import type { InputHTMLAttributes, ReactNode } from 'react'
 import { cn } from '../../utils/cn'
 
 export interface InputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> {
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id' | 'prefix'> {
   label?: string
   hint?: string
   error?: string
   leftIcon?: ReactNode
   rightIcon?: ReactNode
+  /** Static text shown inside the field before the value, e.g. "+91". */
+  prefix?: ReactNode
   containerClassName?: string
 }
 
@@ -18,6 +20,7 @@ export function Input({
   error,
   leftIcon,
   rightIcon,
+  prefix,
   containerClassName,
   className,
   required,
@@ -39,6 +42,12 @@ export function Input({
       ) : null}
 
       <div className="relative">
+        {prefix ? (
+          <span className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 border-r border-line pr-2.5 text-[13px] font-semibold text-ink-muted">
+            {prefix}
+          </span>
+        ) : null}
+
         {leftIcon ? (
           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft">
             {leftIcon}
@@ -55,7 +64,7 @@ export function Input({
             'placeholder:font-normal placeholder:text-ink-soft',
             'focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10',
             'disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-muted',
-            leftIcon ? 'pl-10' : null,
+            prefix ? 'pl-[4.5rem]' : leftIcon ? 'pl-10' : null,
             rightIcon ? 'pr-10' : null,
             error ? 'border-danger/60' : 'border-line hover:border-brand/30',
             className,

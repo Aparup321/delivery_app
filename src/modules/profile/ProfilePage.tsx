@@ -1,15 +1,17 @@
 import {
   BadgeCheck,
+  CheckCircle2,
   ChevronRight,
   FileText,
   LogOut,
   Mail,
   MapPin,
+  Pencil,
   Phone,
   Star,
   Truck,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../components/common/Avatar'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
@@ -29,6 +31,7 @@ import { applicationStatusMeta } from '../../utils/applicationStatus'
 
 export function ProfilePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { session, signOut } = useAuth()
   const {
     onboarding,
@@ -39,6 +42,9 @@ export function ProfilePage() {
   const { language, setLanguage, t } = useLanguage()
 
   const displayName = onboarding.fullName.trim() || t('Partner')
+  const detailsSaved =
+    (location.state as { detailsSaved?: boolean } | null)?.detailsSaved ===
+    true
   const documents = [
     { label: 'Aadhaar card', fileName: onboarding.documents.aadhaar },
     { label: 'PAN card', fileName: onboarding.documents.pan },
@@ -89,6 +95,19 @@ export function ProfilePage() {
       />
 
       <div className="space-y-4 px-4 pt-5">
+        {detailsSaved ? (
+          <div
+            role="status"
+            className="flex items-start gap-2 rounded-2xl bg-success-soft px-3.5 py-2.5 text-[12px] font-medium text-success"
+          >
+            <CheckCircle2
+              className="mt-0.5 size-4 shrink-0"
+              aria-hidden="true"
+            />
+            {t('Your details were updated.')}
+          </div>
+        ) : null}
+
         <Card padding="lg">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -116,6 +135,27 @@ export function ProfilePage() {
               {vehicleLabel}
             </span>
           </div>
+        </Card>
+
+        <Card padding="md">
+          <button
+            type="button"
+            onClick={() => navigate('/profile/edit')}
+            className="flex w-full items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          >
+            <IconTile size="sm">
+              <Pencil className="size-4" aria-hidden="true" />
+            </IconTile>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12.5px] font-semibold text-ink">
+                {t('Edit details')}
+              </span>
+              <span className="mt-0.5 block text-[11.5px] text-ink-muted">
+                {t('Update your email, address and vehicle')}
+              </span>
+            </span>
+            <ChevronRight className="size-4 text-ink-soft" aria-hidden="true" />
+          </button>
         </Card>
 
         <Card padding="md">

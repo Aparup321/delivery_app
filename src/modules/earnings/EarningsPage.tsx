@@ -15,14 +15,10 @@ import {
   payouts,
 } from '../../mock/earnings'
 import type { Delivery } from '../../types/delivery'
-import type { EarningsPeriod, EarningsPoint } from '../../types/earnings'
+import type { EarningsPeriod } from '../../types/earnings'
 import { formatCurrency, formatShortDate } from '../../utils/format'
-
-interface ChartPoint extends EarningsPoint {
-  /** Set on live points so the bar can open that bucket's statements. */
-  start?: string
-  end?: string
-}
+import { EarningsChart } from './EarningsChart'
+import type { EarningsChartPoint } from './EarningsChart'
 
 interface ChartBucket {
   label: string
@@ -122,7 +118,7 @@ function liveChart(
   deliveries: Delivery[],
   period: EarningsPeriod,
   locale: string,
-): ChartPoint[] {
+): EarningsChartPoint[] {
   if (period === 'today') {
     const labels = ['12 AM', '4 AM', '8 AM', '12 PM', '4 PM', '8 PM']
     const dayStart = startOfToday()
@@ -145,7 +141,7 @@ function liveChart(
   if (period === 'week') {
     const start = startOfToday()
     start.setDate(start.getDate() - 6)
-    const points: ChartPoint[] = []
+    const points: EarningsChartPoint[] = []
 
     for (let index = 0; index < 7; index += 1) {
       const bucketStart = new Date(start)
@@ -176,7 +172,7 @@ export function EarningsPage() {
   const { history, isLiveSession } = useApp()
   const { t, locale } = useLanguage()
   const [period, setPeriod] = useState<EarningsPeriod>('today')
-  const [selectedBucket, setSelectedBucket] = useState<ChartPoint | null>(
+  const [selectedBucket, setSelectedBucket] = useState<EarningsChartPoint | null>(
     null,
   )
   const statementsRef = useRef<HTMLDivElement>(null)
@@ -205,7 +201,7 @@ export function EarningsPage() {
         : earningsSummary.deliveriesMonth
 
   const average = deliveries > 0 ? Math.round(amount / deliveries) : 0
-  const chartPoints: ChartPoint[] = useMemo(
+  const chartPoints: EarningsChartPoint[] = useMemo(
     () =>
       isLiveSession
         ? liveChart(liveDeliveries, period, locale)
@@ -241,7 +237,7 @@ export function EarningsPage() {
     ? statementDeliveries
     : recentDeliveries
 
-  function selectBucket(point: ChartPoint) {
+  function selectBucket(point: EarningsChartPoint) {
     if (!point.start || !point.end) {
       return
     }
@@ -365,63 +361,12 @@ export function EarningsPage() {
               {t('No completed deliveries in this period.')}
             </p>
           ) : (
-            <div
-              className="mt-4 flex h-40 items-end gap-2"
-              role="group"
-              aria-label={t('Earnings bar chart')}
-            >
-              {chartPoints.map((point, index) => {
-                // Pixel heights are deliberate: percentage heights inside an
-                // auto-height flex column can resolve to zero in some browsers.
-                const barHeight =
-                  point.amount === 0
-                    ? 2
-                    : Math.max(
-                        8,
-                        Math.round((point.amount / maxPoint) * 112),
-                      )
-                const isMax = point.amount === maxPoint
-
-                return (
-                  <div
-                    key={point.label}
-                    className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
-                  >
-                    <div className="flex min-h-0 w-full flex-1 items-end">
-                      <div
-                        className="group relative w-full"
-                        style={{ height: `${barHeight}px` }}
-                      >
-                        <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-brand-deep px-1.5 py-0.5 text-[10px] font-semibold text-white group-hover:block">
-                          {formatCurrency(point.amount, locale)}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={!point.start || point.amount === 0}
-                          onClick={() => selectBucket(point)}
-                          aria-label={`${point.label}: ${formatCurrency(point.amount, locale)}`}
-                          title={`${point.label}: ${formatCurrency(point.amount, locale)}`}
-                          style={{ animationDelay: `${index * 55}ms` }}
-                          className={[
-                            'bar-grow h-full w-full origin-bottom rounded-t-md border-0 p-0 transition-all duration-200',
-                            isMax ? 'bg-brand-deep' : 'bg-brand/35',
-                            point.start && point.amount > 0
-                              ? 'cursor-pointer hover:scale-y-[1.03] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-                              : 'cursor-default',
-                            selectedBucket?.label === point.label
-                              ? 'ring-2 ring-brand/35'
-                              : '',
-                          ].join(' ')}
-                        />
-                      </div>
-                    </div>
-                    <span className="h-4 text-[11px] font-medium text-ink-soft">
-                      {point.label}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
+            <EarningsChart
+              points={chartPoints}
+              max={maxPoint}
+              selectedLabel={selectedBucket?.label}
+              onSelect={selectBucket}
+            />
           )}
         </Card>
 

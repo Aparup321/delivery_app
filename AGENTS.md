@@ -96,6 +96,7 @@ Cloud Function.
 | Firebase JS SDK | Auth, Firestore and Storage foundation |
 | Leaflet + React Leaflet | Interactive OpenStreetMap delivery map |
 | Lucide React | Icon set |
+| Recharts | Earnings trend chart |
 | Oxlint | Linting |
 
 **Only the libraries listed above are installed.** Do not add a dependency unless
@@ -240,8 +241,14 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 | `SectionHeading` | Section title with optional subtitle and action |
 | `EmptyState` | Icon, title, description and optional action |
 
-Layout components: `AppLayout`, `BottomNavigation`, `ScreenHeader`,
-`ModulePlaceholder`. `AppLayout` owns the vertical scroll area
+Layout components: `AppLayout`, `AuthLayout`, `BottomNavigation`, `ScreenHeader`,
+`ModulePlaceholder`. `AuthLayout` is the sign-in/OTP shell: a solid brand hero
+with a faint street grid and route, and the form in a white bottom sheet. The
+hero is top-anchored and `overflow-hidden`, so the keyboard shrinking the
+viewport (`interactive-widget=resizes-content`) raises the sheet without moving
+the artwork. Focusing a field lifts the sheet smoothly toward the middle with a
+transform-only transition (no layout or scale changes, so text stays sharp);
+a surface tail keeps its bottom edge flush. `AppLayout` owns the vertical scroll area
 (`main.app-scrollbar`) so the slim scrollbar sits on the app column, not the
 browser edge; route changes reset it to the top. Auth screens use the same
 scrollbar treatment.
@@ -287,8 +294,9 @@ extend the shared component with a typed prop instead of copying its classes.
 ## 9. Mock data guidelines
 
 - All mock data lives in `src/mock/`, never in components.
-- Mock records must look realistic: Indian names, Kolkata locations, INR
-  amounts, plausible distances/timings, `#DEL####` delivery IDs.
+- Mock records must look realistic: Indian names, plausible Indian locations
+  (the product is not tied to one home city), INR amounts, plausible
+  distances/timings, `#DEL####` delivery IDs.
 - Mock data must match the planned Firestore shape (see the project roadmap)
   so replacing it later does not change component props.
 - Export `const` values or small helper functions; no random values at render
@@ -596,7 +604,12 @@ their service layer is added:
   Function and is not built.
 - **History, earnings, notifications, support, profile** — searchable history,
   read/unread notifications, FAQ + ticket creation, and profile with documents,
-  language, alerts and sign-out. A declined offer stays `assigned` on the shared
+  language, alerts and sign-out. Profile → **Edit details** lets an onboarded
+  partner update email, address and vehicle details (stored on `partners/{uid}`
+  and `vehicles/{uid}`); the form validates only those fields, so an untouched
+  identity value such as the date of birth cannot block a save. Name, mobile
+  number, KYC numbers and bank details stay
+  locked to their verified values. A declined offer stays `assigned` on the shared
   document so the console can reassign it, but the partner's history treats it
   as a cancellation: a red **Cancelled by you** badge, the decline reason and ₹0
   earned, grouped under the Cancelled filter and excluded from delivered counts
@@ -605,8 +618,9 @@ their service layer is added:
   creates a ticket for operations. The Earnings screen calculates live
   today/week/month totals, chart buckets, average and recent jobs from completed
   deliveries in `history`, so it matches the dashboard. Month bars use the
-  calendar buckets 1–6, 7–12, 13–18, 19–24 and 25–end; hovering a bar shows its
-  amount and clicking it opens that range's statement list. Payouts and
+  calendar buckets 1-6, 7-12, 13-18, 19-24 and 25-end. The trend is a Recharts
+  bar chart that grows in, shows the amount on hover or tap, and opens that
+  range's statement list on click; payouts and
   incentives remain labelled demo/empty until settlement is connected. Every
   section header has a back control with an explicit fallback; Home is the root
   and has none.
@@ -649,8 +663,9 @@ their service layer is added:
 - Closed-app push notifications need Firebase Cloud Messaging plus a Cloud
   Function that fans out assignment events; only in-app notifications and
   background-tab system alerts exist.
-- Onboarding quiz, working shifts, service zones and post-submission editing are
-  not built.
+- Onboarding quiz, working shifts and service zones are not built. Post-onboarding
+  editing covers email, address and vehicle only; name, mobile, KYC numbers and
+  bank details remain read-only and need support.
 
 ### Verification (run before handing work back)
 
@@ -675,8 +690,8 @@ errors.
 3. Replace the demo OTP fallback (`4821`) with the backend-issued delivery code
    end to end, and add customer contact details to the console's offer when its
    privacy review permits.
-4. Add onboarding editing after submission (currently the submitted screen is
-   read-only and the profile button says "View partner details").
+4. Add support-mediated editing for verified fields (name, mobile, KYC and bank);
+   email, address and vehicle are already editable from Profile.
 5. Design alignment for the remaining screens (history, support, profile).
 
 ### Working agreements that still apply

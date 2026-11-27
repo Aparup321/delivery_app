@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ArrowRight, Phone } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/common/Button'
-import { Card } from '../../components/common/Card'
 import { Input } from '../../components/common/Input'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { useLanguage } from '../../context/language'
@@ -67,46 +66,44 @@ export function LoginPage() {
 
   return (
     <AuthLayout>
-      <Card padding="lg">
-        <h1 className="text-[21px] font-semibold tracking-tight text-ink">
-          {t('Sign in')}
-        </h1>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
-          {t('Use the mobile number linked to your partner account.')}
-        </p>
+      <h1 className="text-[20px] font-bold tracking-tight text-ink">
+        {t('Sign in')}
+      </h1>
+      <p className="mt-1 text-[12.5px] leading-relaxed text-ink-muted">
+        {t('Use the mobile number linked to your partner account.')}
+      </p>
 
-        <form className="mt-5 space-y-4" onSubmit={handleSubmit} noValidate>
-          <Input
-            label={t('Mobile number')}
-            required
-            type="tel"
-            inputMode="numeric"
-            autoComplete="tel-national"
-            placeholder="99999 55555"
-            hint={t('We will send a 6-digit verification code.')}
-            error={error ? t(error) : undefined}
-            value={phone}
-            leftIcon={<Phone className="size-4" aria-hidden="true" />}
-            onChange={(event) => {
-              setPhone(normalizeIndianMobile(event.target.value))
-              if (error) {
-                setError('')
-              }
-            }}
-          />
+      <form className="mt-4 space-y-3" onSubmit={handleSubmit} noValidate>
+        <Input
+          label={t('Mobile number')}
+          required
+          type="tel"
+          inputMode="numeric"
+          autoComplete="tel-national"
+          placeholder={t('Enter mobile number')}
+          prefix="+91"
+          hint={t('We will send a 6-digit verification code.')}
+          error={error ? t(error) : undefined}
+          value={phone}
+          onChange={(event) => {
+            setPhone(normalizeIndianMobile(event.target.value))
+            if (error) {
+              setError('')
+            }
+          }}
+        />
 
-          <Button
-            type="submit"
-            fullWidth
-            size="lg"
-            rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
-          >
-            {t('Send OTP')}
-          </Button>
-        </form>
-      </Card>
+        <Button
+          type="submit"
+          fullWidth
+          size="lg"
+          rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+        >
+          {t('Send OTP')}
+        </Button>
+      </form>
 
-      <p className="mt-4 px-1 text-center text-[11.5px] leading-relaxed text-ink-soft">
+      <p className="mt-3 px-1 text-center text-[10.5px] leading-relaxed text-ink-soft">
         {t(
           'Prototype build: verification codes are simulated and no SMS is sent.',
         )}

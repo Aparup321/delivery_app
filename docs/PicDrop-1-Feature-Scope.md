@@ -303,4 +303,17 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   dependency override for the patched `@grpc/grpc-js`. `SECURITY.md` records the
   remaining production work: real OTP, server-side drop-code verification,
   App Check enforcement, quotas/budgets, API-key restrictions and headers/CSP.
+- **2026-11-27 — M28: post-onboarding detail editing.** Profile now has an
+  **Edit details** section. A partner can update email, address, city, PIN code
+  and vehicle type/model/colour/registration after onboarding. The save writes
+  `partners/{uid}` and `vehicles/{uid}` in one Firestore batch and refreshes the
+  Profile immediately; verified name, mobile number, KYC numbers and bank details
+  stay read-only. Rules permit the operational vehicle update after approval but
+  keep the verified licence number locked.
+- **2026-11-27 — M29: location-neutral copy and auth focus motion.** Removed the
+  Kolkata badge, unused tagline and city placeholder, and stripped city names
+  from demo delivery addresses so the product is not presented as a single-city
+  service. The sign-in/OTP sheet now lifts toward the middle when a field is
+  focused: transform-only, 380 ms, no scale, with a surface tail that keeps the
+  bottom flush and reduced-motion support.
 
