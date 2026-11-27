@@ -98,6 +98,17 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **Every training lesson has audible background music.** The old bed was almost
+  entirely below 400 Hz (−23.7 dB there against −54.2 dB at 800-1600 Hz), and
+  phone and laptop speakers reproduce almost nothing that low, so the 3-5 s gaps
+  between Hindi sentences played at −39.6 dB and read as silence. All five
+  modules now use a second bed, `music_hi_v2.wav`, built from the same five
+  chords with a soft 76 BPM arpeggio in the 350-1200 Hz range and a presence
+  lift, mixed at −6 dB. Gaps measure −24.5 to −26.2 dB against −17.7 to −19.1 dB
+  of speech, with the 400-1600 Hz band at −29 to −32 dB; narration is unchanged
+  and no clip peaks above −2.2 dBTP. Regenerate the bed with
+  `tools/make_music_bed.js` in the video project. Re-rendered with the CPU
+  backend because the Vulkan path ran out of memory on this machine.
 - **Edit Details no longer asks for the date of birth.** The page validated its
   own fields and then re-ran the wizard's vehicle-step validator against the full
   application. It now checks only email, address, city, PIN code and the edited
