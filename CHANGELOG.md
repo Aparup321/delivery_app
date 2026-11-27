@@ -98,6 +98,14 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **Onboarding submission no longer fails with "Missing or insufficient
+  permissions".** The partner update rule ran the full profile validator twice —
+  once for a profile update and again for the submission transition — so a
+  realistic application exceeded Firestore's per-request expression budget and
+  the commit was denied. Both shapes are now checked by one function that
+  validates once; the rules were redeployed to `delivery-231a0` and a live
+  submission (partner, document, vehicle and training writes in one transaction)
+  passes.
 - **Every training lesson has audible background music.** The old bed was almost
   entirely below 400 Hz (−23.7 dB there against −54.2 dB at 800-1600 Hz), and
   phone and laptop speakers reproduce almost nothing that low, so the 3-5 s gaps

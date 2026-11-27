@@ -452,7 +452,10 @@ the Firebase session.
   The rules also allow the `delivery_admin` administrator UID to read/write
   `partners/{uid}` and read `partner_documents`, `vehicles`, and
   `training_progress`. `firebase.json` points the Firebase CLI at both rule
-  files and `.firebaserc` sets `delivery-231a0` as the default project.
+  files and `.firebaserc` sets `delivery-231a0` as the default project. Each
+  write is validated by a single rule function: Firestore rejects a request that
+  evaluates more than 1,000 expressions, so the partner update rule checks the
+  profile and submission shapes together instead of validating twice.
 - If configuration is absent, the app uses the local demo OTP and keeps data in
   `localStorage`, so UI work does not depend on live credentials.
 

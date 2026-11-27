@@ -77,6 +77,13 @@ UI is treated as a security control.
   document/file value is bounded.
 - `admin_state` — administrator only.
 
+Rule evaluation budget: Firestore denies a request that evaluates more than
+1,000 expressions. Validate a write in **one** function per operation — running a
+full-document validator in two alternative branches (for example a profile path
+and a submission path) doubles the cost and shows up in the app as "Missing or
+insufficient permissions". `partners/{uid}` updates use a single `isOwnerUpdate`
+for this reason; do not split it back into per-shape functions.
+
 Deploy after any rule change:
 
 ```bash

@@ -446,7 +446,10 @@ their service layer is added:
 - Treat `SECURITY.md` as the security contract. Rule changes live in
   `firestore.rules`/`storage.rules`, are size- and type-bounded, and must be
   deployed (`firebase deploy --only firestore:rules,storage:rules`) — editing the
-  file alone changes nothing in production.
+  file alone changes nothing in production. Validate each write in one function
+  per operation: Firestore denies a request past 1,000 evaluated expressions, so
+  calling a full-document validator from two alternative branches makes a
+  complete onboarding submission fail as "Missing or insufficient permissions".
 - App Check is optional and enabled only when `VITE_RECAPTCHA_SITE_KEY` is set
   (`src/firebase/index.ts`); production must register the key and turn on
   enforcement for Auth, Firestore and Storage. Never describe client timers or

@@ -157,30 +157,31 @@ service cloud.firestore {
           ['adminReview', 'adminSuspension', 'adminPartnerId']);
     }
 
-    function isProfileUpdate(uid) {
-      return request.resource.data.partnerId == uid
-        && validPartnerData(request.resource.data)
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(partnerAppFields());
-    }
-
-    function isSubmissionTransition(uid) {
-      let hasNoPreviousApplication =
-        !resource.data.keys().hasAny(['applicationStatus']);
-      let wasDraft = resource.data.get('applicationStatus', '') == 'draft';
-      let wasRejected = resource.data.get('applicationStatus', '') == 'rejected';
+    // One function for every partner-owned update. Profile/presence writes and
+    // the one-way submission transition are the only allowed shapes, and
+    // `validPartnerData` runs exactly once: evaluating it in two separate
+    // branches doubles the expression count and pushes a full submission past
+    // Firestore's per-request evaluation budget, which is reported to the app as
+    // "Missing or insufficient permissions".
+    function isOwnerUpdate(uid) {
+      let data = request.resource.data;
+      let changed = data.diff(resource.data).affectedKeys();
+      let previousStatus = resource.data.get('applicationStatus', '');
+      let canSubmit = previousStatus == null
+        || previousStatus == ''
+        || previousStatus in ['draft', 'rejected'];
       let isNotSuspended = !resource.data.keys().hasAny(['adminSuspension'])
         || resource.data.adminSuspension.active != true;
 
-      return request.resource.data.partnerId == uid
-        && validPartnerData(request.resource.data)
-        && (hasNoPreviousApplication || wasDraft || wasRejected)
-        && isNotSuspended
-        && request.resource.data.applicationStatus == 'submitted'
-        && request.resource.data.status == 'pending'
-        && maxText(request.resource.data.statusUpdatedAt, 40)
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(submissionFields());
+      return data.partnerId == uid
+        && validPartnerData(data)
+        && (changed.hasOnly(partnerAppFields())
+          || (canSubmit
+            && isNotSuspended
+            && data.applicationStatus == 'submitted'
+            && data.status == 'pending'
+            && maxText(data.statusUpdatedAt, 40)
+            && changed.hasOnly(submissionFields())));
     }
 
     // KYC files can be corrected while an application is open, but not after
@@ -198,8 +199,7 @@ service cloud.firestore {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if isAdmin() || isOwnerCreate(uid);
       allow update: if isAdmin()
-        || (isOwner(uid)
-          && (isProfileUpdate(uid) || isSubmissionTransition(uid)));
+        || (isOwner(uid) && isOwnerUpdate(uid));
       allow delete: if isAdmin();
     }
 
