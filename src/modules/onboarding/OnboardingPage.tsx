@@ -234,6 +234,31 @@ export function OnboardingPage() {
     void signOut()
   }
 
+  /**
+   * Marks one training module complete (never incomplete) and opens the next
+   * unfinished module, the same result as the manual action. Called when a
+   * lesson video ends, so finishing a module no longer leaves the partner stuck
+   * in the player needing to close it and tap "Mark as complete" themselves.
+   */
+  function completeTrainingTopic(topicId: string) {
+    const index = trainingTopics.findIndex((topic) => topic.id === topicId)
+
+    if (index < 0 || onboarding.training[index]) {
+      return
+    }
+
+    const next = [...onboarding.training]
+    next[index] = true
+    updateOnboarding({ training: next })
+
+    const nextIncomplete = next.findIndex(
+      (done, position) => position > index && !done,
+    )
+    setOpenTopic(
+      nextIncomplete >= 0 ? trainingTopics[nextIncomplete]?.id ?? null : null,
+    )
+  }
+
   async function handleContinue() {
     const message = validateStep(step, onboarding)
     if (message) {
@@ -957,7 +982,9 @@ export function OnboardingPage() {
             />
 
             <p className="text-[12px] leading-relaxed text-ink-muted">
-              {t('Read each short module, then mark it complete.')}
+              {t(
+                'Watch each short module; it marks complete when the video ends.',
+              )}
             </p>
 
             <div className="space-y-2.5">
@@ -1003,7 +1030,7 @@ export function OnboardingPage() {
                           {t(topic.duration)} ·{' '}
                           {isComplete
                             ? t('Completed')
-                            : t('Tap to read')}
+                            : t('Tap to watch')}
                         </span>
                       </span>
                       <ChevronDown
@@ -1074,23 +1101,14 @@ export function OnboardingPage() {
                           variant={isComplete ? 'outline' : 'primary'}
                           className="mt-3"
                           onClick={() => {
-                            const next = [...onboarding.training]
-                            next[index] = !next[index]
-                            updateOnboarding({ training: next })
-
-                            if (next[index]) {
-                              const nextIncomplete = next.findIndex(
-                                (done, position) =>
-                                  position > index && !done,
-                              )
-
-                              setOpenTopic(
-                                nextIncomplete >= 0
-                                  ? trainingTopics[nextIncomplete]?.id ??
-                                      null
-                                  : null,
-                              )
+                            if (isComplete) {
+                              const next = [...onboarding.training]
+                              next[index] = false
+                              updateOnboarding({ training: next })
+                              return
                             }
+
+                            completeTrainingTopic(topic.id)
                           }}
                         >
                           {t(
@@ -1355,6 +1373,13 @@ export function OnboardingPage() {
                       poster={videoTopic.poster}
                       aria-label={t(videoTopic.title)}
                       src={videoSrc}
+                      onEnded={() => {
+                        // Watching to the end completes the module and returns
+                        // the partner to the list, opening the next unfinished
+                        // lesson.
+                        completeTrainingTopic(videoTopic.id)
+                        setVideoTopic(null)
+                      }}
                     />
                   ) : videoFailed ? (
                     <div className="w-full max-w-[360px] rounded-2xl bg-white/10 p-5 text-center">

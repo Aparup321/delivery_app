@@ -521,9 +521,9 @@ const hindi: Record<string, string> = {
   'Delivery Safety & Best Practices': 'डिलीवरी सुरक्षा और सर्वोत्तम प्रथाएं',
   'Training progress': 'प्रशिक्षण प्रगति',
   '{completed} of {total} completed': '{completed} में से {total} पूरे',
-  'Read each short module, then mark it complete.':
-    'हर छोटा मॉड्यूल पढ़ें, फिर उसे पूरा चिह्नित करें।',
-  'Tap to read': 'पढ़ने के लिए टैप करें',
+  'Watch each short module; it marks complete when the video ends.':
+    'हर छोटा मॉड्यूल देखें; वीडियो खत्म होने पर वह अपने आप पूरा हो जाता है।',
+  'Tap to watch': 'देखने के लिए टैप करें',
   'Choose your language': 'अपनी भाषा चुनें',
   'You can change this later in Profile.':
     'आप इसे बाद में प्रोफ़ाइल में बदल सकते हैं।',
@@ -1272,9 +1272,9 @@ const bengali: Record<string, string> = {
   'Delivery Safety & Best Practices': 'ডেলিভারি নিরাপত্তা ও সেরা অনুশীলন',
   'Training progress': 'প্রশিক্ষণ অগ্রগতি',
   '{completed} of {total} completed': '{total}-এর মধ্যে {completed}টি সম্পূর্ণ',
-  'Read each short module, then mark it complete.':
-    'প্রতিটি ছোট মডিউল পড়ুন, তারপর সম্পূর্ণ চিহ্নিত করুন।',
-  'Tap to read': 'পড়ার জন্য ট্যাপ করুন',
+  'Watch each short module; it marks complete when the video ends.':
+    'প্রতিটি ছোট মডিউল দেখুন; ভিডিও শেষ হলে সেটি নিজেই সম্পূর্ণ হিসেবে চিহ্নিত হয়।',
+  'Tap to watch': 'দেখতে ট্যাপ করুন',
   'Choose your language': 'আপনার ভাষা বাছাই করুন',
   'You can change this later in Profile.':
     'আপনি এটি পরে প্রোফাইলে বদলাতে পারেন।',

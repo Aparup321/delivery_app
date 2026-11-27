@@ -98,6 +98,11 @@ support fixtures remain mock for the offline prototype only.
 
 ### Fixed
 
+- **Training videos complete their module on their own.** When a lesson clip
+  reaches the end, the full-screen player closes, the module is marked complete
+  and the next unfinished module opens — no more closing the player and tapping
+  **Mark as complete** by hand. Closing a video early still leaves the module
+  incomplete, and the button remains for toggling or when a clip cannot load.
 - **Auth screens on phones.** The sign-in/OTP sheet now sizes against
   `100dvh`, enters with a 300 ms transform-only rise, and only runs the
   focus-lift transition on pointer-fine devices, so the smooth entrance no longer

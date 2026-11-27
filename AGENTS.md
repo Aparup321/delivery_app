@@ -531,8 +531,10 @@ their service layer is added:
   The Training step lists five short modules, each with a 37–39 s portrait
   lesson video (thumbnail opens a full-screen player; every module is narrated
   in Hindi with a music bed), a key-point lesson, a
-  progress bar and an explicit **Mark as complete** action; completing one opens
-  the next unfinished module. The first step opens with a three-option language
+  progress bar and completion that follows the video: when the clip ends the
+  player closes by itself, the module is marked complete and the next unfinished
+  module opens (the **Mark as complete** button stays for manual toggling). The
+  first step opens with a three-option language
   selector (English, Hindi, Bengali; English default) that applies immediately.
   All required text fields are validated. Submission writes
   `partners`,
