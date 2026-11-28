@@ -228,7 +228,7 @@ service cloud.firestore {
 
     match /partners/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create: if isAdmin() || isOwnerCreate(uid);
+      allow create: if isAdmin() || (isOwner(uid) && isOwnerCreate(uid));
       allow update: if isAdmin()
         || (isOwner(uid) && isOwnerUpdate(uid));
       allow delete: if isAdmin();
