@@ -30,13 +30,15 @@ function normalizeIndianMobile(raw: string): string {
 export interface PhoneFormProps {
   /** Route to return to after a successful sign-in. */
   from?: string
+  /** Number to prefill when coming back from the OTP screen. */
+  initialPhone?: string
 }
 
 /**
  * Owns the phone value so typing re-renders only this form. Keeping the state
  * in LoginPage made every digit reconcile the whole hero-and-sheet shell.
  */
-export function PhoneForm({ from }: PhoneFormProps) {
+export function PhoneForm({ from, initialPhone }: PhoneFormProps) {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const phoneRef = useRef<HTMLInputElement>(null)
@@ -77,6 +79,7 @@ export function PhoneForm({ from }: PhoneFormProps) {
         hint={t('We will send a 6-digit verification code.')}
         error={error ? t(error) : undefined}
         inputRef={phoneRef}
+        defaultValue={initialPhone ?? ''}
         onChange={(event) => {
           // Keep the field uncontrolled: normalising in the DOM avoids a React
           // render on every digit, which is what made typing feel laggy.

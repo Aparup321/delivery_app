@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
+import { IconButton } from '../../components/common/IconButton'
 import { IconTile } from '../../components/common/IconTile'
 import { OtpInput } from '../../components/common/OtpInput'
 import { AuthLayout } from '../../components/layout/AuthLayout'
@@ -91,9 +92,26 @@ export function VerifyOtpPage() {
     restart()
   }
 
+  function returnToNumber() {
+    navigate('/login', {
+      state: {
+        phone,
+        ...(state?.from ? { from: state.from } : {}),
+      },
+    })
+  }
+
   return (
     <AuthLayout>
       <div className="flex items-center gap-3">
+        <IconButton
+          label={t('Back to mobile number')}
+          variant="soft"
+          size="sm"
+          onClick={returnToNumber}
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+        </IconButton>
         <IconTile size="md">
           <ShieldCheck className="size-5" aria-hidden="true" />
         </IconTile>
@@ -146,6 +164,10 @@ export function VerifyOtpPage() {
       <div className="mt-4 flex items-center justify-between gap-3 text-[12.5px]">
         <Link
           to="/login"
+          state={{
+            phone,
+            ...(state?.from ? { from: state.from } : {}),
+          }}
           className="font-semibold text-brand-deep hover:underline"
         >
           {t('Change number')}

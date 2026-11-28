@@ -5,12 +5,13 @@ import { PhoneForm } from './PhoneForm'
 
 interface LoginLocationState {
   from?: string
+  phone?: string
 }
 
 export function LoginPage() {
   const location = useLocation()
   const { t } = useLanguage()
-  const from = (location.state as LoginLocationState | null)?.from
+  const state = (location.state ?? null) as LoginLocationState | null
 
   return (
     <AuthLayout>
@@ -21,7 +22,7 @@ export function LoginPage() {
         {t('Use the mobile number linked to your partner account.')}
       </p>
 
-      <PhoneForm from={from} />
+      <PhoneForm from={state?.from} initialPhone={state?.phone} />
 
       <p className="mt-3 px-1 text-center text-[10.5px] leading-relaxed text-ink-soft">
         {t(
