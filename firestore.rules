@@ -19,14 +19,6 @@ service cloud.firestore {
       return value is string && value.size() <= limit;
     }
 
-    function validPartnerBank(bank) {
-      return bank is map
-        && bank.keys().hasOnly(['accountHolder', 'accountNumber', 'ifsc'])
-        && maxText(bank.get('accountHolder', ''), 120)
-        && maxText(bank.get('accountNumber', ''), 30)
-        && maxText(bank.get('ifsc', ''), 11);
-    }
-
     function validPartnerLatitude(value) {
       return value is number && value >= -90 && value <= 90;
     }
@@ -107,14 +99,22 @@ service cloud.firestore {
           || maxText(data.presenceUpdatedAt, 40))
         && (!data.keys().hasAny(['lastLocation'])
           || validPartnerLocation(data.lastLocation))
+        && (!data.keys().hasAny(['addressLocation'])
+          || data.addressLocation == null
+          || (data.addressLocation is map
+            && data.addressLocation.keys().hasOnly(['latitude', 'longitude'])
+            && validPartnerLatitude(data.addressLocation.get('latitude', 0))
+            && validPartnerLongitude(data.addressLocation.get('longitude', 0))))
         && (!data.keys().hasAny(['rating'])
           || data.rating == null
           || (data.rating is number
             && data.rating >= 0
             && data.rating <= 5))
-        && (!data.keys().hasAny(['bank'])
-          || data.bank == null
-          || validPartnerBank(data.bank));
+        && (!data.keys().hasAny(['upiId'])
+          || data.upiId == null
+          || (data.upiId is string
+            && data.upiId.size() <= 80
+            && data.upiId.matches('^[A-Za-z0-9._-]{2,64}@[A-Za-z]{2,32}$')));
     }
 
     // Fields the partner app owns. Administrator decisions are deliberately
@@ -124,8 +124,9 @@ service cloud.firestore {
       return [
         'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
-        'city', 'addressLine', 'pincode', 'vehicleType', 'joinedOn',
-        'submittedAt', 'updatedAt', 'bank', 'lastLocation',
+        'city', 'addressLine', 'pincode', 'addressLocation', 'upiId',
+        'vehicleType', 'joinedOn',
+        'submittedAt', 'updatedAt', 'lastLocation',
         'lastLocationUpdatedAt', 'presenceUpdatedAt', 'isOnline', 'availability'
       ];
     }
@@ -138,8 +139,9 @@ service cloud.firestore {
       return [
         'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
-        'city', 'addressLine', 'pincode', 'vehicleType',
-        'joinedOn', 'submittedAt', 'updatedAt', 'bank', 'lastLocation',
+        'city', 'addressLine', 'pincode', 'addressLocation', 'upiId',
+        'vehicleType',
+        'joinedOn', 'submittedAt', 'updatedAt', 'lastLocation',
         'lastLocationUpdatedAt', 'isOnline', 'status', 'applicationStatus',
         'statusUpdatedAt'
       ];
@@ -196,7 +198,7 @@ service cloud.firestore {
       // Once an application exists they are read-only; changes go through
       // support and the Administrator console.
       let verifiedChanged = changed.hasAny([
-        'fullName', 'phone', 'dateOfBirth', 'bank'
+        'fullName', 'phone', 'dateOfBirth'
       ]);
 
       return data.partnerId == uid
@@ -668,6 +670,35 @@ service cloud.firestore {
             resource.data.status,
             request.resource.data.status));
       allow delete: if isAdmin();
+
+      // In-app delivery chat. The assigned partner and the customer app (when
+      // the delivery carries the customer's Auth UID in `customerUid`) share one
+      // text thread; operations can read it for support. Messages are immutable.
+      match /messages/{messageId} {
+        function deliveryDoc() {
+          return get(/databases/$(database)/documents/deliveries/$(deliveryId)).data;
+        }
+
+        allow read: if isAdmin()
+          || (request.auth != null
+            && (deliveryDoc().partnerUid == request.auth.uid
+              || deliveryDoc().get('customerUid', '') == request.auth.uid));
+        allow create: if request.auth != null
+          && request.resource.data.keys().hasOnly([
+            'sender', 'senderUid', 'text', 'createdAt'
+          ])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.sender in ['partner', 'customer']
+          && ((request.resource.data.sender == 'partner'
+              && deliveryDoc().partnerUid == request.auth.uid)
+            || (request.resource.data.sender == 'customer'
+              && deliveryDoc().get('customerUid', '') == request.auth.uid))
+          && request.resource.data.text is string
+          && request.resource.data.text.size() >= 1
+          && request.resource.data.text.size() <= 1000
+          && maxText(request.resource.data.createdAt, 40);
+        allow update, delete: if isAdmin();
+      }
     }
   }
 }

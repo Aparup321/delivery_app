@@ -57,14 +57,22 @@ UI is treated as a security control.
 - `partners/{uid}` — read/write only by the owner or the administrator UID.
   Partners may update profile and presence fields only; status, review,
   suspension and partner IDs stay administrator-owned. Profile text, pincode,
-  bank, presence coordinates, heartbeat timestamps and online/availability
-  flags are length/format/type bounded.
+  payout UPI ID, the address pin coordinates, presence coordinates, heartbeat
+  timestamps and online/availability flags are length/format/type bounded. Name,
+  mobile, birth date and KYC numbers are frozen once an application exists; the
+  UPI ID stays editable because a withdrawal may change it.
 - `deliveries/{id}` — only the assigned partner or the administrator can read.
   Partners cannot create, delete or reassign a delivery. They may update only
   lifecycle fields, and only along the allowed status transitions. The data they
   add (`proof`, `currentLocation`, `events`, `partnerResponse`,
   `cancellationReason`, timestamps, `adminStatus`) is type- and size-bounded; a
   proof can only exist on a delivered job.
+- `deliveries/{id}/messages/{messageId}` — text-only customer chat. Read and
+  create are allowed for the assigned partner, the delivery's `customerUid`, and
+  the administrator. A caller must write their own `senderUid` and the matching
+  `sender` role, text is 1–1000 characters, and neither party can edit or delete
+  a message. Customer apps must authenticate with the same UID the console (or
+  ordering app) stores as `customerUid`.
 - `notifications/{id}` — only the owner reads/writes their feed; title, body,
   translation variables and timestamps are capped.
 - `support_tickets/{id}` — only the owner or administrator reads. Creation must

@@ -75,15 +75,15 @@ material for the project and are not part of the deployed application.
 
 | Module | What it does | Status |
 | --- | --- | --- |
-| Authentication | Responsive sign-in/OTP with the brand hero retained on every width (fixed 480px on phones so the keyboard cannot reflow it), a smooth 220ms form-sheet lift on focus, mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
-| Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. The first step starts with an English/Hindi/Bengali language selector; training has five short lesson modules, each with a 37-39 s portrait video (thumbnail opens a full-screen player; every module is narrated in Hindi with a music bed), a progress bar and completion on video end (the player closes and the module ticks itself; the Mark as complete button remains). This test build is text-only for documents: profile-photo and document uploads are hidden | Built (Firebase) |
-| KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
+| Authentication | Responsive sign-in/OTP with the brand hero retained on every width (fixed 480px on phones so the keyboard cannot reflow it), a smooth 220ms form-sheet lift on focus, an OTP back button that returns to the prefilled number field, mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
+| Onboarding | Five steps matching the design: personal, KYC & payout, vehicle, training, review. The first step starts with an English/Hindi/Bengali language selector and an address map with live search suggestions (tap/drag the pin or use the current location; the selection fills city/address/PIN; the pin is required). KYC collects document numbers and the payout UPI ID instead of bank details. Training has five short lesson modules, each with a 37-39 s portrait video (thumbnail opens a full-screen player; every module is narrated in Hindi with a music bed), a progress bar and completion on video end (the player closes and the module ticks itself; the Mark as complete button remains). This test build is text-only for documents: profile-photo and document uploads are hidden | Built (Firebase) |
+| KYC & documents | Aadhaar, PAN, licence, RC and payout UPI ID as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
 | Training & approval | Training checklist and submitted-application status | Built (Firebase) |
 | Application status | Pending, submitted, under review, approved or rejected with a progress timeline and rejection/suspension reasons; decisions arrive live from `delivery_admin` | Built (Firebase + admin) |
 | Home dashboard | Light header with avatar, greeting, top-right light/dark toggle and notifications, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
 | Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept/reject, a global sound/vibration alert, and expired-offer removal | Built (Firebase) |
-| Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
+| Active delivery | Interactive OpenStreetMap, a **Go to map with live route** button that opens Google Maps turn-by-turn to the current leg, an in-app **Message customer** chat (`deliveries/{id}/messages`, shared with the ordering apps), a **Cancel delivery** reason list, timeline, status actions, OTP plus text handover proof, contact and issue reporting; completed deliveries show the payout UPI QR; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; solid pickup→drop route plus a dotted live approach route that re-routes after 500 m; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings; declined offers appear under Cancelled with a red badge and ₹0 earned; tap any row for full delivery details | Built (live + demo fallback) |
 | Earnings & payments | Today/week/month totals, an animated Recharts trend and recent deliveries calculated from completed jobs; month uses 1-6, 7-12, 13-18, 19-24, 25-end buckets; bars show hover amounts and open that bucket's statements; recent jobs open the delivery details sheet; a withdrawal flow lets the partner enter an editable UPI ID, confirm a demo phone OTP and track the request live (an operations ticket is raised at High priority and credit is promised within 24 hours); payouts/incentives remain demo/empty | Built (live withdrawals; demo payouts) |
@@ -401,14 +401,19 @@ fallback when configuration is absent.
   labelled demo/empty until settlement is connected.
 - **Withdrawals.** The available balance is the delivered earnings minus every
   request that is not rejected. The partner enters an amount and a UPI ID
-  (prefilled with the last one, editable each time), confirms a demo phone OTP
-  (`123456`, shown in the sheet) and gets the "amount will take 24 hours to
-  credit" notice. One atomic write creates a `payments/{uid_request}` row with
-  status `requested` and a `support_tickets` row with `priority: 'High'` and a
-  "High priority · Withdrawal request" subject, so operations sees it in the
+  (prefilled with the onboarding payout UPI and editable each time; a changed ID
+  also updates the profile UPI so the payment QR stays in step), confirms a demo
+  phone OTP (`123456`, shown in the sheet) and gets the "amount will take 24
+  hours to credit" notice. One atomic write creates a `payments/{uid_request}` row
+  with status `requested` and a `support_tickets` row with `priority: 'High'` and
+  a "High priority · Withdrawal request" subject, so operations sees it in the
   existing ticket feed. `payments` is admin-updated to `processing`, `paid` or
   `rejected`; the Earnings list is an `onSnapshot`, so the status changes
   without a reload. Demo sessions persist the same list in `localStorage`.
+- **Payment QR.** A delivered job's details sheet renders a QR generated locally
+  (`qrcode.react`, no QR service) from the partner's payout UPI ID. It encodes a
+  standard `upi://pay` intent with the payee name, delivery reference and, for a
+  cash-on-delivery job, the collect amount.
 - Demo earnings figures exist only in the offline prototype; live earnings are
   not mock numbers.
 
@@ -512,6 +517,8 @@ write-through publishes each offer with:
 
 - identifiers (`deliveryId`, `displayId`) and the partner's name, vehicle type
   and Firebase UID (`partnerUid`);
+- the customer's name and phone, plus an optional `customerUid` (the ordering
+  app's Firebase Auth UID) that lets the customer join the delivery chat;
 - category, pickup and destination names, addresses and coordinates;
 - distance, ETA, earnings, item count, payment mode and handling notes;
 - the customer's 4-digit drop code (`dropOtp`) and an absolute `expiresAt`
@@ -539,6 +546,19 @@ to close the job and tells the partner to contact operations. The same
 completion can carry text-only handover details (recipient name, short note)
 and the last GPS fix, stored in `proof`; no photo, signature image or audio is
 required.
+
+**In-app customer messages.** Each delivery owns a text thread at
+`deliveries/{deliveryId}/messages/{messageId}` with
+`{ sender, senderUid, text, createdAt }`. The assigned partner sends
+`sender: 'partner'`; the grocery/restaurant customer apps send
+`sender: 'customer'`. Reads and writes are allowed only for the assigned partner,
+the customer whose Auth UID matches `customerUid` on the delivery, and the
+administrator; a sender cannot write a message labelled as the other party, and
+text is 1–1000 characters. Messages are immutable. `customerUid` is optional in
+the console's contract — set it when the ordering app knows the customer's UID so
+their app can join the same thread. The partner opens it from **Message
+customer** on the active delivery and sees replies live; demo sessions keep the
+thread in `localStorage`.
 
 **Notifications.** The live listeners turn events the partner did not create
 themselves into in-app notifications: a new assigned offer, a delivery the
@@ -588,9 +608,13 @@ the re-route is in flight. The map fits once per delivery instead of
 refitting on every GPS fix; follow mode pans to each new fix while it is on.
 Tiles default to OpenStreetMap and routes to the public OSRM demo server; both
 are configurable via `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE` because
-neither public service is SLA-backed. Missing or zeroed coordinates show a
-location-unavailable state instead of a wrong map, and a failed route fetch
-only hides the line — markers stay.
+neither public service is SLA-backed. The onboarding address map uses the same
+tiles and asks Photon for type-ahead suggestions and reverse geocoding (debounced,
+only after three characters or a pin placement); `VITE_GEOCODE_API_BASE` points
+that at a self-hosted or commercial Photon-compatible provider, since the public
+instance is a demo service. Missing or zeroed coordinates
+show a location-unavailable state instead of a wrong map, and a failed route
+fetch only hides the line - markers stay.
 
 `delivery_admin` reads the same collection over REST (polling, since its REST
 connection has no live subscription), shows the partner's latest position on

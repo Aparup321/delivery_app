@@ -9,6 +9,34 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Address suggestions, customer chat and a clearer cancel action.** Typing in
+  the onboarding search box now shows Photon/OSM address suggestions after three
+  characters (debounced); choosing one moves the pin, zooms the map and fills
+  city/address/PIN, alongside the existing tap/drag/current-location flow. The
+  onboarding map now uses Photon for both search and reverse geocoding
+  (`VITE_GEOCODE_API_BASE`). The active delivery gains a **Message customer**
+  chat backed by `deliveries/{id}/messages` — the assigned partner and the
+  customer app (via `customerUid`) share one live, immutable text thread, with
+  demo threads persisted locally — and the issue action is now an explicit
+  **Cancel delivery** with a reason list that includes "Customer refused the
+  order". Adds the nested message rules.
+- **Address map, payout UPI instead of bank details, payment QR and Google Maps
+  launch.** Onboarding's personal step now embeds a Leaflet map: tap or drag the
+  pin (or use the device location), Nominatim reverse-geocodes it once and fills
+  city/address/PIN; the pin is required and stored as `addressLocation`. The KYC
+  step replaces account holder/number/IFSC (and the passbook tile) with a payout
+  UPI ID. The withdrawal sheet prefills that onboarding UPI (still editable) and
+  a changed UPI updates the profile so the payment QR stays in step. Delivered
+  jobs show a locally generated `upi://pay` QR in the details sheet (payee name,
+  delivery reference and the COD collect amount, no QR service). The active
+  delivery screen gained a full-width **Go to map with live route** button that
+  opens Google Maps with `dir_action=navigate` to the current leg. Adds bounded
+  `upiId`/`addressLocation` rules and the `VITE_GEOCODE_API_BASE` provider.
+- **Back from OTP to the number field.** The Verify screen now has an explicit
+  back control beside the title. It returns to `/login` with the entered number
+  prefilled, so the partner can correct it instead of retyping; the intended
+  post-login destination is preserved for both the back button and the existing
+  **Change number** link.
 - **Withdrawal requests.** The Earnings screen now has a Withdraw earnings card
   showing the balance available (delivered earnings minus non-rejected requests).
   The dialog takes an amount and a UPI ID — prefilled from the last request but

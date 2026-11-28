@@ -23,7 +23,7 @@ owner approves a scope change.
 A delivery partner uses the app to:
 
 1. Sign in / register with a mobile number.
-2. Complete onboarding: personal details, KYC documents, vehicle and bank details.
+2. Complete onboarding: personal details, KYC documents, vehicle and payout UPI details.
 3. Go online and receive delivery requests.
 4. Accept or reject requests, then manage the delivery until completion.
 5. Review delivery history, earnings, notifications and support.
@@ -55,7 +55,8 @@ What exists today:
   Protected routes redirect back to the requested screen. A signed-in banner
   shows the Firebase error code and a retry action when that session cannot be
   created, and onboarding submission stays blocked until it succeeds.
-- Five-step onboarding wizard (personal, KYC + bank, vehicle, training, review).
+- Five-step onboarding wizard (personal with address map, KYC + payout, vehicle,
+  training, review).
   Draft progress is saved to `localStorage`; submission uploads files to Storage
   and writes partner records to Firestore.
 - Dashboard with online/offline availability, daily stats and live request
@@ -430,9 +431,10 @@ their service layer is added:
   page or component.
 - Firestore models must follow the roadmap collections: `partners`,
   `partner_documents`, `vehicles`, `training`, `training_progress`,
-  `deliveries`, `delivery_types`, `earnings`, `payments`, `notifications`,
-  `support_tickets`, `admin_users`. The `deliveries` contract (offer fields,
-  status values, partner-owned fields) is documented in README section 12 and
+  `deliveries` (with the `messages` subcollection), `delivery_types`, `earnings`,
+  `payments`, `notifications`, `support_tickets`, `admin_users`. The `deliveries`
+  contract (offer fields, status values, partner-owned fields, `customerUid` and
+  the chat schema) is documented in README section 12 and
   enforced by `firestore.rules`; keep both in sync with
   `src/services/deliveryRequests.ts`.
 - Store file metadata and storage paths, not file contents, in Firestore.
@@ -481,9 +483,10 @@ their service layer is added:
 ### What is implemented
 
 - **Auth** — mobile number + demo OTP (`123456`), the default verification path
-  until the project's own OTP API is connected. When Firebase is configured the
-  verified number signs in to a stable per-number Email/Password demo account, so
-  Firestore and Storage enforce the UID rules. The demo user's display name is
+  until the project's own OTP API is connected. The OTP screen has a back control
+  to the number step and prefills the number for editing. When Firebase is
+  configured the verified number signs in to a stable per-number Email/Password
+  demo account, so Firestore and Storage enforce the UID rules. The demo user's display name is
   set to the verified number and `partners/{uid}` is written at sign-in, so the
   number is visible in the Firebase console before onboarding is submitted. An
   older anonymous device account is linked to the stable credential on its next
@@ -522,11 +525,16 @@ their service layer is added:
   approval disabled until onboarding is submitted, and refreshes synced partner
   records every 60 seconds and on window focus. Delivery, earnings, notification
   and support data remain mock.
-- **Onboarding** — five design-aligned steps (Personal, KYC + bank, Vehicle,
+- **Onboarding** — five design-aligned steps (Personal, KYC + payout, Vehicle,
   Training, Review) with a purple stepper header. The current test build is
   text-only: `src/config/media.ts` hides the profile-photo and document upload
-  controls, and KYC cards collect Aadhaar, PAN, licence, RC and bank numbers for
-  manual review. Vehicle tiles (bike, scooter, bicycle, on foot), licence and
+  controls, and KYC cards collect Aadhaar, PAN, licence and RC numbers for
+  manual review. The Personal step embeds a Leaflet address map: type a place
+  for Photon suggestions, tap or drag the pin, or use the device location; the
+  selection fills city/address/PIN and is stored as `addressLocation` (required).
+  The KYC
+  step collects the payout UPI ID instead of bank account/IFSC fields. Vehicle
+  tiles (bike, scooter, bicycle, on foot), licence and
   registration fields are shared with the vehicle step. Draft progress is
   stored under `fafo.partner.onboarding.<phone>`, one draft per verified number.
   Draft writes are debounced by 400 ms so typing does not block on serializing
@@ -583,10 +591,15 @@ their service layer is added:
   live partner markers, a solid pickup→drop route, a dotted route from the
   partner to the pickup — or to the drop after pickup — that re-routes once they
   move 500 m, and a follow-my-location control that fits
-  once per delivery), external
+  once per delivery), a full-width **Go to map with live route** button that
+  opens Google Maps (`dir_action=navigate`) to the current leg, external
   turn-by-turn navigation per leg, customer contact, issue reporting, a live
   location-sharing status chip (with the last successful GPS update time), and
-  OTP completion against the `dropOtp` the console issued. Development builds
+  OTP completion against the `dropOtp` the console issued. The customer contact
+  card also opens a live **Message customer** chat
+  (`deliveries/{id}/messages`, shared with the ordering apps) and a
+  **Cancel delivery** reason list that cancels with a recorded reason and a
+  support ticket. Development builds
   also accept the test-only delivery code `4821` (configurable with
   `VITE_DEMO_DELIVERY_OTP`); production builds disable it unless the variable is
   set explicitly, and the administrator code remains the primary check.
@@ -623,8 +636,9 @@ their service layer is added:
   partner update email, address and vehicle details (stored on `partners/{uid}`
   and `vehicles/{uid}`); the form validates only those fields, so an untouched
   identity value such as the date of birth cannot block a save. Name, mobile
-  number, KYC numbers and bank details stay
-  locked to their verified values. A declined offer stays `assigned` on the shared
+  number and KYC numbers stay
+  locked to their verified values; the payout UPI changes only through a
+  withdrawal request. A declined offer stays `assigned` on the shared
   document so the console can reassign it, but the partner's history treats it
   as a cancellation: a red **Cancelled by you** badge, the decline reason and ₹0
   earned, grouped under the Cancelled filter and excluded from delivered counts
@@ -640,14 +654,17 @@ their service layer is added:
   bar chart that grows in, shows the amount on hover or tap, and opens that
   range's statement list on click. Under the balance card, **Withdraw earnings**
   shows the available amount (delivered earnings minus requests that are not
-  rejected). The dialog takes an amount and a UPI ID (prefilled with the last one
-  and editable every time), then a demo phone OTP (`123456`), and states that
+  rejected). The dialog takes an amount and a UPI ID (prefilled with the
+  onboarding payout UPI and editable every time; saving it also updates the
+  profile UPI), then a demo phone OTP (`123456`), and states that
   credit takes 24 hours. Submitting writes `payments/{uid_request}` with status
   `requested` and, in the same batch, a `support_tickets` row with
   `priority: 'High'`, so operations sees it in the existing ticket feed. The
   withdrawal list is an `onSnapshot`, so processing/paid/rejected updates appear
-  without a reload; demo sessions persist the list in `localStorage`. Payouts and
-  incentives remain labelled demo/empty until settlement is connected. Every
+  without a reload; demo sessions persist the list in `localStorage`. The
+  delivered-delivery details sheet shows the payout UPI as a locally generated
+  QR (no QR service), with the collect amount for cash-on-delivery jobs. Payouts
+  and incentives remain labelled demo/empty until settlement is connected. Every
   section header has a back control with an explicit fallback; Home is the root
   and has none.
 - **Language** — Profile → App language switches every screen, shared component,
@@ -692,8 +709,9 @@ their service layer is added:
   Function that fans out assignment events; only in-app notifications and
   background-tab system alerts exist.
 - Onboarding quiz, working shifts and service zones are not built. Post-onboarding
-  editing covers email, address and vehicle only; name, mobile, KYC numbers and
-  bank details remain read-only and need support.
+  editing covers email, address and vehicle only; name, mobile and KYC numbers
+  remain read-only and need support, and the payout UPI changes only through a
+  withdrawal.
 
 ### Verification (run before handing work back)
 

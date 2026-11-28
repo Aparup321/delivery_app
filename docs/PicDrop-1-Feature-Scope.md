@@ -359,4 +359,21 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   zero-render through the uncontrolled phone field, and reduced-motion removes
   the lift. Verified at 320×568, 390×844 and 390×500 with the hero visible and the
   input fully above the keyboard.
+- **2026-11-28 — M35: OTP back to the prefilled number.** The OTP screen gained a
+  back button beside its title that returns to the number step. The number is
+  carried in router state and prefilled for editing, and the intended post-login
+  route survives both the back button and the **Change number** link.
+- **2026-11-28 — M36: address map, UPI and payout QR.** The personal step now
+  pins the address on a Leaflet map with reverse geocoding, and the KYC step
+  collects a payout UPI ID instead of bank account/IFSC (the passbook tile was
+  removed with it). Withdrawals prefill that UPI, delivered jobs show a locally
+  generated UPI QR in the payment section, and the active delivery screen has a
+  **Go to map with live route** button that launches Google Maps turn-by-turn.
+- **2026-11-28 — M37: address suggestions, chat and cancellation.** The address
+  search shows Photon suggestions as the partner types and fills the pin and
+  fields from the chosen result. The active delivery has a live **Message
+  customer** chat stored under `deliveries/{id}/messages` for the ordering apps,
+  and the issue action is renamed **Cancel delivery** with a reason list.
+
+
 

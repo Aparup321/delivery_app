@@ -117,6 +117,7 @@ function asCategory(value: unknown): DeliveryCategory {
 
 function asPaymentMode(value: unknown): Delivery['paymentMode'] {
   const mode = asText(value).toLowerCase()
+  if (mode.includes('upi')) return 'UPI'
   return mode.includes('cash') ? 'Cash on delivery' : 'Prepaid'
 }
 
