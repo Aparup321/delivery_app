@@ -340,14 +340,21 @@ function AppDataProvider({
       return
     }
 
-    try {
-      window.localStorage.setItem(
-        onboardingKey(phone),
-        JSON.stringify(onboarding),
-      )
-    } catch {
-      // Progress stays in memory when storage is blocked.
-    }
+    // Typing updates onboarding on every keystroke. Persisting the whole draft
+    // synchronously (including a photo preview) blocks the input on mobile, so
+    // wait until the partner pauses before writing to localStorage.
+    const timer = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(
+          onboardingKey(phone),
+          JSON.stringify(onboarding),
+        )
+      } catch {
+        // Progress stays in memory when storage is blocked.
+      }
+    }, 400)
+
+    return () => window.clearTimeout(timer)
   }, [onboarding, phone, isLoading])
 
   useEffect(() => {
@@ -946,6 +953,8 @@ function AppDataProvider({
     return liveDeliveries.find(isActiveStatus) ?? null
   }, [remoteEnabled, demoDeliveries.activeDelivery, liveDeliveries])
 
+  const activeDeliveryId = activeDelivery?.id ?? null
+
   const history = useMemo(() => {
     if (!remoteEnabled) {
       return demoDeliveries.history
@@ -1156,8 +1165,8 @@ function AppDataProvider({
   const hasActiveDeliveryRef = useRef(false)
 
   useEffect(() => {
-    hasActiveDeliveryRef.current = activeDelivery !== null
-  }, [activeDelivery])
+    hasActiveDeliveryRef.current = activeDeliveryId !== null
+  }, [activeDeliveryId])
 
   // A failed or slow account listener must not disable presence forever. After
   // a short grace period, let the heartbeat try; if the write is rejected the
@@ -1189,7 +1198,7 @@ function AppDataProvider({
     }
 
     const availability: 'Available' | 'On Delivery' | 'Offline' = isOnline
-      ? activeDelivery !== null
+      ? activeDeliveryId
         ? 'On Delivery'
         : 'Available'
       : 'Offline'
@@ -1231,7 +1240,7 @@ function AppDataProvider({
     isLoading,
     accountPresenceLoaded,
     isOnline,
-    activeDelivery,
+    activeDeliveryId,
   ])
 
   // Share the partner's last known position while they are online. This is

@@ -6,6 +6,7 @@ import { Card } from '../../components/common/Card'
 import { Reveal } from '../../components/common/Reveal'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { StatCard } from '../../components/common/StatCard'
+import { DeliveryDetailsDialog } from '../../components/deliveries/DeliveryDetailsDialog'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
@@ -17,6 +18,7 @@ import {
 import type { Delivery } from '../../types/delivery'
 import type { EarningsPeriod } from '../../types/earnings'
 import { formatCurrency, formatShortDate } from '../../utils/format'
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { EarningsChart } from './EarningsChart'
 import type { EarningsChartPoint } from './EarningsChart'
 
@@ -171,8 +173,12 @@ function liveChart(
 export function EarningsPage() {
   const { history, isLiveSession } = useApp()
   const { t, locale } = useLanguage()
+  const reduceMotion = usePrefersReducedMotion()
   const [period, setPeriod] = useState<EarningsPeriod>('today')
   const [selectedBucket, setSelectedBucket] = useState<EarningsChartPoint | null>(
+    null,
+  )
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
     null,
   )
   const statementsRef = useRef<HTMLDivElement>(null)
@@ -209,9 +215,10 @@ export function EarningsPage() {
     [isLiveSession, liveDeliveries, locale, period],
   )
   const maxPoint = Math.max(1, ...chartPoints.map((point) => point.amount))
-  const recentDeliveries = isLiveSession
-    ? liveDeliveries.slice(0, 4)
-    : history.slice(0, 4)
+  const recentDeliveries = useMemo(
+    () => (isLiveSession ? liveDeliveries.slice(0, 4) : history.slice(0, 4)),
+    [history, isLiveSession, liveDeliveries],
+  )
   const statementDeliveries =
     selectedBucket?.start && selectedBucket.end
       ? history
@@ -245,7 +252,7 @@ export function EarningsPage() {
     setSelectedBucket(point)
     window.requestAnimationFrame(() => {
       statementsRef.current?.scrollIntoView({
-        behavior: 'smooth',
+        behavior: reduceMotion ? 'auto' : 'smooth',
         block: 'start',
       })
     })
@@ -409,38 +416,47 @@ export function EarningsPage() {
                   as="li"
                   key={delivery.id}
                   index={index}
-                  className="flex items-center justify-between gap-3 py-2.5"
+                  className="py-2.5"
                 >
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] font-semibold text-ink">
-                      {delivery.id}
-                    </p>
-                    <p className="text-[11px] text-ink-muted">
-                      {delivery.completedAt
-                        ? formatShortDate(delivery.completedAt, locale)
-                        : '—'}{' '}
-                      · {delivery.destination.name}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-[12px] font-bold text-ink">
-                      {formatCurrency(delivery.earnings, locale)}
-                    </span>
-                    <Badge
-                      tone={
-                        delivery.status === 'cancelled' ? 'danger' : 'success'
-                      }
-                      size="sm"
-                    >
-                      {t(
-                        isLiveSession
-                          ? 'Earned'
-                          : delivery.status === 'cancelled'
-                            ? 'Cancelled'
-                            : 'Paid',
-                      )}
-                    </Badge>
-                  </div>
+                  <button
+                    type="button"
+                    aria-label={t('View delivery details')}
+                    onClick={() => setSelectedDelivery(delivery)}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] font-semibold text-ink">
+                        {delivery.id}
+                      </p>
+                      <p className="text-[11px] text-ink-muted">
+                        {delivery.completedAt
+                          ? formatShortDate(delivery.completedAt, locale)
+                          : '—'}{' '}
+                        · {delivery.destination.name}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-[12px] font-bold text-ink">
+                        {formatCurrency(delivery.earnings, locale)}
+                      </span>
+                      <Badge
+                        tone={
+                          delivery.status === 'cancelled'
+                            ? 'danger'
+                            : 'success'
+                        }
+                        size="sm"
+                      >
+                        {t(
+                          isLiveSession
+                            ? 'Earned'
+                            : delivery.status === 'cancelled'
+                              ? 'Cancelled'
+                              : 'Paid',
+                        )}
+                      </Badge>
+                    </div>
+                  </button>
                 </Reveal>
               ))}
             </ul>
@@ -513,6 +529,13 @@ export function EarningsPage() {
           </p>
         )}
       </div>
+
+      {selectedDelivery ? (
+        <DeliveryDetailsDialog
+          delivery={selectedDelivery}
+          onClose={() => setSelectedDelivery(null)}
+        />
+      ) : null}
     </div>
   )
 }

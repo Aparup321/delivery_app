@@ -126,7 +126,8 @@ export function EarningsChart({
           />
           <YAxis hide domain={[0, Math.max(1, max) * 1.18]} />
           <Tooltip
-            cursor={{ fill: 'var(--color-brand-tint)', opacity: 0.75 }}
+            cursor={false}
+            isAnimationActive={false}
             content={<ChartTooltip />}
           />
           <Bar
@@ -144,9 +145,6 @@ export function EarningsChart({
                   selectedLabel === point.label
                     ? 'var(--color-brand-deep)'
                     : 'url(#earnings-bar)'
-                }
-                cursor={
-                  point.start && point.amount > 0 ? 'pointer' : 'default'
                 }
               />
             ))}

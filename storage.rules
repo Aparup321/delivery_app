@@ -6,6 +6,13 @@ service firebase.storage {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // Same allow-listed operations administrator used by Firestore rules.
+    // KYC files are read with a short-lived Firebase ID token, never a public URL.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == 'Xa09IjoJrhPBvuJVWALOuCCHcvZ2';
+    }
+
     function validUpload(maxBytes) {
       return request.resource.size < maxBytes
         // SVG is an image container for script and markup; opening one from
@@ -17,14 +24,14 @@ service firebase.storage {
 
     // Profile image only.
     match /partners/{uid}/profile/{fileName} {
-      allow read: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid) && validUpload(2 * 1024 * 1024);
       allow delete: if isOwner(uid);
     }
 
     // KYC document uploads are limited to the documented document keys.
     match /partners/{uid}/documents/{documentKey}/{fileName} {
-      allow read: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid)
         && documentKey in ['aadhaar', 'pan', 'licence', 'registration', 'passbook']
         && validUpload(2 * 1024 * 1024);

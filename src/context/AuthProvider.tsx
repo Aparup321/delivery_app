@@ -5,6 +5,7 @@ import {
   PHONE_STORAGE_PREFIX,
   demoPhoneFromEmail,
   signInDemoPartner,
+  signOutFirebase,
   subscribeToAuth,
 } from '../services/auth'
 import type { FirebaseAuthUser } from '../services/auth'
@@ -387,12 +388,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restoreAllowed.current = false
     clearSessionMarker()
     markSignedOut()
-    // Keep the Firebase demo account on this device. The demo OTP has no
-    // real security boundary, and releasing it would make the same registered
-    // number look new on its next login. A different number still signs the
-    // previous account out inside signInDemoPartner().
     setFirebaseErrorCode(null)
     setSession(null)
+    // Clear the Firebase session too. The local flag is only a UX guard; it is
+    // not an authentication boundary.
+    try {
+      await signOutFirebase()
+    } catch {
+      setFirebaseErrorCode('auth/sign-out-failed')
+    }
   }, [])
 
   const firebase = useMemo(

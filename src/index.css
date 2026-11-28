@@ -199,34 +199,7 @@
   }
 
   .sheet-enter {
-    animation: sheet-enter 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  /* The surface tail follows the lifted sheet, so the bottom edge stays flush
-     with the viewport instead of exposing a purple gap. */
-  .auth-sheet::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    top: 100%;
-    height: clamp(64px, 14svh, 150px);
-    background-color: var(--color-surface);
-    pointer-events: none;
-  }
-
-  /* The lift is a desktop nicety. On a phone the keyboard already moves the
-     sheet (interactive-widget=resizes-content on Android) or pans it (iOS), and
-     running a long transform transition against that continuous resize is what
-     looked laggy. Touch devices therefore only get the keyboard movement. */
-  @media (hover: hover) and (pointer: fine) {
-    .auth-sheet {
-      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: transform;
-    }
-
-    .auth-sheet:focus-within {
-      transform: translate3d(0, calc(-1 * clamp(48px, 10svh, 120px)), 0);
-    }
+    animation: sheet-enter 300ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
@@ -249,12 +222,11 @@
     transform: none;
   }
 
-  .auth-sheet {
-    transition: none;
-  }
-
-  .auth-sheet:focus-within {
-    transform: none;
+  .animate-ping,
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce {
+    animation: none !important;
   }
 }
 

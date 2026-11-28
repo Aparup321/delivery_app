@@ -50,9 +50,11 @@ export function DeliveryTimeline({ delivery }: DeliveryTimelineProps) {
               <p className="text-[11.5px] text-ink-muted">
                 {event
                   ? formatTime(event.at, locale)
-                  : index === currentIndex + 1
-                    ? t('Next step')
-                    : t('Pending')}
+                  : isDone
+                    ? t('Completed')
+                    : index === currentIndex + 1
+                      ? t('Next step')
+                      : t('Pending')}
               </p>
             </div>
           </li>

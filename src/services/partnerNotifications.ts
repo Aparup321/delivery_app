@@ -4,6 +4,7 @@ import {
   getDocs,
   limit,
   onSnapshot,
+  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -89,6 +90,7 @@ export function subscribePartnerNotifications(
   const feed = query(
     collection(firestore, COLLECTION),
     where('partnerUid', '==', uid),
+    orderBy('createdAt', 'desc'),
     limit(MAX_NOTIFICATIONS),
   )
 
@@ -162,6 +164,7 @@ export async function markAllPartnerNotificationsRead(
       query(
         collection(db, COLLECTION),
         where('partnerUid', '==', uid),
+        orderBy('createdAt', 'desc'),
         limit(MAX_NOTIFICATIONS),
       ),
     )

@@ -75,7 +75,7 @@ material for the project and are not part of the deployed application.
 
 | Module | What it does | Status |
 | --- | --- | --- |
-| Authentication | Hero-and-sheet sign-in and OTP screens with a steady brand artwork, mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
+| Authentication | Responsive sign-in and OTP: form-first compact layout on phones/tablets (no large hero to fight the keyboard), hero-and-sheet on desktop; mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
 | Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. The first step starts with an English/Hindi/Bengali language selector; training has five short lesson modules, each with a 37-39 s portrait video (thumbnail opens a full-screen player; every module is narrated in Hindi with a music bed), a progress bar and completion on video end (the player closes and the module ticks itself; the Mark as complete button remains). This test build is text-only for documents: profile-photo and document uploads are hidden | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
@@ -84,9 +84,9 @@ material for the project and are not part of the deployed application.
 | Home dashboard | Light header with avatar, greeting, top-right light/dark toggle and notifications, availability switch, three headline stats, six quick actions and request preview | Built (live + demo fallback) |
 | Delivery requests | Assigned offers from `delivery_admin` arrive live (`onSnapshot`), with countdown, transactional accept/reject, a global sound/vibration alert, and expired-offer removal | Built (Firebase) |
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
-| Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; OSRM route geometry; follow mode and configurable providers | Built (live) |
-| History | Search, status filter and delivery-level earnings; declined offers appear under Cancelled with a red badge and ₹0 earned | Built (live + demo fallback) |
-| Earnings & payments | Today/week/month totals, an animated Recharts trend and recent deliveries calculated from completed jobs; month uses 1-6, 7-12, 13-18, 19-24, 25-end buckets; bars show hover amounts and open that bucket's statements; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
+| Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; solid pickup→drop route plus a dotted live approach route that re-routes after 500 m; follow mode and configurable providers | Built (live) |
+| History | Search, status filter and delivery-level earnings; declined offers appear under Cancelled with a red badge and ₹0 earned; tap any row for full delivery details | Built (live + demo fallback) |
+| Earnings & payments | Today/week/month totals, an animated Recharts trend and recent deliveries calculated from completed jobs; month uses 1-6, 7-12, 13-18, 19-24, 25-end buckets; bars show hover amounts and open that bucket's statements; recent jobs open the delivery details sheet; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission, live ticket feed and status updates; delivery issues create a ticket automatically | Built (live tickets persisted; FAQs are static help content) |
 | Profile & settings | Partner details, post-onboarding email/address/vehicle editing, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
@@ -568,8 +568,13 @@ so the console can distinguish an online partner from a busy one.
 
 **Map.** The active-delivery screen uses an interactive Leaflet map
 (`src/components/deliveries/DeliveryMap.tsx`) with distinct pickup, drop and
-partner markers, route geometry from an OSRM-compatible service, and a
-follow-my-location control. The map fits once per delivery instead of
+partner markers, two route lines from an OSRM-compatible service, and a
+follow-my-location control. The solid line is the planned pickup→drop leg and is
+always visible before pickup; the dotted line is the partner's approach to the
+pickup (or to the drop after pickup). The approach line starts at the live
+marker and is re-requested once the partner has moved 500 m, so it follows the
+ride without a request per GPS fix; the previous geometry stays on screen while
+the re-route is in flight. The map fits once per delivery instead of
 refitting on every GPS fix; follow mode pans to each new fix while it is on.
 Tiles default to OpenStreetMap and routes to the public OSRM demo server; both
 are configurable via `VITE_MAP_TILE_URL` and `VITE_ROUTE_API_BASE` because

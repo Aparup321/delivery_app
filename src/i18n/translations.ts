@@ -203,6 +203,19 @@ const hindi: Record<string, string> = {
   'Accept a delivery request to see the route, timeline and delivery actions here.':
     'रूट, टाइमलाइन और डिलीवरी क्रियाएं देखने के लिए अनुरोध स्वीकार करें।',
   Pickup: 'पिकअप',
+  Drop: 'ड्रॉप',
+  Distance: 'दूरी',
+  Items: 'वस्तुएं',
+  Payment: 'भुगतान',
+  Customer: 'ग्राहक',
+  'Delivery details': 'डिलीवरी विवरण',
+  'View delivery details': 'डिलीवरी विवरण देखें',
+  'Delivery timeline': 'डिलीवरी टाइमलाइन',
+  Requested: 'अनुरोध किया',
+  Accepted: 'स्वीकार किया',
+  'Received by': 'प्राप्तकर्ता',
+  'Handover note': 'हैंडओवर नोट',
+  'Delivery note': 'डिलीवरी नोट',
   'Deliver to': 'यहां डिलीवर करें',
   'Delivery progress': 'डिलीवरी प्रगति',
   'Customer note': 'ग्राहक का नोट',
@@ -731,6 +744,9 @@ const hindi: Record<string, string> = {
     'आपकी जगह पता लगाने में आम से ज़्यादा समय लग रहा है',
   'Route line unavailable right now. Markers still show the locations.':
     'रूट लाइन अभी उपलब्ध नहीं है। मार्कर जगहें अब भी दिखा रहे हैं।',
+  'Pickup to drop': 'पिकअप से ड्रॉप',
+  'You to pickup': 'आप से पिकअप',
+  'You to drop': 'आप से ड्रॉप',
   'Location unavailable for this delivery. Check back after dispatch updates the addresses.':
     'इस डिलीवरी की जगह उपलब्ध नहीं है। डिस्पैच के पते अपडेट करने के बाद दोबारा देखें।',
   'Finish your active delivery before accepting another request.':
@@ -952,6 +968,19 @@ const bengali: Record<string, string> = {
   'Accept a delivery request to see the route, timeline and delivery actions here.':
     'রুট, টাইমলাইন ও ডেলিভারি কাজ দেখতে অনুরোধ গ্রহণ করুন।',
   Pickup: 'পিকআপ',
+  Drop: 'ড্রপ',
+  Distance: 'দূরত্ব',
+  Items: 'আইটেম',
+  Payment: 'পেমেন্ট',
+  Customer: 'গ্রাহক',
+  'Delivery details': 'ডেলিভারি বিবরণ',
+  'View delivery details': 'ডেলিভারি বিবরণ দেখুন',
+  'Delivery timeline': 'ডেলিভারি টাইমলাইন',
+  Requested: 'অনুরোধ করা হয়েছে',
+  Accepted: 'গৃহীত',
+  'Received by': 'গ্রহণকারী',
+  'Handover note': 'হস্তান্তর নোট',
+  'Delivery note': 'ডেলিভারি নোট',
   'Deliver to': 'এখানে ডেলিভারি করুন',
   'Delivery progress': 'ডেলিভারি অগ্রগতি',
   'Customer note': 'গ্রাহকের নোট',
@@ -1481,6 +1510,9 @@ const bengali: Record<string, string> = {
     'আপনার অবস্থান খুঁজতে সাধারণের চেয়ে বেশি সময় লাগছে',
   'Route line unavailable right now. Markers still show the locations.':
     'রুট লাইন এই মুহূর্তে পাওয়া যাচ্ছে না। মার্কার এখনও অবস্থান দেখাচ্ছে।',
+  'Pickup to drop': 'পিকআপ থেকে ড্রপ',
+  'You to pickup': 'আপনি থেকে পিকআপ',
+  'You to drop': 'আপনি থেকে ড্রপ',
   'Location unavailable for this delivery. Check back after dispatch updates the addresses.':
     'এই ডেলিভারির অবস্থান পাওয়া যাচ্ছে না। ডিসপ্যাচ ঠিকানা আপডেট করার পরে আবার দেখুন।',
   'Finish your active delivery before accepting another request.':

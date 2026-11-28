@@ -49,8 +49,8 @@ export function AppLayout() {
   }, [navigate, pathname])
 
   return (
-    <div className="flex h-svh justify-center overflow-hidden bg-canvas">
-      <div className="relative flex h-svh w-full max-w-[430px] flex-col overflow-hidden bg-canvas lg:border-x lg:border-line">
+    <div className="flex h-[100dvh] justify-center overflow-hidden bg-canvas">
+      <div className="relative flex h-[100dvh] w-full min-w-0 max-w-[430px] flex-col overflow-hidden bg-canvas lg:border-x lg:border-line">
         <FirebaseStatusBanner />
         <LiveSyncBanner />
         <main

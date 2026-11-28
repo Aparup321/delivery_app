@@ -316,4 +316,39 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   service. The sign-in/OTP sheet now lifts toward the middle when a field is
   focused: transform-only, 380 ms, no scale, with a surface tail that keeps the
   bottom flush and reduced-motion support.
+- **2026-11-28 — M30: interaction performance and delivery details.** The auth
+  focus lift is now limited to wide pointer-fine screens, shortened to 200 ms,
+  and no longer keeps a `will-change` layer; phones rely on the keyboard resize.
+  Onboarding draft persistence is debounced by 400 ms, so fast typing no longer
+  serializes the whole application on every keystroke. The Recharts hover cursor
+  was removed and its tooltip no longer animates, eliminating the stuck highlight.
+  Completed orders, History and Earnings recent deliveries open a shared
+  read-only delivery-details sheet (route, amounts, payment, customer, timeline
+  or cancellation reason, proof and timestamps) with Escape/backdrop close,
+  focus restoration and background scroll lock. Timeline steps that are done but
+  have no recorded demo timestamp now read **Completed** instead of **Pending**.
+- **2026-11-28 — M31: sign-in keystroke latency.** Moved the phone value into a
+  dedicated `PhoneForm` and memoized the static hero, so a digit re-renders only
+  the field and button rather than the whole hero-and-sheet shell. Removed the
+  focus-lift animation entirely and anchored the sheet absolutely to the viewport
+  bottom over the hero, so the native keyboard resize only moves the sheet; the
+  hero never reflows and the input is never clipped. Verified at a simulated
+  390×500 keyboard viewport (input stays fully visible) and under 6× CPU
+  throttling: ten digits caused one ~60 ms frame instead of repeated long frames.
+  Onboarding typing produced no long animation frames after the 400 ms draft
+  debounce.
+- **2026-11-28 — M32: zero-render phone field.** The mobile-number input is now
+  uncontrolled via `Input`'s `inputRef`; normalisation happens directly in the
+  DOM, so typing triggers no React render and only submit/error updates state.
+  Validation messages keep the typed value. Under 6× CPU throttling, ten digits
+  produced zero long animation frames. The auth sheet remains absolutely
+  bottom-anchored, so keyboard resizing does not reflow the hero or clip the
+  field.
+- **2026-11-28 — M33: mobile-first responsive pass.** Auth is form-first below
+  1024px (compact brand bar + full-height sheet); the wordmark/route hero returns
+  only on desktop, where there is no soft keyboard. The app shell now sizes
+  against `100dvh` so Android keyboard resizing shrinks the scroll area rather
+  than hiding inputs. Verified at 320×568, 390×844, 768×900 and 1280×900 with no
+  horizontal overflow across Home, Earnings, Profile, Edit details, Orders and
+  auth; the sign-in field stays visible at a simulated 390×500 keyboard viewport.
 

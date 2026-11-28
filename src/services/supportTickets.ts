@@ -3,6 +3,7 @@ import {
   doc,
   limit,
   onSnapshot,
+  orderBy,
   query,
   setDoc,
   where,
@@ -52,6 +53,7 @@ export function subscribePartnerSupportTickets(
   const feed = query(
     collection(firestore, 'support_tickets'),
     where('partnerUid', '==', uid),
+    orderBy('createdAt', 'desc'),
     limit(50),
   )
 

@@ -66,7 +66,8 @@ What exists today:
   lifecycle step writes to the shared `deliveries/{id}` document, and the
   partner's GPS position is published to it while a job is active. The
   active-delivery screen uses an interactive Leaflet + OpenStreetMap map with
-  pickup, drop and partner markers plus OSRM route geometry.
+  pickup, drop and partner markers, a planned pickup→drop route and a live
+  approach route that re-routes after 500 m.
 - Searchable history, earnings with period tabs/chart/payouts, notifications with
   read state, support FAQs and tickets, profile with documents and sign-out.
 - English, Hindi and Bengali interface with immediate switching from Profile →
@@ -235,28 +236,28 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 | `Card` | `padding` (`none`/`sm`/`md`/`lg`), `interactive` hover lift, quiet `shadow-card` elevation |
 | `Badge` | Tones `neutral`, `brand`, `success`, `warning`, `danger`, `info` |
 | `Avatar` | Initials fallback when no image is available |
-| `Input` | Label, `hint`, `error`, left/right icon, `useId` wiring |
+| `Input` | Label, `hint`, `error`, left/right icon, `useId` wiring, optional `inputRef` for uncontrolled fields |
 | `Select` | Same field styling with native `<select>` for accessibility |
 | `ProgressBar` | Clamped, ARIA-complete progress indicator |
 | `SectionHeading` | Section title with optional subtitle and action |
 | `EmptyState` | Icon, title, description and optional action |
 
 Layout components: `AppLayout`, `AuthLayout`, `BottomNavigation`, `ScreenHeader`,
-`ModulePlaceholder`. `AuthLayout` is the sign-in/OTP shell: a solid brand hero
-with a faint street grid and route, and the form in a white bottom sheet. The
-shell and sheet size against `100dvh`. The hero is top-anchored and
-`overflow-hidden`, so the keyboard shrinking the viewport
-(`interactive-widget=resizes-content`) raises the sheet without moving the
-artwork. On pointer-fine devices, focusing a field lifts the sheet toward the
-middle with a transform-only transition; touch devices skip that lift so it does
-not compete with the keyboard resize. The sheet entrance is a 300 ms
-transform-only rise, and a surface tail keeps its bottom edge flush. `AppLayout`
-owns the vertical scroll area (`main.app-scrollbar`) so the slim scrollbar sits
-on the app column, not the browser edge; route changes reset it to the top. Auth
-screens use the same scrollbar treatment. `OtpInput` renders six boxes over one
-real input: backspace deletes natively on mobile keyboards that send no
-`keydown`, and focus never jumps between boxes, so typing does not scroll the
-sheet.
+`ModulePlaceholder`. `AuthLayout` is the sign-in/OTP shell. On phones and tablets
+(below 1024px) it is form-first: a compact brand bar plus a full-height white
+sheet, with no large hero to repaint while the keyboard opens. From 1024px the
+wordmark/route hero returns and the sheet is absolutely bottom-anchored over it,
+where there is room and no soft keyboard. Everything sizes against `100dvh`; the
+sheet never moves on focus, so the native keyboard resize is the only motion. The
+hero is memoized and `PhoneForm` keeps the phone input uncontrolled through
+`Input`'s `inputRef`, so typing performs no React render and only submit or an
+error updates state. The sheet entrance is a 300 ms transform-only rise.
+`AppLayout` owns the vertical scroll area (`main.app-scrollbar`) so the slim
+scrollbar sits on the app column, not the browser edge; route changes reset it to
+the top. Auth screens use the same scrollbar treatment. `OtpInput` renders six
+boxes over one real input: backspace deletes natively on mobile keyboards that
+send no `keydown`, and focus never jumps between boxes, so typing does not scroll
+the sheet.
 
 **Do not duplicate these primitives inside a screen.** If a variant is missing,
 extend the shared component with a typed prop instead of copying its classes.
@@ -528,6 +529,8 @@ their service layer is added:
   manual review. Vehicle tiles (bike, scooter, bicycle, on foot), licence and
   registration fields are shared with the vehicle step. Draft progress is
   stored under `fafo.partner.onboarding.<phone>`, one draft per verified number.
+  Draft writes are debounced by 400 ms so typing does not block on serializing
+  the whole application (including a photo preview) on every keystroke.
   The Training step lists five short modules, each with a 37–39 s portrait
   lesson video (thumbnail opens a full-screen player; every module is narrated
   in Hindi with a music bed), a key-point lesson, a
@@ -577,7 +580,9 @@ their service layer is added:
 - **Active delivery** — accepted → pickup arrived → picked up → on the way → drop
   arrived → delivered, with per-stage primary actions, an interactive
   Leaflet/OpenStreetMap map in a **Current location** section (pickup, drop and
-  live partner markers, OSRM route line, follow-my-location control that fits
+  live partner markers, a solid pickup→drop route, a dotted route from the
+  partner to the pickup — or to the drop after pickup — that re-routes once they
+  move 500 m, and a follow-my-location control that fits
   once per delivery), external
   turn-by-turn navigation per leg, customer contact, issue reporting, a live
   location-sharing status chip (with the last successful GPS update time), and
@@ -625,7 +630,10 @@ their service layer is added:
   earned, grouped under the Cancelled filter and excluded from delivered counts
   and earnings. Support tickets are read from and written to
   `support_tickets`, so they survive a refresh; reporting a delivery issue also
-  creates a ticket for operations. The Earnings screen calculates live
+  creates a ticket for operations. Completed orders, History and Earnings recent
+  deliveries open one shared read-only details sheet with the route, earnings,
+  payment, customer, timeline and handover proof; it closes on Escape or a
+  backdrop tap and restores the row's focus. The Earnings screen calculates live
   today/week/month totals, chart buckets, average and recent jobs from completed
   deliveries in `history`, so it matches the dashboard. Month bars use the
   calendar buckets 1-6, 7-12, 13-18, 19-24 and 25-end. The trend is a Recharts

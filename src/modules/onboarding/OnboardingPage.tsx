@@ -50,6 +50,7 @@ import { validateStep } from '../../utils/onboardingValidation'
 import { DocumentUploadTile } from './DocumentUploadTile'
 import { KycDocumentCard } from './KycDocumentCard'
 import { mediaUploadsEnabled } from '../../config/media'
+import { useModalFocus } from '../../hooks/useModalFocus'
 
 const vehicleOptions: Array<{
   value: OnboardingState['vehicle']['type']
@@ -121,6 +122,8 @@ export function OnboardingPage() {
   const [openTopic, setOpenTopic] = useState<string | null>(null)
   const [videoTopic, setVideoTopic] = useState<TrainingTopic | null>(null)
   const [videoSrc, setVideoSrc] = useState<string | null>(null)
+  const videoDialogRef = useRef<HTMLDivElement>(null)
+  useModalFocus(videoDialogRef, () => setVideoTopic(null), Boolean(videoTopic))
   const [videoFailed, setVideoFailed] = useState(false)
   const uploadFiles = useRef<OnboardingFiles>({ documents: {} })
 
@@ -1341,6 +1344,8 @@ export function OnboardingPage() {
               onClick={() => setVideoTopic(null)}
             >
               <div
+                ref={videoDialogRef}
+                tabIndex={-1}
                 role="dialog"
                 aria-modal="true"
                 aria-label={t(videoTopic.title)}

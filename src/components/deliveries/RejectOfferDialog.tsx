@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '../common/Button'
 import { Card } from '../common/Card'
 import { Input } from '../common/Input'
 import { useLanguage } from '../../context/language'
+import { useModalFocus } from '../../hooks/useModalFocus'
 
 const rejectReasons = [
   'Too far away',
@@ -30,6 +31,8 @@ export function RejectOfferDialog({
   const { t } = useLanguage()
   const [selected, setSelected] = useState<string>('')
   const [note, setNote] = useState('')
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useModalFocus(dialogRef, onCancel)
 
   const reason = selected === 'Other' ? note.trim() : selected
   const canSubmit = Boolean(reason) && !isBusy
@@ -41,6 +44,8 @@ export function RejectOfferDialog({
       onClick={onCancel}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="reject-offer-title"

@@ -351,7 +351,10 @@ async function buildDocumentRecords(
       }
 
       const uploaded = await uploadFile(uid, `documents/${key}`, file)
-      return [key, uploaded] as const
+      // Keep only the object path. KYC files are sensitive and must not be
+      // exposed through a long-lived getDownloadURL token; the admin console
+      // downloads them with the administrator's Firebase ID token instead.
+      return [key, { ...uploaded, downloadUrl: null }] as const
     }),
   )
 

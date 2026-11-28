@@ -5,7 +5,7 @@ import { MapContainer, Marker, Polyline, TileLayer, useMap } from 'react-leaflet
 import 'leaflet/dist/leaflet.css'
 import { useLanguage } from '../../context/language'
 import type { DeliveryLocation, DeliveryStop } from '../../types/delivery'
-import { isValidCoordinate } from '../../utils/geo'
+import { distanceMeters, isValidCoordinate } from '../../utils/geo'
 
 /**
  * OSM-compatible tiles. The public OpenStreetMap servers have no production
@@ -22,6 +22,16 @@ const ROUTE_API_BASE =
   import.meta.env.VITE_ROUTE_API_BASE ?? 'https://router.project-osrm.org'
 
 const routeCache = new Map<string, [number, number][] | null>()
+
+/**
+ * How far the partner must move before the approach route is requested again.
+ * The marker follows every GPS fix; re-routing on each fix would hammer the
+ * routing provider for a few metres of movement.
+ */
+const ROUTE_REFRESH_METERS = 500
+
+/** Keeps a long trip's re-routes from growing the module-level cache forever. */
+const ROUTE_CACHE_LIMIT = 60
 
 interface MapPoint {
   latitude: number
@@ -86,6 +96,15 @@ async function fetchRoute(
 
     const route = line.length >= 2 ? line : null
     routeCache.set(key, route)
+
+    if (routeCache.size > ROUTE_CACHE_LIMIT) {
+      const oldest = routeCache.keys().next().value
+
+      if (oldest) {
+        routeCache.delete(oldest)
+      }
+    }
+
     return route
   } catch {
     return null
@@ -295,16 +314,84 @@ export function DeliveryMap({
     [partnerLocation],
   )
 
-  // Before pickup the route leads to the shop; afterwards it leads to the
-  // customer. Without a partner fix the planned pickup→drop route is shown.
-  const routeTarget = focus === 'pickup' ? pickupPoint : destinationPoint
-  const routeFrom = partnerPoint ?? pickupPoint
-  const { route, state: routeState } = useRoute(
-    routeFrom && routeTarget && pointKey(routeFrom) !== pointKey(routeTarget)
-      ? routeFrom
+  // The approach route starts at the partner's position, but it is only
+  // requested again once they have moved 500 m. Between refreshes the live
+  // marker is joined to the cached route, so the line always starts at the
+  // partner without a request per GPS fix.
+  const [routeOrigin, setRouteOrigin] = useState<MapPoint | null>(null)
+  const nextRouteOrigin = !partnerPoint
+    ? null
+    : !routeOrigin ||
+        distanceMeters(routeOrigin, partnerPoint) >= ROUTE_REFRESH_METERS
+      ? partnerPoint
+      : routeOrigin
+
+  if (nextRouteOrigin !== routeOrigin) {
+    setRouteOrigin(nextRouteOrigin)
+  }
+
+  // The planned pickup→drop leg is always available; the approach leg leads to
+  // the shop before pickup and to the customer afterwards.
+  const approachTarget = focus === 'pickup' ? pickupPoint : destinationPoint
+  const approach = useRoute(
+    routeOrigin &&
+      approachTarget &&
+      pointKey(routeOrigin) !== pointKey(approachTarget)
+      ? routeOrigin
       : null,
-    routeTarget,
+    approachTarget,
   )
+  const planned = useRoute(
+    pickupPoint &&
+      destinationPoint &&
+      pointKey(pickupPoint) !== pointKey(destinationPoint)
+      ? pickupPoint
+      : null,
+    destinationPoint,
+  )
+
+  // Keep the previous approach geometry on screen while a re-route is in
+  // flight, so the line does not blink every 500 m.
+  const [lastApproach, setLastApproach] = useState<{
+    target: string
+    route: [number, number][]
+  } | null>(null)
+
+  if (
+    approach.route &&
+    approachTarget &&
+    (lastApproach?.target !== pointKey(approachTarget) ||
+      lastApproach.route !== approach.route)
+  ) {
+    setLastApproach({
+      target: pointKey(approachTarget),
+      route: approach.route,
+    })
+  }
+
+  const approachRoute =
+    approach.route ??
+    (lastApproach &&
+    approachTarget &&
+    lastApproach.target === pointKey(approachTarget)
+      ? lastApproach.route
+      : null)
+
+  const approachPositions = useMemo<[number, number][] | null>(() => {
+    if (!partnerPoint || !approachRoute) {
+      return null
+    }
+
+    return [
+      [partnerPoint.latitude, partnerPoint.longitude],
+      ...approachRoute,
+    ]
+  }, [partnerPoint, approachRoute])
+
+  // Before pickup both legs are useful. After pickup the approach to the drop
+  // covers the pickup→drop leg, so the planned line is only a fallback while
+  // the live route is missing.
+  const showPlannedRoute = focus === 'pickup' || !approachPositions
 
   const visiblePoints = useMemo(() => {
     const points: [number, number][] = []
@@ -343,10 +430,13 @@ export function DeliveryMap({
   }
 
   const partnerValid = partnerPoint !== null
+  const routeUnavailable =
+    (showPlannedRoute && planned.state === 'unavailable') ||
+    (partnerValid && approach.state === 'unavailable')
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line">
-      <div className="relative h-56 w-full bg-[#e8eef2]">
+      <div className="relative h-56 w-full bg-canvas">
         <MapContainer
           ref={mapRef}
           center={
@@ -395,13 +485,27 @@ export function DeliveryMap({
             />
           ) : null}
 
-          {route ? (
+          {showPlannedRoute && planned.route ? (
             <Polyline
-              positions={route}
+              positions={planned.route}
               pathOptions={{
                 color: '#713CE0',
                 weight: 4,
                 opacity: 0.85,
+                lineJoin: 'round',
+              }}
+            />
+          ) : null}
+
+          {approachPositions ? (
+            <Polyline
+              positions={approachPositions}
+              pathOptions={{
+                color: '#E08A00',
+                weight: 4,
+                opacity: 0.9,
+                dashArray: '2 8',
+                lineCap: 'round',
                 lineJoin: 'round',
               }}
             />
@@ -441,7 +545,7 @@ export function DeliveryMap({
           className={
             follow
               ? 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-brand/30 bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-              : 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-white/95 text-[#6E6789] shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+              : 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-surface/95 text-ink-soft shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
           }
           aria-label={t(
             follow ? 'Stop following my location' : 'Follow my location',
@@ -450,7 +554,7 @@ export function DeliveryMap({
           <Crosshair className="size-4" aria-hidden="true" />
         </button>
 
-        <span className="pointer-events-none absolute bottom-1 right-2 z-[500] rounded bg-white/90 px-1.5 py-0.5 text-[10.5px] font-medium text-[#6E6789]">
+        <span className="pointer-events-none absolute bottom-1 right-2 z-[500] rounded bg-surface/90 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-soft">
           © OpenStreetMap contributors
         </span>
       </div>
@@ -472,7 +576,22 @@ export function DeliveryMap({
         </span>
       </div>
 
-      {routeState === 'unavailable' ? (
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line bg-surface px-3 py-1.5 text-[10.5px] font-medium text-ink-muted">
+        {showPlannedRoute ? (
+          <span className="flex items-center gap-1.5">
+            <span className="h-1 w-4 rounded-full bg-brand" />
+            {t('Pickup to drop')}
+          </span>
+        ) : null}
+        {partnerValid ? (
+          <span className="flex items-center gap-1.5">
+            <span className="h-1 w-4 rounded-full bg-warning" />
+            {t(focus === 'pickup' ? 'You to pickup' : 'You to drop')}
+          </span>
+        ) : null}
+      </div>
+
+      {routeUnavailable ? (
         <p className="border-t border-line bg-warning-soft px-3 py-1.5 text-[10.5px] font-medium text-warning">
           {t('Route line unavailable right now. Markers still show the locations.')}
         </p>

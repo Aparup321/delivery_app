@@ -9,6 +9,47 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
+- **Mobile-first responsive pass.** Auth is now form-first below 1024px: compact
+  brand bar plus a full-height sheet, with the wordmark/route hero only on
+  desktop. The app shell sizes against `100dvh` so the keyboard resizes the
+  scroll area correctly. Verified Home, Earnings, Profile, Edit details, Orders
+  and the auth flow at 320×568, 390×844, 768×900 and 1280×900 with no horizontal
+  overflow; the form remains fully visible at a simulated 390×500 keyboard
+  viewport.
+- **Zero-render phone field.** The sign-in number input is now uncontrolled
+  through a new `Input` `inputRef`, with normalisation applied directly in the
+  DOM. Typing triggers no React render; only submit or an error updates state,
+  and the error case preserves the typed number. Under 6× CPU throttling, ten
+  digits produced **zero long animation frames** (previously repeated 50–350 ms
+  frames). On phones/tablets the sheet is the page; desktop keeps the hero.
+- **Pickup→drop and live approach routes on the delivery map.** Before pickup
+  the map now always shows the planned pickup→drop line (solid purple) together
+  with a dotted route from the partner's current position to the pickup. After
+  pickup the dotted route leads to the drop. The approach geometry is requested
+  once, then again only after the partner has moved 500 m; in between, the line
+  starts at the live marker, so it follows the ride without a routing request per
+  GPS fix. A two-item legend explains the lines, and the previous geometry stays
+  on screen while a re-route is in flight.
+- **Sign-in input latency fix.** The phone value now lives in a dedicated
+  `PhoneForm`, and the static auth hero is memoized, so typing a digit
+  re-renders only the field and button instead of the whole hero-and-sheet
+  shell. The focus-lift animation was removed entirely, and the form sheet is
+  absolutely bottom-anchored over the hero so the native keyboard resize only
+  moves the sheet instead of reflowing the hero and clipping the input. Verified
+  under 6× CPU throttling: ten digits produced a single ~60 ms frame instead of
+  repeated long frames; at a simulated 390×500 keyboard viewport the input stays
+  fully visible at 321–369 px.
+- **Smoother auth, onboarding and earnings interactions.** The sign-in focus
+  lift is now limited to wide pointer-fine screens and shortened, the entrance
+  animation no longer keeps a composited layer, and phones rely on the native
+  keyboard resize. Onboarding draft persistence is debounced by 400 ms instead
+  of serializing the whole application on every keystroke. The Recharts tooltip
+  no longer leaves a stuck hover cursor, and recent deliveries are memoized.
+- **Interactive delivery details.** Completed orders, History rows and Earnings
+  recent deliveries now open one shared read-only sheet with pickup/drop,
+  earnings, distance, items, payment/COD, customer, timeline or cancellation
+  reason, handover proof and timestamps. It closes on Escape or a backdrop tap,
+  restores the row's focus and locks the page scroll while open.
 - **Location-neutral branding and a focused sign-in sheet.** Removed the Kolkata
   badge, tagline and city placeholder; demo delivery addresses no longer name a
   city, and the mock-data guidance no longer ties the product to one location.

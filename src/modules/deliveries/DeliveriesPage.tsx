@@ -8,10 +8,12 @@ import { EmptyState } from '../../components/common/EmptyState'
 import { Reveal } from '../../components/common/Reveal'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
 import { DeliveryRequestCard } from '../../components/deliveries/DeliveryRequestCard'
+import { DeliveryDetailsDialog } from '../../components/deliveries/DeliveryDetailsDialog'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useLanguage } from '../../context/language'
+import type { Delivery } from '../../types/delivery'
 import {
   deliveryOutcome,
   deliveryStatusLabels,
@@ -41,6 +43,9 @@ export function DeliveriesPage() {
     onboarding,
   } = useApp()
   const [tab, setTab] = useState<DeliveryTab>('available')
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
+    null,
+  )
 
   async function handleAccept(id: string) {
     const accepted = await acceptRequest(id)
@@ -253,62 +258,73 @@ export function DeliveriesPage() {
                     className="reveal-up"
                     style={revealStyle(index)}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[12.5px] font-bold text-ink">
-                            {delivery.id}
-                          </span>
-                          <Badge
-                            tone={outcome === 'cancelled' ? 'danger' : 'success'}
-                            size="sm"
-                          >
-                            {t(
-                              outcome === 'delivered'
-                                ? 'Completed'
-                                : declined
-                                  ? 'Cancelled by you'
-                                  : 'Cancelled',
-                            )}
-                          </Badge>
-                        </div>
-                        <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
-                          {delivery.pickup.name} →{' '}
-                          {delivery.destination.name}
-                        </p>
-                        {outcome === 'cancelled' ? (
-                          <p className="mt-0.5 truncate text-[11px] text-danger">
-                            {declined
-                              ? `${t('You declined this request.')}${
-                                  delivery.partnerResponse?.reason
-                                    ? ` ${t(delivery.partnerResponse.reason)}`
-                                    : ''
-                                }`
-                              : delivery.cancellationReason
-                                ? t(delivery.cancellationReason)
-                                : t('Cancelled by operations.')}
+                    <button
+                      type="button"
+                      aria-label={t('View delivery details')}
+                      onClick={() => setSelectedDelivery(delivery)}
+                      className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12.5px] font-bold text-ink">
+                              {delivery.id}
+                            </span>
+                            <Badge
+                              tone={
+                                outcome === 'cancelled' ? 'danger' : 'success'
+                              }
+                              size="sm"
+                            >
+                              {t(
+                                outcome === 'delivered'
+                                  ? 'Completed'
+                                  : declined
+                                    ? 'Cancelled by you'
+                                    : 'Cancelled',
+                              )}
+                            </Badge>
+                          </div>
+                          <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                            {delivery.pickup.name} →{' '}
+                            {delivery.destination.name}
                           </p>
-                        ) : null}
+                          {outcome === 'cancelled' ? (
+                            <p className="mt-0.5 truncate text-[11px] text-danger">
+                              {declined
+                                ? `${t('You declined this request.')}${
+                                    delivery.partnerResponse?.reason
+                                      ? ` ${t(delivery.partnerResponse.reason)}`
+                                      : ''
+                                  }`
+                                : delivery.cancellationReason
+                                  ? t(delivery.cancellationReason)
+                                  : t('Cancelled by operations.')}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p
+                            className={[
+                              'text-[12.5px] font-bold',
+                              outcome === 'delivered'
+                                ? 'text-ink'
+                                : 'text-danger',
+                            ].join(' ')}
+                          >
+                            {formatCurrency(
+                              outcome === 'delivered' ? delivery.earnings : 0,
+                              locale,
+                            )}
+                          </p>
+                          <p className="text-[10.5px] text-ink-soft">
+                            {delivery.completedAt
+                              ? formatShortDate(delivery.completedAt, locale)
+                              : '—'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p
-                          className={[
-                            'text-[12.5px] font-bold',
-                            outcome === 'delivered' ? 'text-ink' : 'text-danger',
-                          ].join(' ')}
-                        >
-                          {formatCurrency(
-                            outcome === 'delivered' ? delivery.earnings : 0,
-                            locale,
-                          )}
-                        </p>
-                        <p className="text-[10.5px] text-ink-soft">
-                          {delivery.completedAt
-                            ? formatShortDate(delivery.completedAt, locale)
-                            : '—'}
-                        </p>
-                      </div>
-                    </div>
+                    </button>
                   </Card>
                 )
               })}
@@ -324,6 +340,13 @@ export function DeliveriesPage() {
           )
         ) : null}
       </div>
+
+      {selectedDelivery ? (
+        <DeliveryDetailsDialog
+          delivery={selectedDelivery}
+          onClose={() => setSelectedDelivery(null)}
+        />
+      ) : null}
     </div>
   )
 }

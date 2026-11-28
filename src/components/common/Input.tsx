@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import type { InputHTMLAttributes, ReactNode } from 'react'
+import type { InputHTMLAttributes, ReactNode, Ref } from 'react'
 import { cn } from '../../utils/cn'
 
 export interface InputProps
@@ -11,6 +11,8 @@ export interface InputProps
   rightIcon?: ReactNode
   /** Static text shown inside the field before the value, e.g. "+91". */
   prefix?: ReactNode
+  /** Access the underlying input without making it a controlled field. */
+  inputRef?: Ref<HTMLInputElement>
   containerClassName?: string
 }
 
@@ -21,6 +23,7 @@ export function Input({
   leftIcon,
   rightIcon,
   prefix,
+  inputRef,
   containerClassName,
   className,
   required,
@@ -56,6 +59,7 @@ export function Input({
 
         <input
           id={id}
+          ref={inputRef}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
