@@ -11,6 +11,8 @@ export const initialOnboarding: OnboardingState = {
   city: '',
   addressLine: '',
   pincode: '',
+  addressLocation: null,
+  upiId: '',
   documentNumbers: {
     aadhaar: '',
     pan: '',
@@ -28,11 +30,6 @@ export const initialOnboarding: OnboardingState = {
     model: '',
     colour: '',
     registrationNumber: '',
-  },
-  bank: {
-    accountHolder: '',
-    accountNumber: '',
-    ifsc: '',
   },
   training: [false, false, false, false, false],
   submittedAt: null,

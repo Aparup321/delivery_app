@@ -128,6 +128,7 @@ const hindi: Record<string, string> = {
   'Verification code': 'सत्यापन कोड',
   'Verify and continue': 'सत्यापित करें और जारी रखें',
   'Change number': 'नंबर बदलें',
+  'Back to mobile number': 'मोबाइल नंबर पर वापस जाएं',
   'Resend in {seconds}s': '{seconds} सेकंड में फिर भेजें',
   'Resend code': 'कोड फिर भेजें',
   'No SMS is sent in this prototype. Use the code {code}.':
@@ -245,6 +246,42 @@ const hindi: Record<string, string> = {
     'निकासी अनुरोध सहेजा नहीं जा सका। कनेक्शन जांचकर फिर कोशिश करें।',
   Amount: 'राशि',
   'High priority': 'उच्च प्राथमिकता',
+  'Pin your address on the map': 'मैप पर अपना पता चिह्नित करें',
+  'Search your address': 'अपना पता खोजें',
+  'Area, street or landmark': 'क्षेत्र, सड़क या लैंडमार्क',
+  'Searching…': 'खोजा जा रहा है…',
+  'Address suggestions': 'पता सुझाव',
+  'Search an address, tap the map or drag the pin to mark your address.':
+    'पता खोजें, मैप पर टैप करें या पिन खींचकर अपना पता चिह्नित करें।',
+  'Use my location': 'मेरी जगह इस्तेमाल करें',
+  'Map to pin your delivery address': 'डिलीवरी पता चिह्नित करने का मैप',
+  'Your pinned address': 'आपका चिह्नित पता',
+  'Looking up the address…': 'पता खोजा जा रहा है…',
+  'Address filled from the map. You can edit it above.':
+    'पता मैप से भर दिया गया है। आप इसे ऊपर बदल सकते हैं।',
+  'Could not look up the address. Fill it in above.':
+    'पता नहीं खोजा जा सका। इसे ऊपर भरें।',
+  'Tap the map or drag the pin to mark your address.':
+    'अपना पता चिह्नित करने के लिए मैप पर टैप करें या पिन खींचें।',
+  'Location permission was not granted. Tap the map to pin your address instead.':
+    'जगह की अनुमति नहीं मिली। इसके बजाय मैप पर टैप करके अपना पता चिह्नित करें।',
+  'Pin your delivery address on the map.':
+    'मैप पर अपना डिलीवरी पता चिह्नित करें।',
+  'Payout UPI ID': 'भुगतान UPI आईडी',
+  'Payout UPI': 'भुगतान UPI',
+  'Earnings and withdrawals are sent to this UPI ID.':
+    'कमाई और निकासी इसी UPI आईडी पर भेजी जाती है।',
+  'Use a UPI ID linked to your own bank account.':
+    'अपने बैंक खाते से जुड़ी UPI आईडी इस्तेमाल करें।',
+  'You can change this for each withdrawal from the Earnings screen.':
+    'आप कमाई स्क्रीन से हर निकासी के लिए इसे बदल सकते हैं।',
+  'KYC & payout': 'KYC और भुगतान',
+  'Your payment QR': 'आपका भुगतान QR',
+  'Scan to pay this UPI ID': 'इस UPI आईडी पर भुगतान के लिए स्कैन करें',
+  'Amount filled: {amount}': 'राशि भरी गई: {amount}',
+  'Go to map with live route': 'लाइव रूट के साथ मैप पर जाएं',
+  'Opens Google Maps with live traffic and turn-by-turn directions.':
+    'लाइव ट्रैफिक और टर्न-बाय-टर्न दिशाओं के साथ Google Maps खोलता है।',
   Accepted: 'स्वीकार किया',
   'Received by': 'प्राप्तकर्ता',
   'Handover note': 'हैंडओवर नोट',
@@ -272,6 +309,26 @@ const hindi: Record<string, string> = {
   'Address could not be found': 'पता नहीं मिला',
   'Order was damaged': 'ऑर्डर खराब हो गया',
   'Vehicle breakdown': 'वाहन खराब हो गया',
+  'Customer refused the order': 'ग्राहक ने ऑर्डर लेने से मना किया',
+  'Cancel delivery': 'डिलीवरी रद्द करें',
+  'Why cancel this delivery?': 'यह डिलीवरी क्यों रद्द करें?',
+  'Message customer': 'ग्राहक को संदेश भेजें',
+  'In-app messages': 'ऐप में संदेश',
+  'Messages with the customer': 'ग्राहक के साथ संदेश',
+  'No messages yet': 'अभी कोई संदेश नहीं',
+  'Send an update about the pickup, the route or the handover.':
+    'पिकअप, रास्ते या हैंडओवर के बारे में जानकारी भेजें।',
+  'Demo build: only your messages are shown.':
+    'डेमो बिल्ड: केवल आपके संदेश दिखाई देते हैं।',
+  Message: 'संदेश',
+  'Type a message…': 'संदेश लिखें…',
+  Send: 'भेजें',
+  'Messages could not be loaded. Check your connection.':
+    'संदेश लोड नहीं हो सके। अपना कनेक्शन जांचें।',
+  'The message could not be sent. Try again.':
+    'संदेश नहीं भेजा जा सका। फिर कोशिश करें।',
+  'Sign in again to message the customer.':
+    'ग्राहक को संदेश भेजने के लिए फिर साइन इन करें।',
   'I have reached the pickup': 'मैं पिकअप पहुंच गया',
   'Confirm pickup': 'पिकअप की पुष्टि करें',
   'Start the delivery': 'डिलीवरी शुरू करें',
@@ -926,6 +983,7 @@ const bengali: Record<string, string> = {
   'Verification code': 'যাচাই কোড',
   'Verify and continue': 'যাচাই করে চালিয়ে যান',
   'Change number': 'নম্বর পরিবর্তন করুন',
+  'Back to mobile number': 'মোবাইল নম্বরে ফিরে যান',
   'Resend in {seconds}s': '{seconds} সেকেন্ডে আবার পাঠান',
   'Resend code': 'কোড আবার পাঠান',
   'No SMS is sent in this prototype. Use the code {code}.':
@@ -1043,6 +1101,42 @@ const bengali: Record<string, string> = {
     'তোলার অনুরোধ সংরক্ষণ করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
   Amount: 'পরিমাণ',
   'High priority': 'উচ্চ অগ্রাধিকার',
+  'Pin your address on the map': 'ম্যাপে আপনার ঠিকানা চিহ্নিত করুন',
+  'Search your address': 'আপনার ঠিকানা খুঁজুন',
+  'Area, street or landmark': 'এলাকা, রাস্তা বা ল্যান্ডমার্ক',
+  'Searching…': 'খোঁজা হচ্ছে…',
+  'Address suggestions': 'ঠিকানা সূচনা',
+  'Search an address, tap the map or drag the pin to mark your address.':
+    'ঠিকানা খুঁজুন, ম্যাপে ট্যাপ করুন বা পিন টেনে আপনার ঠিকানা চিহ্নিত করুন।',
+  'Use my location': 'আমার অবস্থান ব্যবহার করুন',
+  'Map to pin your delivery address': 'ডেলিভারি ঠিকানা চিহ্নিত করার ম্যাপ',
+  'Your pinned address': 'আপনার চিহ্নিত ঠিকানা',
+  'Looking up the address…': 'ঠিকানা খোঁজা হচ্ছে…',
+  'Address filled from the map. You can edit it above.':
+    'ঠিকানা ম্যাপ থেকে ভরা হয়েছে। উপরে এটি সম্পাদনা করতে পারেন।',
+  'Could not look up the address. Fill it in above.':
+    'ঠিকানা খুঁজে পাওয়া যায়নি। উপরে এটি লিখুন।',
+  'Tap the map or drag the pin to mark your address.':
+    'আপনার ঠিকানা চিহ্নিত করতে ম্যাপে ট্যাপ করুন বা পিন টানুন।',
+  'Location permission was not granted. Tap the map to pin your address instead.':
+    'অবস্থানের অনুমতি দেওয়া হয়নি। এর বদলে ম্যাপে ট্যাপ করে ঠিকানা চিহ্নিত করুন।',
+  'Pin your delivery address on the map.':
+    'ম্যাপে আপনার ডেলিভারি ঠিকানা চিহ্নিত করুন।',
+  'Payout UPI ID': 'পেআউট UPI আইডি',
+  'Payout UPI': 'পেআউট UPI',
+  'Earnings and withdrawals are sent to this UPI ID.':
+    'আয় ও উত্তোলন এই UPI আইডিতেই পাঠানো হয়।',
+  'Use a UPI ID linked to your own bank account.':
+    'আপনার নিজের ব্যাংক অ্যাকাউন্টের সাথে যুক্ত UPI আইডি ব্যবহার করুন।',
+  'You can change this for each withdrawal from the Earnings screen.':
+    'আয় স্ক্রিন থেকে প্রতিবার উত্তোলনের জন্য এটি বদলাতে পারেন।',
+  'KYC & payout': 'KYC ও পেআউট',
+  'Your payment QR': 'আপনার পেমেন্ট QR',
+  'Scan to pay this UPI ID': 'এই UPI আইডিতে পেমেন্ট করতে স্ক্যান করুন',
+  'Amount filled: {amount}': 'পরিমাণ ভরা হয়েছে: {amount}',
+  'Go to map with live route': 'লাইভ রুটসহ ম্যাপে যান',
+  'Opens Google Maps with live traffic and turn-by-turn directions.':
+    'লাইভ ট্রাফিক ও ধাপে ধাপে দিকনির্দেশসহ Google Maps খোলে।',
   Accepted: 'গৃহীত',
   'Received by': 'গ্রহণকারী',
   'Handover note': 'হস্তান্তর নোট',
@@ -1070,6 +1164,26 @@ const bengali: Record<string, string> = {
   'Address could not be found': 'ঠিকানা পাওয়া যায়নি',
   'Order was damaged': 'অর্ডার নষ্ট হয়েছে',
   'Vehicle breakdown': 'যানবাহন নষ্ট হয়েছে',
+  'Customer refused the order': 'গ্রাহক অর্ডার নিতে রাজি হননি',
+  'Cancel delivery': 'ডেলিভারি বাতিল করুন',
+  'Why cancel this delivery?': 'এই ডেলিভারি কেন বাতিল করবেন?',
+  'Message customer': 'গ্রাহককে বার্তা পাঠান',
+  'In-app messages': 'অ্যাপের বার্তা',
+  'Messages with the customer': 'গ্রাহকের সাথে বার্তা',
+  'No messages yet': 'এখনও কোনো বার্তা নেই',
+  'Send an update about the pickup, the route or the handover.':
+    'পিকআপ, পথ বা হ্যান্ডওভার সম্পর্কে আপডেট পাঠান।',
+  'Demo build: only your messages are shown.':
+    'ডেমো বিল্ড: শুধু আপনার বার্তা দেখানো হয়।',
+  Message: 'বার্তা',
+  'Type a message…': 'বার্তা লিখুন…',
+  Send: 'পাঠান',
+  'Messages could not be loaded. Check your connection.':
+    'বার্তা লোড করা যায়নি। আপনার সংযোগ পরীক্ষা করুন।',
+  'The message could not be sent. Try again.':
+    'বার্তা পাঠানো যায়নি। আবার চেষ্টা করুন।',
+  'Sign in again to message the customer.':
+    'গ্রাহককে বার্তা পাঠাতে আবার সাইন ইন করুন।',
   'I have reached the pickup': 'আমি পিকআপে পৌঁছেছি',
   'Confirm pickup': 'পিকআপ নিশ্চিত করুন',
   'Start the delivery': 'ডেলিভারি শুরু করুন',

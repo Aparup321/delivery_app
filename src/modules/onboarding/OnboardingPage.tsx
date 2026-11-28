@@ -15,6 +15,7 @@ import {
   Play,
   ShieldCheck,
   UserRound,
+  Wallet,
   X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -48,10 +49,10 @@ import {
 } from '../../utils/firebaseError'
 import { formatDate } from '../../utils/format'
 import { validateStep } from '../../utils/onboardingValidation'
-import { DocumentUploadTile } from './DocumentUploadTile'
 import { KycDocumentCard } from './KycDocumentCard'
 import { mediaUploadsEnabled } from '../../config/media'
 import { useModalFocus } from '../../hooks/useModalFocus'
+import { AddressMapPicker } from './AddressMapPicker'
 
 const vehicleOptions: Array<{
   value: OnboardingState['vehicle']['type']
@@ -583,6 +584,29 @@ export function OnboardingPage() {
                   })
                 }
               />
+              <AddressMapPicker
+                value={onboarding.addressLocation}
+                onChange={(addressLocation) =>
+                  updateOnboarding({ addressLocation })
+                }
+                onAddressResolved={(parts) => {
+                  const patch: Partial<OnboardingState> = {}
+
+                  if (parts.addressLine) {
+                    patch.addressLine = parts.addressLine
+                  }
+                  if (parts.city) {
+                    patch.city = parts.city
+                  }
+                  if (parts.pincode) {
+                    patch.pincode = parts.pincode
+                  }
+
+                  if (Object.keys(patch).length > 0) {
+                    updateOnboarding(patch)
+                  }
+                }}
+              />
             </Card>
           </>
         ) : null}
@@ -739,91 +763,38 @@ export function OnboardingPage() {
             </Card>
 
             <Card padding="md" className="space-y-3">
-              <p className="text-[13px] font-semibold text-ink">
-                {t('Bank account details')}
-              </p>
-              <Input
-                label={t('Account holder name')}
-                required
-                value={onboarding.bank.accountHolder}
-                placeholder={t('Name as on the bank account')}
-                onChange={(event) =>
-                  updateOnboarding({
-                    bank: {
-                      ...onboarding.bank,
-                      accountHolder: event.target.value,
-                    },
-                  })
-                }
-              />
-              <div>
-                <div className="flex items-start gap-3">
-                  <Input
-                    containerClassName="min-w-0 flex-1"
-                    label={t('Account number')}
-                    required
-                    inputMode="numeric"
-                    value={onboarding.bank.accountNumber}
-                    placeholder="50100 1234 5678"
-                    onChange={(event) =>
-                      updateOnboarding({
-                        bank: {
-                          ...onboarding.bank,
-                          accountNumber: event.target.value
-                            .replace(/\D/g, '')
-                            .slice(0, 18),
-                        },
-                      })
-                    }
-                  />
-
-                  {mediaUploadsEnabled ? (
-                    <DocumentUploadTile
-                      className="mt-[26px]"
-                      documentName={t('Bank passbook')}
-                      fileName={onboarding.documents.passbook}
-                      onFileChange={(file) =>
-                        handleDocumentChange('passbook', file)
-                      }
-                    />
-                  ) : (
-                    <span className="mt-[26px] grid w-[104px] shrink-0 place-items-center rounded-2xl border border-dashed border-line bg-canvas px-2 py-2.5 text-center text-[10.5px] font-medium text-ink-muted">
-                      {t('Manual review')}
-                    </span>
-                  )}
-                </div>
-
-                <p className="mt-2 break-words text-[11px] leading-relaxed text-ink-muted">
-                  {mediaUploadsEnabled
-                    ? onboarding.documents.passbook ||
-                      t('Passbook or cancelled cheque · JPG or PDF · max 2 MB')
-                    : t('Document number only · manual verification')}
-                </p>
-
-                {documentErrors.passbook ? (
-                  <p
-                    role="alert"
-                    className="mt-2 text-[11px] font-medium text-danger"
-                  >
-                    {t(documentErrors.passbook)}
+              <div className="flex items-start gap-2.5">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-deep">
+                  <Wallet className="size-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-ink">
+                    {t('Payout UPI ID')}
                   </p>
-                ) : null}
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+                    {t('Earnings and withdrawals are sent to this UPI ID.')}
+                  </p>
+                </div>
               </div>
+
               <Input
-                label={t('IFSC code')}
+                label={t('UPI ID')}
                 required
-                value={onboarding.bank.ifsc}
-                placeholder="HDFC0001234"
-                hint={t('Find this on your cheque book or bank app.')}
+                inputMode="email"
+                autoComplete="off"
+                value={onboarding.upiId}
+                placeholder={t('name@bank')}
+                hint={t('Use a UPI ID linked to your own bank account.')}
                 onChange={(event) =>
-                  updateOnboarding({
-                    bank: {
-                      ...onboarding.bank,
-                      ifsc: event.target.value.toUpperCase().slice(0, 11),
-                    },
-                  })
+                  updateOnboarding({ upiId: event.target.value })
                 }
               />
+
+              <p className="text-[11px] leading-relaxed text-ink-muted">
+                {t(
+                  'You can change this for each withdrawal from the Earnings screen.',
+                )}
+              </p>
             </Card>
           </>
         ) : null}
@@ -1184,7 +1155,7 @@ export function OnboardingPage() {
               <section className="border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11.5px] font-medium text-ink-muted">
-                    {t('KYC & bank')}
+                    {t('KYC & payout')}
                   </p>
                   <button
                     type="button"
@@ -1206,9 +1177,7 @@ export function OnboardingPage() {
                       {t('Driving licence')}{' '}
                       {t(onboarding.documents.licence ? 'uploaded' : 'missing')} ·{' '}
                       {t('Vehicle RC')}{' '}
-                      {t(onboarding.documents.registration ? 'uploaded' : 'missing')}{' '}
-                      · {t('Bank passbook')}{' '}
-                      {t(onboarding.documents.passbook ? 'uploaded' : 'missing')}
+                      {t(onboarding.documents.registration ? 'uploaded' : 'missing')}
                     </p>
                   </>
                 ) : (
@@ -1217,8 +1186,7 @@ export function OnboardingPage() {
                   </p>
                 )}
                 <p className="text-[11.5px] text-ink-muted">
-                  {onboarding.bank.accountHolder} ····{' '}
-                  {onboarding.bank.accountNumber.slice(-4)}
+                  {t('Payout UPI')}: {onboarding.upiId}
                 </p>
               </section>
 

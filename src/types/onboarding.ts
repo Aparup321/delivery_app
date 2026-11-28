@@ -39,10 +39,10 @@ export interface OnboardingVehicle {
   registrationNumber: string
 }
 
-export interface OnboardingBank {
-  accountHolder: string
-  accountNumber: string
-  ifsc: string
+/** Coordinates pinned on the onboarding map for the partner's address. */
+export interface OnboardingLocation {
+  latitude: number
+  longitude: number
 }
 
 export interface OnboardingFiles {
@@ -67,11 +67,14 @@ export interface OnboardingState {
   city: string
   addressLine: string
   pincode: string
+  /** Pin dropped on the address map; required with the address. */
+  addressLocation: OnboardingLocation | null
+  /** Payout UPI ID. Replaces the old bank-account fields. */
+  upiId: string
   /** Numbers printed on the Aadhaar and PAN, plus the licence entered with the vehicle. */
   documentNumbers: OnboardingDocumentNumbers
   documents: OnboardingDocuments
   vehicle: OnboardingVehicle
-  bank: OnboardingBank
   training: boolean[]
   submittedAt: string | null
   /** When the current status last changed. */

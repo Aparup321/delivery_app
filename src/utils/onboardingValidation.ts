@@ -1,8 +1,9 @@
 import type { OnboardingState } from '../types/onboarding'
+import { isValidCoordinate } from './geo'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PINCODE_PATTERN = /^\d{6}$/
-const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/
+const UPI_PATTERN = /^[A-Za-z0-9._-]{2,64}@[A-Za-z]{2,32}$/
 const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/
 const LICENCE_PATTERN = /^[A-Z]{2}[- ]?\d{2}[- ]?\d{4}[- ]?\d{7}$/
 const REGISTRATION_PATTERN =
@@ -56,6 +57,15 @@ export function validateStep(step: number, state: OnboardingState): string {
       if (!PINCODE_PATTERN.test(state.pincode)) {
         return 'Enter a 6-digit PIN code.'
       }
+      if (
+        !state.addressLocation ||
+        !isValidCoordinate(
+          state.addressLocation.latitude,
+          state.addressLocation.longitude,
+        )
+      ) {
+        return 'Pin your delivery address on the map.'
+      }
       return ''
     case 1: {
       if (!/^\d{12}$/.test(state.documentNumbers.aadhaar)) {
@@ -65,14 +75,8 @@ export function validateStep(step: number, state: OnboardingState): string {
         return 'Enter a valid 10-character PAN number.'
       }
 
-      if (state.bank.accountHolder.trim().length < 3) {
-        return "Enter the account holder's name."
-      }
-      if (!/^\d{9,18}$/.test(state.bank.accountNumber)) {
-        return 'Enter a valid bank account number.'
-      }
-      if (!IFSC_PATTERN.test(state.bank.ifsc)) {
-        return 'Enter a valid IFSC code, for example HDFC0001234.'
+      if (!UPI_PATTERN.test(state.upiId.trim())) {
+        return 'Enter a valid UPI ID, for example name@bank.'
       }
       return ''
     }

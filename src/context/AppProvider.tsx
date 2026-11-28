@@ -119,7 +119,14 @@ function readOnboarding(phone: string | null): OnboardingState {
       },
       documents: { ...initialOnboarding.documents, ...parsed.documents },
       vehicle: { ...initialOnboarding.vehicle, ...parsed.vehicle },
-      bank: { ...initialOnboarding.bank, ...parsed.bank },
+      addressLocation:
+        typeof parsed.addressLocation?.latitude === 'number' &&
+        typeof parsed.addressLocation?.longitude === 'number'
+          ? {
+              latitude: parsed.addressLocation.latitude,
+              longitude: parsed.addressLocation.longitude,
+            }
+          : null,
       training: Array.from(
         { length: initialOnboarding.training.length },
         (_, index) => parsed.training?.[index] ?? false,

@@ -447,11 +447,8 @@ export async function savePartnerOnboarding({
         submittedAt,
         statusUpdatedAt,
         updatedAt: submittedAt,
-        bank: {
-          accountHolder: state.bank.accountHolder.trim(),
-          accountNumber: state.bank.accountNumber,
-          ifsc: state.bank.ifsc.trim().toUpperCase(),
-        },
+        upiId: state.upiId.trim().toLowerCase(),
+        addressLocation: state.addressLocation,
       },
       { merge: true },
     )
@@ -575,7 +572,7 @@ export async function loadPartnerOnboarding(
 
   const documentNumbers = asRecord(documents.documentNumbers)
   const documentFiles = asRecord(documents.documents)
-  const bank = asRecord(partner.bank)
+  const addressLocation = asRecord(partner.addressLocation)
   const rawTraining = training.completed
   const account = accountSnapshotFromPartner(partner)
 
@@ -597,6 +594,15 @@ export async function loadPartnerOnboarding(
     city: asString(partner.city),
     addressLine: asString(partner.addressLine),
     pincode: asString(partner.pincode),
+    addressLocation:
+      typeof addressLocation.latitude === 'number' &&
+      typeof addressLocation.longitude === 'number'
+        ? {
+            latitude: addressLocation.latitude,
+            longitude: addressLocation.longitude,
+          }
+        : null,
+    upiId: asString(partner.upiId),
     documentNumbers: {
       aadhaar: asString(documentNumbers.aadhaar),
       pan: asString(documentNumbers.pan),
@@ -619,11 +625,6 @@ export async function loadPartnerOnboarding(
       model: asString(vehicle.model),
       colour: asString(vehicle.colour),
       registrationNumber: asString(vehicle.registrationNumber),
-    },
-    bank: {
-      accountHolder: asString(bank.accountHolder),
-      accountNumber: asString(bank.accountNumber),
-      ifsc: asString(bank.ifsc),
     },
     training: Array.isArray(rawTraining)
       ? initialOnboarding.training.map(
