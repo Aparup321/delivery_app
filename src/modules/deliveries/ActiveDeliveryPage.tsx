@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Crosshair,
   MapPin,
+  MessageCircle,
   Navigation,
   Phone,
   Wallet,
@@ -16,13 +17,16 @@ import { Input } from '../../components/common/Input'
 import { OptionButton } from '../../components/common/OptionButton'
 import { SectionHeading } from '../../components/common/SectionHeading'
 import { DeliveryMap } from '../../components/deliveries/DeliveryMap'
+import { DeliveryChatDialog } from '../../components/deliveries/DeliveryChatDialog'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
+import { PaymentQr } from '../../components/deliveries/PaymentQr'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import {
   demoDeliveryOtp,
   demoDeliveryOtpEnabled,
 } from '../../config/demoDelivery'
 import { useApp } from '../../context/app-store'
+import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
 import type { TrackingStatus } from '../../hooks/usePartnerTracking'
 import {
@@ -31,10 +35,12 @@ import {
 } from '../../utils/delivery'
 import { formatCurrency, formatTime } from '../../utils/format'
 import { navigationUrl } from '../../utils/navigation'
+import { useDeliveryMessages } from '../../hooks/useDeliveryMessages'
 
 const issueReasons = [
   'Customer is unreachable',
   'Address could not be found',
+  'Customer refused the order',
   'Order was damaged',
   'Vehicle breakdown',
 ]
@@ -76,13 +82,29 @@ export function ActiveDeliveryPage() {
     trackingStatus,
     trackingPosition,
     shareLocationNow,
+    onboarding,
   } = useApp()
   const [showIssues, setShowIssues] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState('')
   const [recipientName, setRecipientName] = useState('')
   const [handoverNote, setHandoverNote] = useState('')
   const [actionError, setActionError] = useState('')
+  const { session } = useAuth()
+  const deliveryChatId =
+    activeDelivery?.documentId ?? activeDelivery?.id ?? ''
+  const {
+    messages,
+    error: messageError,
+    isSending,
+    send,
+  } = useDeliveryMessages({
+    deliveryId: deliveryChatId,
+    uid: session?.uid ?? '',
+    isLive: isLiveSession,
+    enabled: Boolean(activeDelivery),
+  })
 
   if (!activeDelivery) {
     return (
@@ -295,6 +317,40 @@ export function ActiveDeliveryPage() {
           </div>
         </Card>
 
+        {activeDelivery.paymentMode === 'UPI' && onboarding.upiId ? (
+          <PaymentQr
+            upiId={onboarding.upiId}
+            payeeName={onboarding.fullName}
+            amount={activeDelivery.orderValue}
+            reference={activeDelivery.id}
+          />
+        ) : null}
+
+        <div>
+          <Button
+            fullWidth
+            leftIcon={<Navigation className="size-4" aria-hidden="true" />}
+            onClick={() => {
+              const target =
+                focus === 'pickup'
+                  ? activeDelivery.pickup
+                  : activeDelivery.destination
+              window.open(
+                navigationUrl(target),
+                '_blank',
+                'noopener,noreferrer',
+              )
+            }}
+          >
+            {t('Go to map with live route')}
+          </Button>
+          <p className="mt-1.5 text-center text-[10.5px] leading-relaxed text-ink-soft">
+            {t(
+              'Opens Google Maps with live traffic and turn-by-turn directions.',
+            )}
+          </p>
+        </div>
+
         <section aria-label={t('Current location')}>
           <SectionHeading
             title={t('Current location')}
@@ -455,6 +511,16 @@ export function ActiveDeliveryPage() {
 
           <div className="grid grid-cols-2 gap-2">
             <Button
+              variant="outline"
+              disabled={pendingAction !== null}
+              onClick={() => setChatOpen(true)}
+              leftIcon={
+                <MessageCircle className="size-4" aria-hidden="true" />
+              }
+            >
+              {t('Message customer')}
+            </Button>
+            <Button
               variant="secondary"
               disabled={!canContact}
               title={
@@ -471,11 +537,13 @@ export function ActiveDeliveryPage() {
             </Button>
             <Button
               variant="outline"
+              fullWidth
+              className="col-span-2"
               disabled={pendingAction !== null}
               onClick={() => setShowIssues((value) => !value)}
               leftIcon={<AlertTriangle className="size-4" aria-hidden="true" />}
             >
-              {t('Report issue')}
+              {t('Cancel delivery')}
             </Button>
             {!canContact ? (
               <p className="col-span-2 rounded-xl bg-canvas px-3 py-2 text-center text-[10.5px] text-ink-muted">
@@ -490,7 +558,7 @@ export function ActiveDeliveryPage() {
         {showIssues ? (
           <Card padding="md">
             <SectionHeading
-              title={t('What went wrong?')}
+              title={t('Why cancel this delivery?')}
               subtitle={t('This cancels the delivery and informs support.')}
             />
             <div className="mt-3 space-y-2">
@@ -506,6 +574,18 @@ export function ActiveDeliveryPage() {
               ))}
             </div>
           </Card>
+        ) : null}
+
+        {chatOpen ? (
+          <DeliveryChatDialog
+            delivery={activeDelivery}
+            messages={messages}
+            isSending={isSending}
+            error={messageError}
+            isLive={isLiveSession}
+            onSend={send}
+            onClose={() => setChatOpen(false)}
+          />
         ) : null}
       </div>
     </div>

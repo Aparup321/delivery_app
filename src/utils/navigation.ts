@@ -14,6 +14,7 @@ export function navigationUrl(stop: DeliveryStop): string {
 
   return (
     'https://www.google.com/maps/dir/?api=1&destination=' +
-    encodeURIComponent(`${latitude},${longitude}`)
+    encodeURIComponent(`${latitude},${longitude}`) +
+    '&travelmode=driving&dir_action=navigate'
   )
 }
