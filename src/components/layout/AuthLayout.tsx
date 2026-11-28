@@ -32,7 +32,7 @@ const AuthHero = memo(function AuthHero() {
         </span>
       </header>
 
-      <div className="relative z-10 hidden min-h-0 flex-1 flex-col overflow-hidden px-5 pt-9 lg:flex">
+      <div className="relative z-10 flex h-[480px] min-h-0 shrink-0 flex-col overflow-hidden px-5 pt-9 lg:h-auto lg:flex-1">
         <HeroRoute />
         <h1 className="relative text-[clamp(48px,15vw,64px)] font-extrabold leading-[0.94] tracking-[-3px] text-white">
           PicDrop
@@ -48,10 +48,13 @@ const AuthHero = memo(function AuthHero() {
 })
 
 /**
- * Auth shell. On phones and tablets the form is the primary screen: a compact
- * brand bar plus a full-height sheet, which keeps the keyboard from fighting a
- * large hero or a fixed overlay. From 1024px the wordmark/route hero returns and
- * the sheet is anchored over it, where there is room and no soft keyboard.
+ * Auth shell: brand hero with the form in a white sheet at the bottom.
+ *
+ * On phones the hero has a fixed 480px height (rather than `flex: 1`), so the
+ * keyboard resizing the viewport never reflows or repaints the artwork. The
+ * sheet is absolutely bottom-anchored and gets a short transform-only lift when
+ * a field is focused; a surface tail keeps its bottom edge flush. From 1024px
+ * the hero fills the available height and the sheet sits over it.
  *
  * The hero is memoized and the phone field is uncontrolled, so typing never
  * re-renders the artwork.
@@ -62,9 +65,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <div className="relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden bg-brand-deep">
         <AuthHero />
 
-        <main className="sheet-enter app-scrollbar relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-t-[30px] bg-surface px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6 shadow-float lg:absolute lg:inset-x-0 lg:bottom-0 lg:max-h-[calc(100dvh-56px)] lg:flex-none">
+        <main className="auth-sheet sheet-enter app-scrollbar absolute inset-x-0 bottom-0 z-10 max-h-[calc(100dvh-56px)] overflow-y-auto overscroll-contain rounded-t-[30px] bg-surface px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6 shadow-float">
           {children}
         </main>
+        <div className="auth-sheet-tail" aria-hidden="true" />
       </div>
     </div>
   )

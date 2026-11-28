@@ -21,7 +21,7 @@ const variantClasses: Record<IconButtonVariant, string> = {
 }
 
 const sizeClasses: Record<IconButtonSize, string> = {
-  sm: 'size-9',
+  sm: 'size-10',
   md: 'size-11',
 }
 

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Button } from '../common/Button'
 import { Card } from '../common/Card'
 import { Input } from '../common/Input'
+import { OptionButton } from '../common/OptionButton'
 import { useLanguage } from '../../context/language'
 import { useModalFocus } from '../../hooks/useModalFocus'
 
@@ -65,19 +66,13 @@ export function RejectOfferDialog({
 
           <div className="mt-3 space-y-2" role="group" aria-label={t('Rejection reason')}>
             {rejectReasons.map((item) => (
-              <button
+              <OptionButton
                 key={item}
-                type="button"
-                aria-pressed={selected === item}
+                selected={selected === item}
                 onClick={() => setSelected(item)}
-                className={
-                  selected === item
-                    ? 'w-full rounded-xl border border-brand/40 bg-brand-tint px-3.5 py-2.5 text-left text-[12.5px] font-semibold text-brand-deep transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-                    : 'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-left text-[12.5px] font-medium text-ink transition-colors hover:border-brand/25 hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-                }
               >
                 {t(item)}
-              </button>
+              </OptionButton>
             ))}
           </div>
 

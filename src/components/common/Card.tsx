@@ -16,6 +16,14 @@ const paddingClasses: Record<CardPadding, string> = {
   lg: 'p-5',
 }
 
+/**
+ * The shared card surface. Exported for elements that cannot render a `div`
+ * (buttons, `details`) so screens do not copy the border/radius/background
+ * string and drift away from the design system.
+ */
+export const cardSurface =
+  'rounded-card border border-line bg-surface shadow-card'
+
 export function Card({
   padding = 'md',
   interactive = false,
@@ -26,7 +34,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-card border border-line bg-surface shadow-card',
+        cardSurface,
         interactive && 'transition-colors hover:border-brand/30',
         paddingClasses[padding],
         className,

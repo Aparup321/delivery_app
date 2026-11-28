@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Wallet } from 'lucide-react'
 import { AnimatedNumber } from '../../components/common/AnimatedNumber'
 import { Badge } from '../../components/common/Badge'
+import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { Reveal } from '../../components/common/Reveal'
 import { SegmentedTabs } from '../../components/common/SegmentedTabs'
@@ -9,7 +10,9 @@ import { StatCard } from '../../components/common/StatCard'
 import { DeliveryDetailsDialog } from '../../components/deliveries/DeliveryDetailsDialog'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
+import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
+import { useWithdrawals } from '../../hooks/useWithdrawals'
 import {
   earningsChart,
   earningsSummary,
@@ -17,10 +20,29 @@ import {
 } from '../../mock/earnings'
 import type { Delivery } from '../../types/delivery'
 import type { EarningsPeriod } from '../../types/earnings'
+import type { WithdrawalStatus } from '../../types/withdrawal'
 import { formatCurrency, formatShortDate } from '../../utils/format'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { EarningsChart } from './EarningsChart'
 import type { EarningsChartPoint } from './EarningsChart'
+import { WithdrawDialog } from './WithdrawDialog'
+
+const withdrawalLabels: Record<WithdrawalStatus, string> = {
+  requested: 'Requested',
+  processing: 'Processing',
+  paid: 'Paid',
+  rejected: 'Rejected',
+}
+
+const withdrawalTones: Record<
+  WithdrawalStatus,
+  'warning' | 'brand' | 'success' | 'danger'
+> = {
+  requested: 'warning',
+  processing: 'brand',
+  paid: 'success',
+  rejected: 'danger',
+}
 
 interface ChartBucket {
   label: string
@@ -172,9 +194,19 @@ function liveChart(
 
 export function EarningsPage() {
   const { history, isLiveSession } = useApp()
+  const { session } = useAuth()
   const { t, locale } = useLanguage()
   const reduceMotion = usePrefersReducedMotion()
+  const uid = session?.uid ?? ''
+  const {
+    withdrawals,
+    lastUpiId,
+    error: withdrawalError,
+    isSubmitting,
+    submit,
+  } = useWithdrawals({ uid, isLive: isLiveSession })
   const [period, setPeriod] = useState<EarningsPeriod>('today')
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [selectedBucket, setSelectedBucket] = useState<EarningsChartPoint | null>(
     null,
   )
@@ -243,6 +275,32 @@ export function EarningsPage() {
   const visibleDeliveries = selectedBucket
     ? statementDeliveries
     : recentDeliveries
+
+  const deliveredEarnings = useMemo(
+    () =>
+      history
+        .filter((delivery) => delivery.status === 'delivered')
+        .reduce((sum, delivery) => sum + delivery.earnings, 0),
+    [history],
+  )
+  // A demo session uses its labelled demo month total; live sessions use the
+  // earnings actually recorded on completed deliveries. Requested, processing
+  // and paid withdrawals all reduce what is still available.
+  const committedWithdrawals = withdrawals
+    .filter((withdrawal) => withdrawal.status !== 'rejected')
+    .reduce((sum, withdrawal) => sum + withdrawal.amount, 0)
+  const availableBalance = Math.max(
+    0,
+    Math.floor(
+      (isLiveSession ? deliveredEarnings : earningsSummary.month) -
+        committedWithdrawals,
+    ),
+  )
+  const hasPendingWithdrawal = withdrawals.some(
+    (withdrawal) =>
+      withdrawal.status === 'requested' ||
+      withdrawal.status === 'processing',
+  )
 
   function selectBucket(point: EarningsChartPoint) {
     if (!point.start || !point.end) {
@@ -358,6 +416,88 @@ export function EarningsPage() {
             hint={isLiveSession ? t('Earned') : t('After incentives')}
           />
         </div>
+
+        <Card padding="md">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-ink">
+                {t('Withdraw earnings')}
+              </p>
+              <p className="mt-0.5 text-[11.5px] text-ink-muted">
+                {t('Available to withdraw')}
+              </p>
+              <p className="mt-1 text-[22px] font-bold leading-none tracking-tight text-ink">
+                {formatCurrency(availableBalance, locale)}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              leftIcon={<Wallet className="size-4" aria-hidden="true" />}
+              disabled={availableBalance < 1}
+              onClick={() => setWithdrawOpen(true)}
+            >
+              {t('Withdraw')}
+            </Button>
+          </div>
+
+          <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
+            {t('The amount will take 24 hours to credit in your account.')}
+          </p>
+
+          {hasPendingWithdrawal ? (
+            <p className="mt-1.5 text-[11px] font-medium text-warning">
+              {t('You already have a withdrawal in progress.')}
+            </p>
+          ) : null}
+
+          {withdrawalError ? (
+            <p role="alert" className="mt-1.5 text-[11px] font-medium text-danger">
+              {t(withdrawalError)}
+            </p>
+          ) : null}
+        </Card>
+
+        <Card padding="md">
+          <p className="text-[13px] font-bold text-ink">
+            {t('Withdrawal history')}
+          </p>
+
+          {withdrawals.length > 0 ? (
+            <ul className="mt-2 divide-y divide-line">
+              {withdrawals.map((withdrawal, index) => (
+                <Reveal
+                  as="li"
+                  key={withdrawal.id}
+                  index={index}
+                  className="flex items-start justify-between gap-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-semibold text-ink">
+                      {formatCurrency(withdrawal.amount, locale)}
+                    </p>
+                    <p className="truncate text-[11px] text-ink-muted">
+                      {withdrawal.upiId}
+                    </p>
+                    <p className="text-[10.5px] text-ink-soft">
+                      {withdrawal.id} ·{' '}
+                      {formatShortDate(withdrawal.requestedAt, locale)}
+                    </p>
+                  </div>
+                  <Badge
+                    tone={withdrawalTones[withdrawal.status]}
+                    size="sm"
+                  >
+                    {t(withdrawalLabels[withdrawal.status])}
+                  </Badge>
+                </Reveal>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-[11.5px] text-ink-muted">
+              {t('No withdrawal requests yet.')}
+            </p>
+          )}
+        </Card>
 
         <Card padding="md">
           <p className="text-[13px] font-bold text-ink">{t('Earnings trend')}</p>
@@ -534,6 +674,17 @@ export function EarningsPage() {
         <DeliveryDetailsDialog
           delivery={selectedDelivery}
           onClose={() => setSelectedDelivery(null)}
+        />
+      ) : null}
+
+      {withdrawOpen ? (
+        <WithdrawDialog
+          available={availableBalance}
+          lastUpiId={lastUpiId}
+          isSubmitting={isSubmitting}
+          submitError={withdrawalError}
+          onClose={() => setWithdrawOpen(false)}
+          onSubmit={submit}
         />
       ) : null}
     </div>

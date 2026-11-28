@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Spinner } from '../components/common/Spinner'
 import { useAuth } from '../context/auth'
 import { hasSignedOutFlag } from '../utils/sessionFlag'
 
@@ -8,12 +9,8 @@ export function ProtectedRoute() {
 
   if (!isReady) {
     return (
-      <div
-        className="grid h-svh place-items-center bg-canvas"
-        role="status"
-        aria-label="Loading"
-      >
-        <span className="size-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      <div className="grid h-dvh place-items-center bg-canvas">
+        <Spinner label="Loading" />
       </div>
     )
   }

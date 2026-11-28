@@ -34,9 +34,33 @@
   --color-warning: #e08a00;
   --color-warning-soft: #fff4e0;
   --color-danger: #e0413e;
+  --color-danger-hover: #c93a37;
   --color-danger-soft: #fdecea;
   --color-info: #2f6fed;
   --color-info-soft: #eaf1ff;
+
+  /* Text placed on a status fill. The dark palette's status colours are light,
+     so white would sit at roughly 2:1 contrast; the dark theme flips these. */
+  --color-on-success: #ffffff;
+  --color-on-danger: #ffffff;
+
+  /* Brand used as text on a dark surface. `text-brand`/`text-brand-deep` are
+     remapped to these in dark mode (see index.css), while fills such as
+     `bg-brand` keep the original hue. */
+  --color-brand-text: #5123a5;
+  --color-brand-deep-text: #350f7a;
+  /* Text that always sits on a white circle/chip, even in dark mode. */
+  --color-brand-deep-on-light: #5123a5;
+
+  /* Map. Tiles are a fixed light surface in both themes, so map-only colours
+     stay constant: route lines, pins and the legend must match each other even
+     when the app is in dark mode. */
+  --color-map-control: #ffffff;
+  --color-map-control-text: #655e7b;
+  --color-map-route: #713ce0;
+  --color-map-approach: #e08a00;
+  --color-map-pickup: #12a150;
+  --color-map-drop: #e0413e;
 
   /* Radii */
   --radius-card: 1rem;
@@ -67,9 +91,16 @@
   --color-warning: #fbbf24;
   --color-warning-soft: #35280c;
   --color-danger: #f87171;
+  --color-danger-hover: #ef5252;
   --color-danger-soft: #3b1c1f;
   --color-info: #60a5fa;
   --color-info-soft: #15243d;
+
+  --color-on-success: #0b2618;
+  --color-on-danger: #2a0f10;
+
+  --color-brand-text: #b9a3ff;
+  --color-brand-deep-text: #cbb8ff;
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-float: 0 24px 60px -40px rgba(0, 0, 0, 0.7);

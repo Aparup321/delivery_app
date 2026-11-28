@@ -13,6 +13,7 @@ import { Button } from '../../components/common/Button'
 import { Card } from '../../components/common/Card'
 import { EmptyState } from '../../components/common/EmptyState'
 import { Input } from '../../components/common/Input'
+import { OptionButton } from '../../components/common/OptionButton'
 import { SectionHeading } from '../../components/common/SectionHeading'
 import { DeliveryMap } from '../../components/deliveries/DeliveryMap'
 import { DeliveryTimeline } from '../../components/deliveries/DeliveryTimeline'
@@ -250,7 +251,7 @@ export function ActiveDeliveryPage() {
                 href={navigationUrl(activeDelivery.pickup)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                 aria-label={t('Navigate to pickup')}
               >
                 <Navigation className="size-4" aria-hidden="true" />
@@ -276,7 +277,7 @@ export function ActiveDeliveryPage() {
                 href={navigationUrl(activeDelivery.destination)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                 aria-label={t('Navigate to drop')}
               >
                 <Navigation className="size-4" aria-hidden="true" />
@@ -494,15 +495,14 @@ export function ActiveDeliveryPage() {
             />
             <div className="mt-3 space-y-2">
               {issueReasons.map((reason) => (
-                <button
+                <OptionButton
                   key={reason}
-                  type="button"
+                  tone="danger"
                   disabled={pendingAction !== null}
                   onClick={() => void handleCancel(reason)}
-                  className="w-full rounded-2xl border border-line bg-surface px-3.5 py-2.5 text-left text-[12.5px] font-medium text-ink transition-colors hover:border-danger/40 hover:bg-danger-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30 disabled:opacity-60"
                 >
                   {t(reason)}
-                </button>
+                </OptionButton>
               ))}
             </div>
           </Card>

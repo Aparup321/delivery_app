@@ -25,6 +25,7 @@ import { Card } from '../../components/common/Card'
 import { IconButton } from '../../components/common/IconButton'
 import { Input } from '../../components/common/Input'
 import { ProgressBar } from '../../components/common/ProgressBar'
+import { Spinner } from '../../components/common/Spinner'
 import { ScreenHeader } from '../../components/layout/ScreenHeader'
 import { useApp } from '../../context/app-store'
 import { useAuth } from '../../context/auth'
@@ -326,12 +327,8 @@ export function OnboardingPage() {
 
   if (isLoading) {
     return (
-      <div
-        className="grid min-h-[60svh] place-items-center"
-        role="status"
-        aria-label={t('Loading')}
-      >
-        <span className="size-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      <div className="grid min-h-[60dvh] place-items-center">
+        <Spinner label={t('Loading')} />
       </div>
     )
   }
@@ -397,7 +394,7 @@ export function OnboardingPage() {
             type="button"
             aria-label={t('Go back')}
             onClick={handleBack}
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
@@ -432,9 +429,9 @@ export function OnboardingPage() {
                     className={cn(
                       'grid size-7 place-items-center rounded-full border text-[11px] font-bold',
                       isDone
-                        ? 'border-white bg-white text-brand-deep'
+                        ? 'border-white bg-white text-brand-deep-on-light'
                         : isActive
-                          ? 'border-white bg-white text-brand-deep ring-4 ring-white/20'
+                          ? 'border-white bg-white text-brand-deep-on-light ring-4 ring-white/20'
                           : 'border-white/35 bg-white/10 text-white/80',
                     )}
                   >
@@ -1038,7 +1035,7 @@ export function OnboardingPage() {
                       </span>
                       <ChevronDown
                         className={cn(
-                          'size-4 shrink-0 text-ink-soft transition-transform duration-200',
+                          'size-4 shrink-0 text-ink-soft transition-transform duration-200 motion-reduce:transition-none',
                           isOpen && 'rotate-180',
                         )}
                         aria-hidden="true"

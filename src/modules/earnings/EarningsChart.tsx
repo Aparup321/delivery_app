@@ -51,7 +51,7 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
         {formatCurrency(point.amount, locale)}
       </p>
       {point.start && point.amount > 0 ? (
-        <p className="mt-0.5 text-[10px] text-ink-soft">
+        <p className="mt-0.5 text-[10.5px] text-ink-soft">
           {t('Tap to open this range')}
         </p>
       ) : null}

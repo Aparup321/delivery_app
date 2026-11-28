@@ -122,7 +122,7 @@ export function HomePage() {
               {unreadNotifications > 0 ? (
                 <span
                   key={unreadNotifications}
-                  className="badge-pop absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-white"
+                  className="badge-pop absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-semibold text-on-danger"
                 >
                   {unreadNotifications}
                 </span>

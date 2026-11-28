@@ -29,7 +29,7 @@ export function DocumentUploadTile({
       <span
         className={cn(
           'grid size-7 place-items-center rounded-lg',
-          fileName ? 'bg-success text-white' : 'bg-surface text-brand-deep',
+          fileName ? 'bg-success text-on-success' : 'bg-surface text-brand-deep',
         )}
       >
         {fileName ? (

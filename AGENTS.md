@@ -243,21 +243,21 @@ Status colours also have `-soft` backgrounds: `bg-success-soft`,
 | `EmptyState` | Icon, title, description and optional action |
 
 Layout components: `AppLayout`, `AuthLayout`, `BottomNavigation`, `ScreenHeader`,
-`ModulePlaceholder`. `AuthLayout` is the sign-in/OTP shell. On phones and tablets
-(below 1024px) it is form-first: a compact brand bar plus a full-height white
-sheet, with no large hero to repaint while the keyboard opens. From 1024px the
-wordmark/route hero returns and the sheet is absolutely bottom-anchored over it,
-where there is room and no soft keyboard. Everything sizes against `100dvh`; the
-sheet never moves on focus, so the native keyboard resize is the only motion. The
-hero is memoized and `PhoneForm` keeps the phone input uncontrolled through
-`Input`'s `inputRef`, so typing performs no React render and only submit or an
-error updates state. The sheet entrance is a 300 ms transform-only rise.
-`AppLayout` owns the vertical scroll area (`main.app-scrollbar`) so the slim
-scrollbar sits on the app column, not the browser edge; route changes reset it to
-the top. Auth screens use the same scrollbar treatment. `OtpInput` renders six
-boxes over one real input: backspace deletes natively on mobile keyboards that
-send no `keydown`, and focus never jumps between boxes, so typing does not scroll
-the sheet.
+`ModulePlaceholder`. `AuthLayout` is the sign-in/OTP shell: brand hero, faint
+street grid and the form in a white bottom sheet. On phones the hero is a fixed
+480px tall instead of `flex: 1`, so the keyboard shrinking the viewport never
+reflows the artwork; the sheet is absolutely bottom-anchored. Focusing a field
+adds a 220ms transform-only lift of `clamp(36px, 7svh, 88px)`; a surface tail
+keeps the bottom edge flush, and reduced-motion removes the lift. From 1024px the
+hero fills the available height. The hero is memoized and `PhoneForm` keeps the
+phone input uncontrolled through `Input`'s `inputRef`, so typing performs no React
+render and only submit or an error updates state. The sheet entrance is a 300ms
+transform-only rise. `AppLayout` owns the vertical scroll area
+(`main.app-scrollbar`) so the slim scrollbar sits on the app column, not the
+browser edge; route changes reset it to the top. Auth screens use the same
+scrollbar treatment. `OtpInput` renders six boxes over one real input: backspace
+deletes natively on mobile keyboards that send no `keydown`, and focus never
+jumps between boxes, so typing does not scroll the sheet.
 
 **Do not duplicate these primitives inside a screen.** If a variant is missing,
 extend the shared component with a typed prop instead of copying its classes.
@@ -474,7 +474,7 @@ their service layer is added:
 
 ## 16. Current implementation state and handoff
 
-> Last updated: 20 November 2026. Read this section before starting work; it
+> Last updated: 28 November 2026. Read this section before starting work; it
 > records what is built, what is intentionally missing, and what an agent
 > picking up the project should do next.
 
@@ -638,7 +638,15 @@ their service layer is added:
   deliveries in `history`, so it matches the dashboard. Month bars use the
   calendar buckets 1-6, 7-12, 13-18, 19-24 and 25-end. The trend is a Recharts
   bar chart that grows in, shows the amount on hover or tap, and opens that
-  range's statement list on click; payouts and
+  range's statement list on click. Under the balance card, **Withdraw earnings**
+  shows the available amount (delivered earnings minus requests that are not
+  rejected). The dialog takes an amount and a UPI ID (prefilled with the last one
+  and editable every time), then a demo phone OTP (`123456`), and states that
+  credit takes 24 hours. Submitting writes `payments/{uid_request}` with status
+  `requested` and, in the same batch, a `support_tickets` row with
+  `priority: 'High'`, so operations sees it in the existing ticket feed. The
+  withdrawal list is an `onSnapshot`, so processing/paid/rejected updates appear
+  without a reload; demo sessions persist the list in `localStorage`. Payouts and
   incentives remain labelled demo/empty until settlement is connected. Every
   section header has a back control with an explicit fallback; Home is the root
   and has none.
@@ -668,7 +676,9 @@ their service layer is added:
   stores metadata and paths, not file contents. There is no document-level
   review workflow. Files over 2 MB are rejected before the name is recorded.
 - Earnings, payouts, ratings and dashboard totals are demo constants, labelled
-  as demo where they could be mistaken for live data.
+  as demo where they could be mistaken for live data. Withdrawals are real
+  requests stored in `payments`, but the phone OTP is a fixed demo code and
+  settlement happens outside this app.
 - Distance and ETA on console-assigned deliveries are service-area estimates
   from the console, not routing-engine figures. The public OpenStreetMap tile
   servers and the OSRM demo server are defaults, not SLA-backed services;

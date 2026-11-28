@@ -212,6 +212,39 @@ const hindi: Record<string, string> = {
   'View delivery details': 'डिलीवरी विवरण देखें',
   'Delivery timeline': 'डिलीवरी टाइमलाइन',
   Requested: 'अनुरोध किया',
+  'Withdraw earnings': 'कमाई निकालें',
+  Withdraw: 'निकालें',
+  'Available to withdraw': 'निकालने के लिए उपलब्ध',
+  'You can withdraw up to {amount}.': 'आप {amount} तक निकाल सकते हैं।',
+  'Withdraw all': 'पूरी राशि निकालें',
+  'UPI ID': 'UPI आईडी',
+  'name@bank': 'name@bank',
+  'This is where the money will be sent. You can change it each time.':
+    'पैसा इसी UPI आईडी पर भेजा जाएगा। आप इसे हर बार बदल सकते हैं।',
+  'The amount will take 24 hours to credit in your account.':
+    'राशि आपके खाते में जमा होने में 24 घंटे लगेंगे।',
+  'Enter a valid withdraw amount.': 'मान्य निकासी राशि दर्ज करें।',
+  'Enter an amount between {min} and {max}.':
+    '{min} से {max} के बीच राशि दर्ज करें।',
+  'Enter a valid UPI ID, for example name@bank.':
+    'मान्य UPI आईडी दर्ज करें, जैसे name@bank।',
+  'Verify withdrawal': 'निकासी सत्यापित करें',
+  'Withdrawal code': 'निकासी कोड',
+  'We will send a {length}-digit code to your registered mobile number.':
+    'हम आपके पंजीकृत मोबाइल नंबर पर {length} अंकों का कोड भेजेंगे।',
+  'Confirm withdrawal': 'निकासी की पुष्टि करें',
+  'Withdrawal requested': 'निकासी का अनुरोध किया गया',
+  Done: 'हो गया',
+  'You already have a withdrawal in progress.':
+    'आपकी एक निकासी पहले से प्रक्रिया में है।',
+  'Withdrawal history': 'निकासी इतिहास',
+  'No withdrawal requests yet.': 'अभी कोई निकासी अनुरोध नहीं है।',
+  'Withdrawals could not be loaded. Check your connection.':
+    'निकासी लोड नहीं हो सकी। अपना कनेक्शन जांचें।',
+  'The withdrawal request could not be saved. Check your connection and try again.':
+    'निकासी अनुरोध सहेजा नहीं जा सका। कनेक्शन जांचकर फिर कोशिश करें।',
+  Amount: 'राशि',
+  'High priority': 'उच्च प्राथमिकता',
   Accepted: 'स्वीकार किया',
   'Received by': 'प्राप्तकर्ता',
   'Handover note': 'हैंडओवर नोट',
@@ -977,6 +1010,39 @@ const bengali: Record<string, string> = {
   'View delivery details': 'ডেলিভারি বিবরণ দেখুন',
   'Delivery timeline': 'ডেলিভারি টাইমলাইন',
   Requested: 'অনুরোধ করা হয়েছে',
+  'Withdraw earnings': 'আয় তুলুন',
+  Withdraw: 'তুলুন',
+  'Available to withdraw': 'তোলার জন্য উপলব্ধ',
+  'You can withdraw up to {amount}.': 'আপনি {amount} পর্যন্ত তুলতে পারেন।',
+  'Withdraw all': 'সব তুলুন',
+  'UPI ID': 'UPI আইডি',
+  'name@bank': 'name@bank',
+  'This is where the money will be sent. You can change it each time.':
+    'টাকা এই UPI আইডিতেই পাঠানো হবে। আপনি প্রতিবার এটি বদলাতে পারেন।',
+  'The amount will take 24 hours to credit in your account.':
+    'টাকাটি আপনার অ্যাকাউন্টে জমা হতে ২৪ ঘণ্টা লাগবে।',
+  'Enter a valid withdraw amount.': 'সঠিক তোলার পরিমাণ লিখুন।',
+  'Enter an amount between {min} and {max}.':
+    '{min} থেকে {max}-এর মধ্যে পরিমাণ লিখুন।',
+  'Enter a valid UPI ID, for example name@bank.':
+    'সঠিক UPI আইডি লিখুন, যেমন name@bank।',
+  'Verify withdrawal': 'তোলা যাচাই করুন',
+  'Withdrawal code': 'তোলার কোড',
+  'We will send a {length}-digit code to your registered mobile number.':
+    'আপনার নিবন্ধিত মোবাইল নম্বরে {length} সংখ্যার কোড পাঠানো হবে।',
+  'Confirm withdrawal': 'তোলা নিশ্চিত করুন',
+  'Withdrawal requested': 'তোলার অনুরোধ করা হয়েছে',
+  Done: 'সম্পন্ন',
+  'You already have a withdrawal in progress.':
+    'আপনার একটি তোলার অনুরোধ আগে থেকেই প্রক্রিয়াধীন আছে।',
+  'Withdrawal history': 'তোলার ইতিহাস',
+  'No withdrawal requests yet.': 'এখনও কোনো তোলার অনুরোধ নেই।',
+  'Withdrawals could not be loaded. Check your connection.':
+    'তোলার তথ্য লোড করা যায়নি। আপনার সংযোগ পরীক্ষা করুন।',
+  'The withdrawal request could not be saved. Check your connection and try again.':
+    'তোলার অনুরোধ সংরক্ষণ করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+  Amount: 'পরিমাণ',
+  'High priority': 'উচ্চ অগ্রাধিকার',
   Accepted: 'গৃহীত',
   'Received by': 'গ্রহণকারী',
   'Handover note': 'হস্তান্তর নোট',

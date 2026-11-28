@@ -33,15 +33,11 @@
   /* Deep purple stays correct on white surfaces; dark surfaces use a lighter
      accent so links and secondary buttons keep readable contrast. */
   :root[data-theme='dark'] .text-brand {
-    color: #b9a3ff;
+    color: var(--color-brand-text);
   }
 
   :root[data-theme='dark'] .text-brand-deep {
-    color: #cbb8ff;
-  }
-
-  :root[data-theme='dark'] .bg-white.text-brand-deep {
-    color: #5123a5;
+    color: var(--color-brand-deep-text);
   }
 }
 
@@ -201,6 +197,26 @@
   .sheet-enter {
     animation: sheet-enter 300ms cubic-bezier(0.22, 1, 0.36, 1);
   }
+
+  /* A short, transform-only lift: the hero stays put, the sheet moves, and a
+     tail keeps the bottom edge flush so no purple gap appears. */
+  .auth-sheet {
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .auth-sheet:has(input:focus) {
+    transform: translate3d(0, calc(-1 * clamp(36px, 7svh, 88px)), 0);
+  }
+
+  .auth-sheet-tail {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 0;
+    height: clamp(36px, 7svh, 88px);
+    background-color: var(--color-surface);
+    pointer-events: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -228,6 +244,14 @@
   .animate-bounce {
     animation: none !important;
   }
+
+  .auth-sheet {
+    transition: none;
+  }
+
+  .auth-sheet:has(input:focus) {
+    transform: none;
+  }
 }
 
 @layer base {
@@ -238,7 +262,7 @@
 
   body {
     margin: 0;
-    min-height: 100svh;
+    min-height: 100dvh;
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
@@ -247,7 +271,7 @@
   }
 
   #root {
-    min-height: 100svh;
+    min-height: 100dvh;
   }
 
   h1,
@@ -282,5 +306,10 @@
   ::selection {
     background-color: var(--color-brand-soft);
     color: var(--color-brand-deep);
+  }
+
+  :root[data-theme='dark'] ::selection {
+    background-color: var(--color-brand);
+    color: #ffffff;
   }
 }

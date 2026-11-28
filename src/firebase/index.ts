@@ -53,6 +53,7 @@ if (isFirebaseConfigured && recaptchaSiteKey) {
 }
 
 export const appCheck = appCheckInstance
+export const isAppCheckConfigured = Boolean(appCheckInstance)
 
 /**
  * Services are null until the Firebase Web App configuration is present. The

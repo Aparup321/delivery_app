@@ -21,11 +21,11 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline:
     'border border-line bg-surface text-ink hover:border-brand/35 hover:bg-brand-tint',
   ghost: 'text-brand-deep hover:bg-brand-soft',
-  danger: 'bg-danger text-white hover:bg-[#c93a37]',
+  danger: 'bg-danger text-on-danger hover:bg-danger-hover',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'h-9 rounded-lg px-3.5 text-[13px]',
+  sm: 'h-10 rounded-lg px-3.5 text-[13px]',
   md: 'h-11 rounded-xl px-5 text-sm',
   lg: 'h-13 rounded-xl px-6 text-[15px]',
 }

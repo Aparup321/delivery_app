@@ -22,7 +22,7 @@ const SupportPage = lazy(() => import('../modules/support/SupportPage').then((mo
 
 function RouteFallback() {
   return (
-    <div className="grid min-h-[50svh] place-items-center text-ink-soft" role="status" aria-label="Loading page">
+    <div className="grid min-h-[50dvh] place-items-center text-ink-soft" role="status" aria-label="Loading page">
       <Loader2 className="size-5 animate-spin" aria-hidden="true" />
     </div>
   )

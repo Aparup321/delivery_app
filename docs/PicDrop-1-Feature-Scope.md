@@ -351,4 +351,12 @@ Nomad • PicDrop · Requirements draft · 6 November 2026
   than hiding inputs. Verified at 320×568, 390×844, 768×900 and 1280×900 with no
   horizontal overflow across Home, Earnings, Profile, Edit details, Orders and
   auth; the sign-in field stays visible at a simulated 390×500 keyboard viewport.
+- **2026-11-28 — M34: restored hero and smooth focus lift.** Reversed the
+  form-first auth change: the wordmark/route hero is visible at every width. On
+  phones it is fixed at 480px so the keyboard cannot reflow or repaint it; the
+  sheet stays absolutely bottom-anchored and lifts by `clamp(36px, 7svh, 88px)`
+  with a 220ms transform-only transition, backed by a surface tail. Typing stays
+  zero-render through the uncontrolled phone field, and reduced-motion removes
+  the lift. Verified at 320×568, 390×844 and 390×500 with the hero visible and the
+  input fully above the keyboard.
 

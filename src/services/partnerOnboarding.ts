@@ -441,7 +441,8 @@ export async function savePartnerOnboarding({
         vehicleType: state.vehicle.type,
         status: 'pending',
         applicationStatus: 'submitted',
-        rating: 0,
+        // `rating` is deliberately not written here: reputation is assigned by
+        // the platform, never by the partner. The rules reject it.
         joinedOn: state.submittedAt?.slice(0, 10) ?? submittedAt.slice(0, 10),
         submittedAt,
         statusUpdatedAt,

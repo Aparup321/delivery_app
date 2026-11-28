@@ -75,7 +75,7 @@ material for the project and are not part of the deployed application.
 
 | Module | What it does | Status |
 | --- | --- | --- |
-| Authentication | Responsive sign-in and OTP: form-first compact layout on phones/tablets (no large hero to fight the keyboard), hero-and-sheet on desktop; mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
+| Authentication | Responsive sign-in/OTP with the brand hero retained on every width (fixed 480px on phones so the keyboard cannot reflow it), a smooth 220ms form-sheet lift on focus, mobile number + demo OTP (`123456`, the default until the OTP API lands), stable per-number Firebase demo account when configured, protected routes with redirect back, logout | Built (Firebase bridge) |
 | Onboarding | Five steps matching the design: personal, KYC and bank, vehicle, training, review. The first step starts with an English/Hindi/Bengali language selector; training has five short lesson modules, each with a 37-39 s portrait video (thumbnail opens a full-screen player; every module is narrated in Hindi with a music bed), a progress bar and completion on video end (the player closes and the module ticks itself; the Mark as complete button remains). This test build is text-only for documents: profile-photo and document uploads are hidden | Built (Firebase) |
 | KYC & documents | Aadhaar, PAN, licence, RC and bank details as text for manual verification; no Storage dependency | Built (text-only test mode) |
 | Vehicle information | Bike, scooter, bicycle or on foot; model, colour, licence and registration where applicable | Built (Firebase) |
@@ -86,7 +86,7 @@ material for the project and are not part of the deployed application.
 | Active delivery | Interactive OpenStreetMap, timeline, status actions, OTP plus text handover proof, contact, navigation and issue reporting; development builds also accept the test delivery code `4821` | Built (Firebase) |
 | Map & tracking | Leaflet + OpenStreetMap markers for pickup, drop and the partner's GPS position; solid pickup→drop route plus a dotted live approach route that re-routes after 500 m; follow mode and configurable providers | Built (live) |
 | History | Search, status filter and delivery-level earnings; declined offers appear under Cancelled with a red badge and ₹0 earned; tap any row for full delivery details | Built (live + demo fallback) |
-| Earnings & payments | Today/week/month totals, an animated Recharts trend and recent deliveries calculated from completed jobs; month uses 1-6, 7-12, 13-18, 19-24, 25-end buckets; bars show hover amounts and open that bucket's statements; recent jobs open the delivery details sheet; payouts/incentives remain demo/empty | Built (live earnings; demo payouts) |
+| Earnings & payments | Today/week/month totals, an animated Recharts trend and recent deliveries calculated from completed jobs; month uses 1-6, 7-12, 13-18, 19-24, 25-end buckets; bars show hover amounts and open that bucket's statements; recent jobs open the delivery details sheet; a withdrawal flow lets the partner enter an editable UPI ID, confirm a demo phone OTP and track the request live (an operations ticket is raised at High priority and credit is promised within 24 hours); payouts/incentives remain demo/empty | Built (live withdrawals; demo payouts) |
 | Notifications | Real-event in-app notifications persisted in Firestore with read state and deep links; a new offer also opens a global Accept/Reject alert; background tab gets a system alert | Built (live) |
 | Help & support | FAQs, ticket submission, live ticket feed and status updates; delivery issues create a ticket automatically | Built (live tickets persisted; FAQs are static help content) |
 | Profile & settings | Partner details, post-onboarding email/address/vehicle editing, English/Hindi/Bengali language switching, persisted alert sound/vibration preference, application status and sign-out | Built (live partner record) |
@@ -399,6 +399,16 @@ fallback when configuration is absent.
   for live accounts: today/week/month totals, per-delivery average, chart and
   recent jobs are derived from `history`. Payout history and incentives stay
   labelled demo/empty until settlement is connected.
+- **Withdrawals.** The available balance is the delivered earnings minus every
+  request that is not rejected. The partner enters an amount and a UPI ID
+  (prefilled with the last one, editable each time), confirms a demo phone OTP
+  (`123456`, shown in the sheet) and gets the "amount will take 24 hours to
+  credit" notice. One atomic write creates a `payments/{uid_request}` row with
+  status `requested` and a `support_tickets` row with `priority: 'High'` and a
+  "High priority · Withdrawal request" subject, so operations sees it in the
+  existing ticket feed. `payments` is admin-updated to `processing`, `paid` or
+  `rejected`; the Earnings list is an `onSnapshot`, so the status changes
+  without a reload. Demo sessions persist the same list in `localStorage`.
 - Demo earnings figures exist only in the offline prototype; live earnings are
   not mock numbers.
 
@@ -611,11 +621,15 @@ explored offline; live accounts never receive mock deliveries.
    added later, initialize it in the same project, set the bucket name to match
    `VITE_FIREBASE_STORAGE_BUCKET`, and set `mediaUploadsEnabled` in
    `src/config/media.ts` to `true` after re-testing uploads.
-3. Deploy the rules with the Firebase CLI:
+3. Deploy the rules and the composite indexes with the Firebase CLI:
 
    ```bash
-   firebase deploy --only firestore:rules,storage
+   firebase deploy --only firestore:rules,firestore:indexes,storage
    ```
+
+   The withdrawal feed needs the `payments` (partnerUid, requestedAt) index in
+   `firestore.indexes.json`; the rule deploy alone is not enough. A new index may
+   take a few minutes to build.
 
    Alternatively paste `firestore.rules` and `storage.rules` into the matching
    rules editors in Firebase Console.

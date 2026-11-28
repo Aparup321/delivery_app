@@ -26,6 +26,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
 
+    // Keep the browser chrome in step with the app instead of pinning the
+    // light brand purple in dark mode.
+    const themeColor = document.querySelector('meta[name="theme-color"]')
+    themeColor?.setAttribute(
+      'content',
+      theme === 'dark' ? '#0f0d17' : '#5123a5',
+    )
+
     try {
       window.localStorage.setItem(THEME_KEY, theme)
     } catch {

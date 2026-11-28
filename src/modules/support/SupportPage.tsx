@@ -76,8 +76,8 @@ export function SupportPage() {
                     <ChevronDown
                       className={
                         isOpen
-                          ? 'size-4 shrink-0 rotate-180 text-brand transition-transform'
-                          : 'size-4 shrink-0 text-ink-soft transition-transform'
+                          ? 'size-4 shrink-0 rotate-180 text-brand transition-transform motion-reduce:transition-none'
+                          : 'size-4 shrink-0 text-ink-soft transition-transform motion-reduce:transition-none'
                       }
                       aria-hidden="true"
                     />
@@ -140,7 +140,7 @@ export function SupportPage() {
                   setSent(false)
                 }
               }}
-              className="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink transition-colors placeholder:font-normal placeholder:text-ink-soft hover:border-brand/30 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10"
+              className="w-full resize-none rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink transition-colors placeholder:font-normal placeholder:text-ink-soft hover:border-brand/30 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10"
             />
           </div>
 
@@ -181,12 +181,19 @@ export function SupportPage() {
                     <p className="text-[12.5px] font-semibold text-ink">
                       {ticket.subject}
                     </p>
-                    <Badge
-                      tone={ticket.status === 'Open' ? 'warning' : 'success'}
-                      size="sm"
-                    >
-                      {t(ticket.status)}
-                    </Badge>
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      {ticket.priority === 'High' ? (
+                        <Badge tone="danger" size="sm">
+                          {t('High priority')}
+                        </Badge>
+                      ) : null}
+                      <Badge
+                        tone={ticket.status === 'Open' ? 'warning' : 'success'}
+                        size="sm"
+                      >
+                        {t(ticket.status)}
+                      </Badge>
+                    </span>
                   </div>
                   <p className="mt-0.5 text-[11px] text-ink-soft">
                     {ticket.id} · {formatDate(ticket.createdAt, locale)}

@@ -131,12 +131,14 @@ service cloud.firestore {
     }
 
     // A partner may add the lifecycle fields once: first submission, or a
-    // re-application after a rejection. Nothing else may change them.
+    // re-application after a rejection. Nothing else may change them. `rating`
+    // is deliberately absent: it is reputation data, not something a partner
+    // may assign themselves.
     function submissionFields() {
       return [
         'partnerId', 'phone', 'authProvider', 'lastSignInAt', 'fullName',
         'email', 'dateOfBirth', 'profilePhotoUrl', 'profilePhotoPath',
-        'city', 'addressLine', 'pincode', 'vehicleType', 'rating',
+        'city', 'addressLine', 'pincode', 'vehicleType',
         'joinedOn', 'submittedAt', 'updatedAt', 'bank', 'lastLocation',
         'lastLocationUpdatedAt', 'isOnline', 'status', 'applicationStatus',
         'statusUpdatedAt'
@@ -157,6 +159,17 @@ service cloud.firestore {
           ['adminReview', 'adminSuspension', 'adminPartnerId']);
     }
 
+    // Presence is operational data, so it may only be published by an account
+    // the Administrator has approved and left active. Going offline is always
+    // allowed: the app forces suspended or unapproved accounts to offline and
+    // must be able to record that without a permission error.
+    function isApprovedAndActive() {
+      return resource.data.get('applicationStatus', '') == 'approved'
+        && resource.data.get('status', '') == 'active'
+        && (!resource.data.keys().hasAny(['adminSuspension'])
+          || resource.data.adminSuspension.active != true);
+    }
+
     // One function for every partner-owned update. Profile/presence writes and
     // the one-way submission transition are the only allowed shapes, and
     // `validPartnerData` runs exactly once: evaluating it in two separate
@@ -167,15 +180,31 @@ service cloud.firestore {
       let data = request.resource.data;
       let changed = data.diff(resource.data).affectedKeys();
       let previousStatus = resource.data.get('applicationStatus', '');
+      let hasApplication = resource.data.keys().hasAny(['applicationStatus']);
       let canSubmit = previousStatus == null
         || previousStatus == ''
         || previousStatus in ['draft', 'rejected'];
       let isNotSuspended = !resource.data.keys().hasAny(['adminSuspension'])
         || resource.data.adminSuspension.active != true;
+      let presenceChanged = changed.hasAny([
+        'isOnline', 'availability', 'presenceUpdatedAt'
+      ]);
+      let locationChanged = changed.hasAny([
+        'lastLocation', 'lastLocationUpdatedAt'
+      ]);
+      // Name, mobile, birth date and payout account are verified during review.
+      // Once an application exists they are read-only; changes go through
+      // support and the Administrator console.
+      let verifiedChanged = changed.hasAny([
+        'fullName', 'phone', 'dateOfBirth', 'bank'
+      ]);
 
       return data.partnerId == uid
         && validPartnerData(data)
-        && (changed.hasOnly(partnerAppFields())
+        && ((changed.hasOnly(partnerAppFields())
+          && (!presenceChanged || data.isOnline != true || isApprovedAndActive())
+          && (!locationChanged || isApprovedAndActive())
+          && (!verifiedChanged || !hasApplication))
           || (canSubmit
             && isNotSuspended
             && data.applicationStatus == 'submitted'
@@ -329,6 +358,8 @@ service cloud.firestore {
         && request.resource.data.completedCount is int
         && request.resource.data.completedCount >= 0
         && request.resource.data.completedCount <= 20
+        && request.resource.data.completedCount
+          == request.resource.data.completed.size()
         && maxText(request.resource.data.updatedAt, 40);
       allow update: if isOwner(uid)
         && applicationOpen(uid)
@@ -340,6 +371,8 @@ service cloud.firestore {
         && request.resource.data.completedCount is int
         && request.resource.data.completedCount >= 0
         && request.resource.data.completedCount <= 20
+        && request.resource.data.completedCount
+          == request.resource.data.completed.size()
         && maxText(request.resource.data.updatedAt, 40);
     }
 
@@ -357,13 +390,29 @@ service cloud.firestore {
           'createdAt', 'readAt', 'updatedAt'
         ])
         && request.resource.data.type in [
-          'request', 'account', 'delivery', 'payment'
+          'request', 'account', 'delivery'
         ]
         && maxText(request.resource.data.notificationId, 160)
         && maxText(request.resource.data.title, 160)
         && maxText(request.resource.data.body, 1000)
         && request.resource.data.vars is map
         && request.resource.data.vars.size() <= 20
+        // Only the template variables the app actually renders are allowed, and
+        // each one is length-bounded: the schema must not accept near-document
+        // sized values that the console would later render.
+        && request.resource.data.vars.keys().hasOnly([
+          'id', 'category', 'pickup', 'drop', 'reason'
+        ])
+        && (!request.resource.data.vars.keys().hasAny(['id'])
+          || maxText(request.resource.data.vars.get('id', ''), 160))
+        && (!request.resource.data.vars.keys().hasAny(['category'])
+          || maxText(request.resource.data.vars.get('category', ''), 80))
+        && (!request.resource.data.vars.keys().hasAny(['pickup'])
+          || maxText(request.resource.data.vars.get('pickup', ''), 160))
+        && (!request.resource.data.vars.keys().hasAny(['drop'])
+          || maxText(request.resource.data.vars.get('drop', ''), 160))
+        && (!request.resource.data.vars.keys().hasAny(['reason'])
+          || maxText(request.resource.data.vars.get('reason', ''), 400))
         && maxText(request.resource.data.createdAt, 40)
         && (request.resource.data.readAt == null
           || maxText(request.resource.data.readAt, 40))
@@ -381,6 +430,33 @@ service cloud.firestore {
           && resource.data.partnerUid == request.auth.uid);
     }
 
+    // Payout requests. A partner creates their own `requested` row and reads
+    // its status; only the administrator moves it to processing/paid/rejected.
+    // The status list on the Earnings screen is an onSnapshot of these rows.
+    match /payments/{paymentId} {
+      allow read: if isAdmin()
+        || (request.auth != null
+          && resource.data.partnerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.partnerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'partnerUid', 'requestId', 'amount', 'upiId', 'status',
+          'requestedAt', 'updatedAt'
+        ])
+        && request.resource.data.status == 'requested'
+        && request.resource.data.requestId is string
+        && request.resource.data.requestId.size() <= 160
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 1
+        && request.resource.data.amount <= 1000000
+        && request.resource.data.upiId is string
+        && request.resource.data.upiId.matches(
+          '^[A-Za-z0-9._-]{2,64}@[A-Za-z]{2,32}$')
+        && maxText(request.resource.data.requestedAt, 40)
+        && maxText(request.resource.data.updatedAt, 40);
+      allow update, delete: if isAdmin();
+    }
+
     // Partner-created support tickets are read by the owning partner and the
     // operations administrator. The admin console uses them for notifications.
     match /support_tickets/{ticketId} {
@@ -389,9 +465,12 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.partnerUid == request.auth.uid
         && request.resource.data.keys().hasOnly([
-          'partnerUid', 'id', 'subject', 'message', 'status', 'createdAt', 'updatedAt'
+          'partnerUid', 'id', 'subject', 'message', 'status', 'priority',
+          'createdAt', 'updatedAt'
         ])
         && request.resource.data.status == 'Open'
+        && (!request.resource.data.keys().hasAny(['priority'])
+          || request.resource.data.priority in ['High', 'Normal'])
         && request.resource.data.id is string
         && request.resource.data.id.size() <= 160
         && request.resource.data.subject is string
@@ -436,7 +515,9 @@ service cloud.firestore {
     // Fields the assigned partner may change on a delivery. Everything the
     // Administrator controls — the route, customer data, payout, drop code and
     // the assignment itself — is deliberately absent, so the partner app can
-    // advance a delivery but never rewrite one.
+    // advance a delivery but never rewrite one. `adminStatus` is present only
+    // because the console renders it directly; validAdminStatus pins it to the
+    // native status so it cannot carry invented workflow text.
     function partnerDeliveryFields() {
       return [
         'status', 'adminStatus', 'acceptedAt', 'completedAt',
@@ -506,6 +587,35 @@ service cloud.firestore {
       );
     }
 
+    // `adminStatus` mirrors delivery_admin's own workflow values. The partner is
+    // allowed to keep it in step with the native status (the console renders it
+    // directly), but only with the exact paired value: free text is not a
+    // workflow the partner gets to invent.
+    function validAdminStatus(status, adminStatus) {
+      return (status == 'assigned' && adminStatus == 'Pending')
+        || ((status == 'accepted' || status == 'pickup_arrived')
+          && adminStatus == 'Assigned')
+        || ((status == 'picked_up' || status == 'in_transit'
+          || status == 'drop_arrived')
+          && adminStatus == 'In Transit')
+        || (status == 'delivered' && adminStatus == 'Completed')
+        || (status == 'cancelled' && adminStatus == 'Cancelled');
+    }
+
+    // The events array is an append-only audit trail. Rules cannot iterate a
+    // list, so the history length may only stay the same or grow by one, and
+    // the appended entry must be the {status, at} pair for the requested status.
+    function validDeliveryEvents(previous, next) {
+      return next is list
+        && next.size() <= 40
+        && next.size() >= previous.size()
+        && (next.size() == previous.size()
+          || (next.size() == previous.size() + 1
+            && next[next.size() - 1].keys().hasOnly(['status', 'at'])
+            && next[next.size() - 1].status == request.resource.data.status
+            && maxText(next[next.size() - 1].at, 40)));
+    }
+
     function validPartnerDeliveryData(data) {
       return (!data.keys().hasAny(['cancellationReason'])
           || data.cancellationReason == null
@@ -516,9 +626,6 @@ service cloud.firestore {
           || validDeliveryProof(data.proof))
         && (!data.keys().hasAny(['currentLocation'])
           || validDeliveryLocation(data.currentLocation))
-        && (!data.keys().hasAny(['events'])
-          || data.events == null
-          || (data.events is list && data.events.size() <= 40))
         && (!data.keys().hasAny(['acceptedAt'])
           || data.acceptedAt == null
           || maxText(data.acceptedAt, 40))
@@ -528,9 +635,6 @@ service cloud.firestore {
         && (!data.keys().hasAny(['updatedAt'])
           || data.updatedAt == null
           || maxText(data.updatedAt, 40))
-        && (!data.keys().hasAny(['adminStatus'])
-          || data.adminStatus == null
-          || maxText(data.adminStatus, 40))
         && (data.get('proof', null) == null || data.status == 'delivered');
     }
 
@@ -552,6 +656,14 @@ service cloud.firestore {
           && validPartnerDeliveryData(request.resource.data)
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(partnerDeliveryFields())
+          && validDeliveryEvents(
+            resource.data.get('events', []),
+            request.resource.data.get('events', []))
+          && (!request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['adminStatus'])
+            || validAdminStatus(
+              request.resource.data.status,
+              request.resource.data.adminStatus))
           && validDeliveryTransition(
             resource.data.status,
             request.resource.data.status));

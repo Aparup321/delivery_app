@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../context/auth'
 import { useLanguage } from '../../context/language'
+import { isAppCheckConfigured } from '../../firebase'
 import { Button } from '../common/Button'
 
 /**
@@ -13,8 +14,9 @@ export function FirebaseStatusBanner() {
   const { firebase, isAuthenticated, retryFirebaseConnection } = useAuth()
   const { t } = useLanguage()
   const [isRetrying, setIsRetrying] = useState(false)
+  const appCheckMissing = import.meta.env.PROD && firebase.enabled && !isAppCheckConfigured
 
-  if (!firebase.enabled || !isAuthenticated || firebase.connected) {
+  if (!firebase.enabled || !isAuthenticated || (firebase.connected && !appCheckMissing)) {
     return null
   }
 
@@ -41,9 +43,9 @@ export function FirebaseStatusBanner() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[12.5px] font-semibold text-ink">
-              {t('Firebase is not connected')}
+              {t(appCheckMissing ? 'App Check is not configured' : 'Firebase is not connected')}
             </p>
-            <Button
+            {!appCheckMissing ? <Button
               size="sm"
               variant="outline"
               className="shrink-0"
@@ -51,12 +53,14 @@ export function FirebaseStatusBanner() {
               onClick={handleRetry}
             >
               {t(isRetrying ? 'Retrying…' : 'Retry connection')}
-            </Button>
+            </Button> : null}
           </div>
 
           <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted">
             {t(
-              'This session is stored only on this device. Enable Authentication and the Email/Password provider in the Firebase console, then retry.',
+              appCheckMissing
+                ? 'Production traffic is not attested. Add VITE_RECAPTCHA_SITE_KEY, register the app in Firebase App Check, and add App Check tokens to delivery_admin before enforcing Firestore or the admin REST sync will be rejected.'
+                : 'This session is stored only on this device. Enable Authentication and the Email/Password provider in the Firebase console, then retry.',
             )}
           </p>
 

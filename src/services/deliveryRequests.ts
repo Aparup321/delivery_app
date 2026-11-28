@@ -345,9 +345,7 @@ function assertAssigned(
   uid: string,
   now: string,
 ) {
-  const partnerUid = asText(data.partnerUid)
-
-  if (partnerUid !== uid) {
+  if (asText(data.partnerUid) !== uid) {
     throw new DeliveryActionError(
       'delivery/not-assigned',
       'This delivery is no longer offered to you. The list will refresh in a moment.',
@@ -394,6 +392,15 @@ export async function acceptAssignedDelivery(
         throw new DeliveryActionError(
           'delivery/not-found',
           'This delivery is no longer available.',
+        )
+      }
+
+      // Ownership is checked before the idempotency shortcut so a retry can
+      // never report success for a delivery that belongs to another partner.
+      if (asText(data.partnerUid) !== uid) {
+        throw new DeliveryActionError(
+          'delivery/not-assigned',
+          'This delivery is no longer offered to you. The list will refresh in a moment.',
         )
       }
 

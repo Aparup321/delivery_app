@@ -163,7 +163,7 @@ export function OfferAlert() {
           <button
             type="button"
             onClick={() => navigate('/deliveries')}
-            className="mt-1.5 w-full text-center text-[10.5px] font-medium text-ink-soft transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="mt-1.5 w-full rounded-lg py-2.5 text-center text-[10.5px] font-medium text-ink-soft transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
             {t('View all')}
           </button>

@@ -165,6 +165,24 @@ function useRoute(from: MapPoint | null, to: MapPoint | null) {
   return { route: null, state: 'loading' as RouteState }
 }
 
+/**
+ * Leaflet writes colours as SVG presentation attributes, where `var(...)` does
+ * not resolve. Read the fixed map tokens once so the drawn lines and the legend
+ * always use the same values, in both app themes.
+ */
+function mapColor(variable: string, fallback: string): string {
+  if (typeof window === 'undefined') {
+    return fallback
+  }
+
+  return (
+    window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue(variable)
+      .trim() || fallback
+  )
+}
+
 function pickupIcon() {
   return L.divIcon({
     className: '',
@@ -172,7 +190,7 @@ function pickupIcon() {
     iconAnchor: [13, 13],
     html:
       '<span class="grid size-[26px] place-items-center rounded-full ' +
-      'border-[3px] border-white bg-success shadow-md">' +
+      'border-[3px] border-white bg-map-pickup shadow-md">' +
       '<span class="size-2 rounded-full bg-white"></span></span>',
   })
 }
@@ -184,7 +202,7 @@ function dropIcon() {
     iconAnchor: [13, 13],
     html:
       '<span class="grid size-[26px] place-items-center rounded-full ' +
-      'border-[3px] border-white bg-danger shadow-md">' +
+      'border-[3px] border-white bg-map-drop shadow-md">' +
       '<span class="size-2 rounded-full bg-white"></span></span>',
   })
 }
@@ -287,6 +305,13 @@ export function DeliveryMap({
   const { t } = useLanguage()
   const mapRef = useRef<L.Map | null>(null)
   const [follow, setFollow] = useState(false)
+  const routeColors = useMemo(
+    () => ({
+      planned: mapColor('--color-map-route', '#713CE0'),
+      approach: mapColor('--color-map-approach', '#E08A00'),
+    }),
+    [],
+  )
 
   const pickupPoint = useMemo(
     () =>
@@ -447,7 +472,7 @@ export function DeliveryMap({
           zoom={14}
           className="size-full"
           scrollWheelZoom={false}
-          attributionControl
+          attributionControl={false}
           aria-label={
             ariaLabel ??
             t('Map showing {pickup} to {destination}', {
@@ -489,7 +514,7 @@ export function DeliveryMap({
             <Polyline
               positions={planned.route}
               pathOptions={{
-                color: '#713CE0',
+                color: routeColors.planned,
                 weight: 4,
                 opacity: 0.85,
                 lineJoin: 'round',
@@ -501,7 +526,7 @@ export function DeliveryMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: '#E08A00',
+                color: routeColors.approach,
                 weight: 4,
                 opacity: 0.9,
                 dashArray: '2 8',
@@ -544,8 +569,8 @@ export function DeliveryMap({
           aria-pressed={follow}
           className={
             follow
-              ? 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-brand/30 bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
-              : 'absolute right-2 top-2 z-[500] grid size-9 place-items-center rounded-lg border border-line bg-surface/95 text-ink-soft shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+              ? 'absolute right-2 top-2 z-[500] grid size-10 place-items-center rounded-lg border border-brand/30 bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
+              : 'absolute right-2 top-2 z-[500] grid size-10 place-items-center rounded-lg border border-line bg-surface/95 text-ink-soft shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40'
           }
           aria-label={t(
             follow ? 'Stop following my location' : 'Follow my location',
@@ -561,17 +586,17 @@ export function DeliveryMap({
 
       <div className="flex items-center justify-between gap-2 border-t border-line bg-surface px-3 py-2 text-[11px] text-ink-muted">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="size-2 shrink-0 rounded-full bg-success" />
+          <span className="size-2 shrink-0 rounded-full bg-map-pickup" />
           <span className="truncate">{pickup.name}</span>
         </span>
         {partnerValid ? (
           <span className="flex shrink-0 items-center gap-1.5">
-            <span className="size-2 rounded-full bg-brand" />
+            <span className="size-2 rounded-full bg-map-route" />
             {t('You')}
           </span>
         ) : null}
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="size-2 shrink-0 rounded-full bg-danger" />
+          <span className="size-2 shrink-0 rounded-full bg-map-drop" />
           <span className="truncate">{destination.name}</span>
         </span>
       </div>
@@ -579,13 +604,13 @@ export function DeliveryMap({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line bg-surface px-3 py-1.5 text-[10.5px] font-medium text-ink-muted">
         {showPlannedRoute ? (
           <span className="flex items-center gap-1.5">
-            <span className="h-1 w-4 rounded-full bg-brand" />
+            <span className="h-1 w-4 rounded-full bg-map-route" />
             {t('Pickup to drop')}
           </span>
         ) : null}
         {partnerValid ? (
           <span className="flex items-center gap-1.5">
-            <span className="h-1 w-4 rounded-full bg-warning" />
+            <span className="h-1 w-4 rounded-full bg-map-approach" />
             {t(focus === 'pickup' ? 'You to pickup' : 'You to drop')}
           </span>
         ) : null}

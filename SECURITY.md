@@ -68,7 +68,13 @@ UI is treated as a security control.
 - `notifications/{id}` — only the owner reads/writes their feed; title, body,
   translation variables and timestamps are capped.
 - `support_tickets/{id}` — only the owner or administrator reads. Creation must
-  be `Open`, with bounded subject/message; the partner cannot close a ticket.
+  be `Open`, with bounded subject/message and an optional `High`/`Normal`
+  priority; the partner cannot close or reprioritise a ticket.
+- `payments/{id}` — a withdrawal request. A partner may create only their own row
+  with status `requested`, a positive amount and a UPI-shaped id, and read its
+  status. Processing, paid and rejected are administrator-only. **The amount is
+  client-declared**, so operations must reconcile it against recorded earnings
+  before paying; the ticket raised with the request is the review trigger.
 - `partner_documents`, `vehicles`, `training_progress` — owner or administrator.
   KYC documents and training stay writable only while the application is open.
   Vehicles allow post-approval corrections to type, model, colour and

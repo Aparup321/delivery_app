@@ -117,7 +117,7 @@ export function DeliveryDetailsDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delivery-details-title"
-        className="dialog-enter max-h-[88svh] w-full max-w-[430px] overflow-y-auto overscroll-contain rounded-2xl bg-surface shadow-float"
+        className="dialog-enter max-h-[88dvh] w-full max-w-[430px] overflow-y-auto overscroll-contain rounded-2xl bg-surface shadow-float"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-line bg-surface px-4 py-3">
@@ -142,7 +142,7 @@ export function DeliveryDetailsDialog({
             type="button"
             aria-label={t('Close')}
             onClick={onClose}
-            className="grid size-9 shrink-0 place-items-center rounded-full text-ink-muted transition-colors hover:bg-brand-tint hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="grid size-10 shrink-0 place-items-center rounded-full text-ink-muted transition-colors hover:bg-brand-tint hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           >
             <X className="size-4" aria-hidden="true" />
           </button>

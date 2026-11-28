@@ -9,13 +9,25 @@ support fixtures remain mock for the offline prototype only.
 
 ### Added
 
-- **Mobile-first responsive pass.** Auth is now form-first below 1024px: compact
-  brand bar plus a full-height sheet, with the wordmark/route hero only on
-  desktop. The app shell sizes against `100dvh` so the keyboard resizes the
-  scroll area correctly. Verified Home, Earnings, Profile, Edit details, Orders
-  and the auth flow at 320×568, 390×844, 768×900 and 1280×900 with no horizontal
-  overflow; the form remains fully visible at a simulated 390×500 keyboard
-  viewport.
+- **Withdrawal requests.** The Earnings screen now has a Withdraw earnings card
+  showing the balance available (delivered earnings minus non-rejected requests).
+  The dialog takes an amount and a UPI ID — prefilled from the last request but
+  editable every time — then a demo phone OTP (`123456`), and states that the
+  amount takes 24 hours to credit. Submitting writes a `payments` row with status
+  `requested` and, in the same batch, a High-priority `support_tickets` row for
+  operations; the status list is a live `onSnapshot` (processing, paid,
+  rejected), with demo sessions persisting it in `localStorage`. Adds the
+  `payments` rules and its composite index.
+- **Restored mobile hero with a smooth focus lift.** The artwork stays visible at
+  every width: on phones it has a fixed 480px height so the keyboard cannot
+  reflow or repaint it. Focusing the number field lifts the sheet by
+  `clamp(36px, 7svh, 88px)` with a 220ms transform-only transition, and a surface
+  tail keeps the bottom edge flush. The phone field remains uncontrolled, so
+  typing still performs zero React renders. Reduced-motion removes the lift.
+- **Mobile-first responsive pass.** The app shell sizes against `100dvh` so the
+  keyboard resizes the scroll area correctly. Verified Home, Earnings, Profile,
+  Edit details, Orders and the auth flow at 320×568, 390×844, 768×900 and
+  1280×900 with no horizontal overflow.
 - **Zero-render phone field.** The sign-in number input is now uncontrolled
   through a new `Input` `inputRef`, with normalisation applied directly in the
   DOM. Typing triggers no React render; only submit or an error updates state,

@@ -26,7 +26,7 @@ export function DeliveryTimeline({ delivery }: DeliveryTimelineProps) {
               className={cn(
                 'mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-2 transition-colors',
                 isDone
-                  ? 'border-success bg-success text-white'
+                  ? 'border-success bg-success text-on-success'
                   : 'border-line bg-surface text-ink-soft',
                 isCurrent && 'ring-4 ring-success/15',
               )}

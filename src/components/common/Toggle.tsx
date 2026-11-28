@@ -30,7 +30,7 @@ export function Toggle({
     >
       <span
         className={cn(
-          'size-5 rounded-full bg-white shadow-sm transition-transform duration-200',
+          'size-5 rounded-full bg-white shadow-sm transition-transform duration-200 motion-reduce:transition-none',
           checked ? 'translate-x-[22px]' : 'translate-x-0.5',
         )}
         aria-hidden="true"

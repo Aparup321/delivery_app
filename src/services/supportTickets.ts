@@ -35,6 +35,7 @@ function toTicket(data: unknown): SupportTicket | null {
     subject,
     message,
     status: asText(record.status) === 'Resolved' ? 'Resolved' : 'Open',
+    priority: asText(record.priority) === 'High' ? 'High' : 'Normal',
     createdAt,
   }
 }
