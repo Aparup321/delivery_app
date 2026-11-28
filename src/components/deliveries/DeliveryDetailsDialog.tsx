@@ -20,10 +20,14 @@ import {
   formatTime,
 } from '../../utils/format'
 import { DeliveryTimeline } from './DeliveryTimeline'
+import { PaymentQr } from './PaymentQr'
 
 export interface DeliveryDetailsDialogProps {
   delivery: Delivery
   onClose: () => void
+  /** The partner's payout UPI, shown as a QR on delivered jobs. */
+  paymentUpi?: string
+  payeeName?: string
 }
 
 function StopRow({
@@ -81,6 +85,8 @@ function DetailCell({ label, value }: { label: string; value: string }) {
 export function DeliveryDetailsDialog({
   delivery,
   onClose,
+  paymentUpi,
+  payeeName,
 }: DeliveryDetailsDialogProps) {
   const { t, locale } = useLanguage()
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -185,6 +191,15 @@ export function DeliveryDetailsDialog({
               }`}
             />
           </div>
+
+          {!isCancelled && delivery.paymentMode === 'UPI' && paymentUpi ? (
+            <PaymentQr
+              upiId={paymentUpi}
+              payeeName={payeeName}
+              amount={delivery.orderValue}
+              reference={delivery.id}
+            />
+          ) : null}
 
           {delivery.customerName ? (
             <div className="rounded-xl border border-line px-3 py-2.5">

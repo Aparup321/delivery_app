@@ -209,6 +209,17 @@ export async function requestWithdrawal(
     requestedAt: request.requestedAt,
     updatedAt: request.updatedAt,
   })
+  // Keep the profile's payout UPI in step with the latest request, so the
+  // payment QR always shows the account the money is going to.
+  batch.set(
+    doc(db, 'partners', uid),
+    {
+      partnerId: uid,
+      upiId: request.upiId,
+      updatedAt: request.updatedAt,
+    },
+    { merge: true },
+  )
   batch.set(
     doc(db, 'support_tickets', documentId(uid, request.id)),
     {

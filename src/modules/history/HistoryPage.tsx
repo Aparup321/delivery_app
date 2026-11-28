@@ -20,7 +20,7 @@ import { revealStyle } from '../../utils/reveal'
 type HistoryFilter = 'all' | 'delivered' | 'cancelled'
 
 export function HistoryPage() {
-  const { history } = useApp()
+  const { history, onboarding } = useApp()
   const { t, locale } = useLanguage()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<HistoryFilter>('all')
@@ -200,6 +200,8 @@ export function HistoryPage() {
         <DeliveryDetailsDialog
           delivery={selectedDelivery}
           onClose={() => setSelectedDelivery(null)}
+          paymentUpi={onboarding.upiId}
+          payeeName={onboarding.fullName}
         />
       ) : null}
     </div>

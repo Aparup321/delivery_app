@@ -193,7 +193,7 @@ function liveChart(
 }
 
 export function EarningsPage() {
-  const { history, isLiveSession } = useApp()
+  const { history, isLiveSession, onboarding, updateOnboarding } = useApp()
   const { session } = useAuth()
   const { t, locale } = useLanguage()
   const reduceMotion = usePrefersReducedMotion()
@@ -674,17 +674,27 @@ export function EarningsPage() {
         <DeliveryDetailsDialog
           delivery={selectedDelivery}
           onClose={() => setSelectedDelivery(null)}
+          paymentUpi={onboarding.upiId}
+          payeeName={onboarding.fullName}
         />
       ) : null}
 
       {withdrawOpen ? (
         <WithdrawDialog
           available={availableBalance}
-          lastUpiId={lastUpiId}
+          lastUpiId={onboarding.upiId || lastUpiId}
           isSubmitting={isSubmitting}
           submitError={withdrawalError}
           onClose={() => setWithdrawOpen(false)}
-          onSubmit={submit}
+          onSubmit={async (amount, upiId) => {
+            const request = await submit(amount, upiId)
+
+            if (request) {
+              updateOnboarding({ upiId })
+            }
+
+            return request
+          }}
         />
       ) : null}
     </div>

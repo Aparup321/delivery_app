@@ -345,6 +345,8 @@ export function DeliveriesPage() {
         <DeliveryDetailsDialog
           delivery={selectedDelivery}
           onClose={() => setSelectedDelivery(null)}
+          paymentUpi={onboarding.upiId}
+          payeeName={onboarding.fullName}
         />
       ) : null}
     </div>

@@ -62,7 +62,7 @@ export interface Delivery {
   etaMinutes: number
   earnings: number
   itemCount: number
-  paymentMode: 'Prepaid' | 'Cash on delivery'
+  paymentMode: 'Prepaid' | 'Cash on delivery' | 'UPI'
   /** Order value and cash to collect, when the console sends them. */
   orderValue?: number
   collectAmount?: number
